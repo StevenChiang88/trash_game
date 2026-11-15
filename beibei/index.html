@@ -213,7 +213,8 @@ const DAY_LEN=6,G=600,MU_FREE=.36,MU_RAIN=.28,H_FALL=.7;
 const KIN=.8;                        // 動摩擦：一旦開始往外滑就很難自己停下來，要點擊才煞得住
 const QTE_WARN=1.2,QTE_R=30;         // 圈圈事件（龍捲風、地震）：預告秒數、圈圈半徑
 const TOR_TOTAL=190,QUAKE_TOTAL=120; // 一個圈都沒點到時被推出去多遠；點掉幾成就少推幾成
-const PIGEON_LOAD=.18,POOP_AT=1.8,DIRT_MAX=4,DIRT_COST=12;
+const PIGEON_LOAD=[0,.18,.19,.2],PIGEON_HP=[0,1,3,5];   // 鴿子等級 1～3：越大隻越重、要點越多下
+const POOP_AT=1.8,DIRT_MAX=4,DIRT_COST=12;
 const ST_MAX=100,ST_REGEN=15,ST_TAP=7;
 
 class Sim{
@@ -256,7 +257,7 @@ class Sim{
     }
   }
   slipping(){const h=this.h,on=1-h,pg=this.pigeon;
-    const drive=G*(h*(1+.35*this.wet)+(pg&&pg.phase==='on'?PIGEON_LOAD:0)+on*SIN_)+this.wind*(.6+1.2*h)*(1-.35*this.wet);
+    const drive=G*(h*(1+.35*this.wet)+(pg&&pg.phase==='on'?PIGEON_LOAD[pg.lv]:0)+on*SIN_)+this.wind*(.6+1.2*h)*(1-.35*this.wet);
     return this.v>15||drive-lerp(MU_FREE,MU_RAIN,this.slick)*G*UX*on>40;}
   gustSpec(){
     const d=this.day,D=d/30,m=.76+.59*D,q=1+.25*Math.min(D,3);
@@ -319,12 +320,14 @@ class Sim{
     this.quake=this.qte&&this.qte.kind==='quake'?1:0;
 
     // 鴿子
-    if(this.pigeonAt>0&&this.t>=this.pigeonAt){this.pigeonAt=-1;this.pigeon={phase:'in',t:0,poops:0};this.events.push({type:'pigeon'});}
+    if(this.pigeonAt>0&&this.t>=this.pigeonAt){this.pigeonAt=-1;const x=this.rng(),lv=this.day>=20&&x<.2?3:this.day>=10&&x<.55?2:1;   // Day 10 起有胖鴿，Day 20 起有鴿王
+      this.pigeon={phase:'in',t:0,poops:0,lv,hp:PIGEON_HP[lv]};this.events.push({type:'pigeon',lv});}
     const pg=this.pigeon;
     if(pg){pg.t+=dt;
       // 沒被趕走就會大便，一隻最多兩坨
       if(pg.phase==='on'&&!this.tut&&!inp.shoo&&pg.poops<2&&pg.t>=POOP_AT*(pg.poops+1)){pg.poops++;this.dirt=Math.min(DIRT_MAX,this.dirt+1);this.events.push({type:'poop'});}
       if(pg.phase==='in'&&pg.t>=.8){pg.phase='on';pg.t=0;}
+      else if(pg.phase==='on'&&inp.shoo&&--pg.hp>0)this.events.push({type:'peck',hp:pg.hp});   // 大隻的要多點幾下
       else if(pg.phase==='on'&&((pg.t>=5&&!this.tut)||inp.shoo)){if(inp.shoo)this.events.push({type:'shoo'});pg.phase='out';pg.t=0;}
       else if(pg.phase==='out'&&pg.t>=.8)this.pigeon=null;}
 
@@ -342,7 +345,7 @@ class Sim{
 
     // 力學：垂在外面的越多，越會被自己拖下去
     const h=clamp((this.s+BL-A_EFF)/BL,0,1),on=1-h;this.h=h;
-    const drive=G*(h*(1+.35*this.wet)+(sitting?PIGEON_LOAD:0)+on*SIN_)+this.wind*(.6+1.2*h)*(1-.35*this.wet);
+    const drive=G*(h*(1+.35*this.wet)+(sitting?PIGEON_LOAD[pg.lv]:0)+on*SIN_)+this.wind*(.6+1.2*h)*(1-.35*this.wet);
     const fmax=lerp(MU_FREE,MU_RAIN,this.slick)*(this.v>1?KIN:1)*G*UX*on;
     if(Math.abs(this.v)<1e-3){this.v=Math.abs(drive)<=fmax?0:(drive-Math.sign(drive)*fmax)*dt;}
     else{const nv=this.v+(drive-Math.sign(this.v)*fmax)*dt;this.v=(nv*this.v<0&&Math.abs(drive)<=fmax)?0:nv;}
@@ -504,7 +507,7 @@ let sim=new Sim(1),cloth=new Cloth(),mode='title',time=0,windVis=0,stormVis=0,ra
 const inp={tap:false,shoo:false,hits:[]},ripples=[];
 let best=parseInt(store.get('bb.best')||'0',10)||0,crawls=0;
 let tutDone=store.get('bb.tut')==='1'||store.get('bb.learned')==='1',tutT=0,tutMsgT=0,tutSlide=null;   // 教學只在第一次玩時出現，學過就記在 localStorage
-let tiredT=0;
+let tiredT=0,peckT=0;const PIGEON_SC=[1,1,1.3,1.6];
 const clouds=[],streaks=[],drops=[],leaves=[],feathers=[],drips=[],steam=[],sparks=[],stains=[];let poopedToday=false;
 {const r=rng32(5);for(let i=0;i<7;i++)clouds.push({x:-500+r()*1400,y:40+r()*250,s:.7+r()*.9,v:.5+r()});
  for(let i=0;i<110;i++)drops.push({x:r()*1300-470,y:r()*900-130,l:9+r()*9});}
@@ -513,22 +516,28 @@ const laundry=[{x:150,w:22,h:34,c:'#f3b6c2',k:1},{x:182,w:26,h:26,c:'#9cc7e8',k:
 
 function pigeonPos(){const pg=sim.pigeon;if(!pg)return null;const P=cloth.p;let k=NODES-2;for(let i=1;i<NODES;i++)if(!P[i].on){k=Math.max(2,i-1);break;}
   const sx=P[k].x+NX*R,sy=P[k].y+NY*R;
-  if(pg.phase==='on')return{x:sx,y:sy+Math.abs(Math.sin(time*7))*-1.2,fly:false};
+  if(pg.phase==='on')return{x:sx,y:sy+Math.abs(Math.sin(time*7))*-1.2-(peckT>0?Math.sin(peckT/.22*Math.PI)*7:0),fly:false,lv:pg.lv,hp:pg.hp};
   const t=clamp(pg.t/.8,0,1),e=pg.phase==='in'?1-(1-t)*(1-t):1-t*t,fx=pg.phase==='in'?wx1+30:wx1+40,fy=pg.phase==='in'?210:120;
-  return{x:lerp(fx,sx,e),y:lerp(fy,sy,e)-Math.sin(e*Math.PI)*24,fly:true};}
+  return{x:lerp(fx,sx,e),y:lerp(fy,sy,e)-Math.sin(e*Math.PI)*24,fly:true,lv:pg.lv,hp:pg.hp};}
 
-function drawPigeon(c,p){c.save();c.translate(p.x,p.y);c.lineWidth=2;c.strokeStyle=INK;c.lineJoin='round';
+function drawPigeon(c,p){const sc=PIGEON_SC[p.lv],body=['','#98a1b3','#8490aa','#6f7a98'][p.lv];
+  c.save();c.translate(p.x,p.y);c.scale(sc,sc);c.lineWidth=2/sc+.6;c.strokeStyle=INK;c.lineJoin='round';
   if(!p.fly){c.strokeStyle='#e58a5b';c.beginPath();c.moveTo(-2,-3);c.lineTo(-2,0);c.moveTo(3,-3);c.lineTo(3,0);c.stroke();c.strokeStyle=INK;}
-  c.fillStyle='#98a1b3';c.beginPath();c.ellipse(1,-10,11,7.5,-.15,0,TAU);c.fill();c.stroke();
+  c.fillStyle=body;c.beginPath();c.ellipse(1,-10,p.lv>1?12.5:11,p.lv>1?8.6:7.5,-.15,0,TAU);c.fill();c.stroke();
   c.beginPath();c.moveTo(10,-11);c.lineTo(19,-8);c.lineTo(10,-6);c.closePath();c.fill();c.stroke();
-  c.fillStyle='#98a1b3';c.beginPath();c.arc(-8,-18,5.5,0,TAU);c.fill();c.stroke();
+  c.fillStyle=body;c.beginPath();c.arc(-8,-18,5.5,0,TAU);c.fill();c.stroke();
   c.fillStyle='#7ab79e';c.beginPath();c.ellipse(-6,-13,4,2.6,.5,0,TAU);c.fill();
   c.fillStyle='#f0a13c';c.beginPath();c.moveTo(-13,-18.5);c.lineTo(-18,-17);c.lineTo(-13,-16);c.closePath();c.fill();
   c.fillStyle=INK;c.beginPath();c.arc(-9.5,-19,1.2,0,TAU);c.fill();
-  c.fillStyle='#6f7889';c.beginPath();
+  c.fillStyle=p.lv===3?'#566080':'#6f7889';c.beginPath();
   if(p.fly){const f=Math.sin(time*32)*13;c.moveTo(-4,-12);c.quadraticCurveTo(3,-14-f,12,-12-f*1.25);c.lineTo(8,-9);c.closePath();}
   else c.ellipse(3,-10,7.5,4.5,.1,0,TAU);
-  c.fill();c.stroke();c.restore();}
+  c.fill();c.stroke();
+  if(p.lv===3){c.fillStyle='#ffc64a';c.beginPath();c.moveTo(-13,-23);c.lineTo(-13.5,-30);c.lineTo(-10.5,-26.5);c.lineTo(-8,-31);c.lineTo(-5.5,-26.5);c.lineTo(-2.5,-30);c.lineTo(-3,-23);c.closePath();c.fill();c.stroke();}   // 鴿王的皇冠
+  c.restore();
+  // 還要點幾下：頭上的小圓點
+  if(!p.fly&&PIGEON_HP[p.lv]>1){const n=PIGEON_HP[p.lv],top=p.y-(p.lv===3?37:27)*sc-8;
+    for(let i=0;i<n;i++){const x=p.x-8*sc+(i-(n-1)/2)*11;c.fillStyle=INK;c.beginPath();c.arc(x,top,5,0,TAU);c.fill();c.fillStyle=i<p.hp?'#ee5b3a':'#fffdf5';c.beginPath();c.arc(x,top,3.2,0,TAU);c.fill();}}}
 
 function drawBlanket(c){
   const P=cloth.p,n=NODES,wet=wetVis(),RR=R+1.2-2.2*wet;
@@ -675,7 +684,7 @@ function hud(dt){
   const dd=Math.round(DIRT_COST*sim.dirt);if(dd!==lastDead){lastDead=dd;el.dead.hidden=dd<=0;el.dead.style.width=dd+'%';}
   const f=Math.round(sim.st);if(f!==lastFill){lastFill=f;el.fill.style.width=f+'%';}
   el.stam.classList.toggle('low',sim.st<ST_TAP*3);el.stam.classList.toggle('held',!!(sim.pigeon&&sim.pigeon.phase==='on'));
-  if(tiredT>0)tiredT-=dt;
+  if(tiredT>0)tiredT-=dt;if(peckT>0)peckT-=dt;
   el.vig.style.opacity=mode==='play'?(clamp((sim.h-.22)/.35,0,1)*(.75+.25*Math.sin(time*9))).toFixed(2):'0';
   if(tutMsgT>0)tutMsgT-=dt;
   if(mode==='play'&&sim.tut){const S=sim.tutStep;
@@ -686,7 +695,7 @@ function hud(dt){
   }else if(mode==='play'){
     if(sim.qte)setHint(sim.qte.kind==='tor'?'龍捲風！把圈圈全部點掉':'地震！把圈圈全部點掉');
     else if(tiredT>0)setHint('沒力了…停一下再點');
-    else if(sim.pigeon&&sim.pigeon.phase==='on')setHint('鴿子踩著會往外滑，還會大便。點牠！');
+    else if(sim.pigeon&&sim.pigeon.phase==='on')setHint(sim.pigeon.hp>1?`還要點 ${sim.pigeon.hp} 下才趕得走！`:'鴿子踩著會往外滑，還會大便。點牠！');
     else if(sim.v>20)setHint('正在滑！快連點');
     else if(sim.h>.3)setHint('連點！往牆邊爬！');
     else if(sim.h>.04&&(crawls<8||sim.day<=6))setHint('滑出去了！連點爬回牆邊');
@@ -709,7 +718,7 @@ function tutTick(dt){
   if(S===1){if(tutSlide){tutSlide.t+=dt/.6;const e=clamp(tutSlide.t,0,1);sim.s=lerp(tutSlide.from,48,e*e*(3-2*e));sim.v=0;if(e>=1)tutSlide=null;}
     else if(sim.s<8&&Math.abs(sim.v)<5)tutGo(2);}
   else if(S===2){if(!sim.qte&&(tutT-=dt)<=0){sim.startQte('quake',3,5);tutT=1e9;}}   // 練習用：3 個圈、5 秒，沒全點到就再來一次
-  else if(S===3){if(!sim.pigeon)sim.pigeon={phase:'in',t:0,poops:0};}
+  else if(S===3){if(!sim.pigeon)sim.pigeon={phase:'in',t:0,poops:0,lv:1,hp:1};}
   else if((tutT-=dt)<=0)begin(false);
 }
 function start(){begin(!tutDone);}
@@ -753,7 +762,8 @@ function handle(ev){
       if(ev.c===1){banner(`全部點到！${what}拿被被沒辦法`,false,2.6);Snd.blip(700,1200,.18,'triangle',.08);Snd.blip(900,1500,.2,'triangle',.07,.12);}
       else{banner(ev.c===0?`一個都沒點到，被被被${what}${ev.kind==='tor'?'捲':'震'}出去了！`:`漏了 ${ev.miss} 個，被被被${ev.kind==='tor'?'捲':'震'}出去一截`,true,3);shake=Math.max(shake,9);Snd.blip(320,120,.3,'sawtooth',.07);}
       break;}
-    case'pigeon':banner('鴿子來踩被被了，點牠趕走！',false,2.6);Snd.blip(430,350,.2,'sine',.08);Snd.blip(430,350,.22,'sine',.08,.26);break;
+    case'peck':{peckT=.22;const p=pigeonPos();if(p)for(let i=0;i<3;i++)feathers.push({x:p.x,y:p.y-12,vx:(Math.random()-.5)*110,vy:-30-Math.random()*50,a:Math.random()*TAU,life:.8});Snd.blip(520,380,.08,'square',.05);break;}
+    case'pigeon':banner(ev.lv===3?'鴿王駕到！要點 5 下才趕得走':ev.lv===2?'胖鴿子來了！要點 3 下才趕得走':'鴿子來踩被被了，點牠趕走！',ev.lv===3,2.8);Snd.blip(430,350,.2,'sine',.08);Snd.blip(430,350,.22,'sine',.08,.26);break;
     case'shoo':{const p=pigeonPos();if(p)for(let i=0;i<6;i++)feathers.push({x:p.x,y:p.y-10,vx:(Math.random()-.5)*120,vy:-40-Math.random()*60,a:Math.random()*TAU,life:1});Snd.blip(900,500,.1,'triangle',.06);if(sim.tut&&sim.tutStep===3)tutGo(4);break;}
     case'crawl':cloth.crawl();crawls++;Snd.blip(230,340,.07,'sine',.09);break;
     case'tired':if(tiredT<=0)Snd.blip(180,130,.1,'triangle',.05);tiredT=1.4;break;
@@ -822,7 +832,7 @@ function down(cx,cy){
   if(sim.qte){let best=-1,bd=QTE_R+16;for(let i=0;i<sim.qte.n;i++){if(sim.qte.hit[i]||inp.hits.includes(i))continue;const p=sim.qtePos(i),d=Math.hypot(x-p.x,y-p.y);if(d<bd){bd=d;best=i;}}
     if(best>=0)inp.hits.push(best);else{ripples.push({x,y,life:.35,bad:true});Snd.blip(170,130,.07,'triangle',.04);}return;}
   const p=pigeonPos();
-  if(p&&sim.pigeon.phase!=='out'&&Math.hypot(x-p.x,y-(p.y-10))<40){if(sim.pigeon.phase==='in'){sim.pigeon.phase='on';sim.pigeon.t=0;}inp.shoo=true;return;}
+  if(p&&sim.pigeon.phase!=='out'&&Math.hypot(x-p.x,y-(p.y-10*PIGEON_SC[p.lv]))<30+10*PIGEON_SC[p.lv]){if(sim.pigeon.phase==='in'){sim.pigeon.phase='on';sim.pigeon.t=0;}inp.shoo=true;return;}
   inp.tap=true;ripples.push({x,y,life:.35});
 }
 gameEl.addEventListener('pointerdown',e=>{if(e.target.closest('button'))return;e.preventDefault();Snd.init();down(e.clientX,e.clientY);});
@@ -844,7 +854,7 @@ window.addEventListener('resize',resize);
 if(window.ResizeObserver)new ResizeObserver(resize).observe(gameEl);
 
 muteIcon();showBest();resize();requestAnimationFrame(frame);
-window.__bb={Sim,DAY_LEN,get sim(){return sim},get mode(){return mode},start,pigeonXY(){const p=pigeonPos();if(!p)return null;const b=gameEl.getBoundingClientRect();return{x:b.left+ox+p.x*scale,y:b.top+oy+(p.y-10)*scale};},qteXY(i){const p=sim.qtePos(i),b=gameEl.getBoundingClientRect();return{x:b.left+ox+p.x*scale,y:b.top+oy+p.y*scale};}};
+window.__bb={Sim,DAY_LEN,get sim(){return sim},get mode(){return mode},start,pigeonXY(){const p=pigeonPos();if(!p)return null;const b=gameEl.getBoundingClientRect();return{x:b.left+ox+p.x*scale,y:b.top+oy+(p.y-10*PIGEON_SC[p.lv])*scale};},qteXY(i){const p=sim.qtePos(i),b=gameEl.getBoundingClientRect();return{x:b.left+ox+p.x*scale,y:b.top+oy+p.y*scale};}};
 })();
 </script>
 <!--/PAGE-->
