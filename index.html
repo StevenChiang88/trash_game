@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Trash Game</title>
+<meta name="description" content="一些沒什麼營養的小遊戲，打開就能玩。">
+<meta name="theme-color" content="#9fd3ee">
+<link rel="canonical" href="https://stevenchiang88.github.io/trash_game/">
+<link rel="icon" href="beibei/favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="beibei/apple-touch-icon.png">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Trash Game">
+<meta property="og:title" content="Trash Game｜沒什麼營養的小遊戲">
+<meta property="og:description" content="一些沒什麼營養的小遊戲，打開就能玩。">
+<meta property="og:url" content="https://stevenchiang88.github.io/trash_game/">
+<meta property="og:image" content="https://stevenchiang88.github.io/trash_game/beibei/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:locale" content="zh_TW">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chiron+GoRound+TC:wght@500;900&family=Fredoka:wght@600;700&display=swap">
+<style>
+/* 版面：天空底色上一欄遊戲卡片；每款遊戲一張卡，圖片就是它的分享預覽圖 */
+:root{
+  --ink:#2f2c45;
+  --quilt:#fffdf5;
+  --tin:#2f9a7c;
+  --sun:#ffc64a;
+  --sky:#9fd3ee;
+  --display:"Fredoka","Chiron GoRound TC","PingFang TC","Microsoft JhengHei",sans-serif;
+  --body:"Chiron GoRound TC","PingFang TC","Noto Sans TC","Microsoft JhengHei",sans-serif;
+  --sticker:-2px -2px 0 var(--ink),2px -2px 0 var(--ink),-2px 2px 0 var(--ink),2px 2px 0 var(--ink),0 -2.5px 0 var(--ink),0 2.5px 0 var(--ink),-2.5px 0 0 var(--ink),2.5px 0 0 var(--ink);
+}
+*{box-sizing:border-box}
+html{padding:env(safe-area-inset-top,0px) 0 env(safe-area-inset-bottom,0px)}
+body{margin:0;min-height:100vh;background:var(--sky);color:var(--ink);font-family:var(--body);font-weight:500;line-height:1.6}
+.wrap{max-width:720px;margin:0 auto;display:flex;flex-direction:column;gap:28px;padding-block:44px 56px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+header{display:flex;flex-direction:column;gap:10px}
+h1{margin:0;font-family:var(--display);font-weight:700;font-size:clamp(44px,13vw,72px);line-height:1;color:var(--quilt);text-shadow:var(--sticker),0 6px 0 var(--ink);transform:rotate(-3deg);transform-origin:left center}
+h1 span{color:var(--sun)}
+.lead{margin:0;font-weight:900;font-size:17px;color:var(--quilt);text-shadow:var(--sticker)}
+.games{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:20px}
+.game{display:flex;flex-direction:column;height:100%;border:3px solid var(--ink);border-radius:20px;background:var(--quilt);box-shadow:0 6px 0 var(--ink);overflow:hidden;color:inherit;text-decoration:none;transition:transform .08s,box-shadow .08s}
+.game:hover{transform:translateY(-2px);box-shadow:0 8px 0 var(--ink)}
+.game:active{transform:translateY(4px);box-shadow:0 2px 0 var(--ink)}
+.game:focus-visible{outline:4px solid var(--sun);outline-offset:3px}
+.game img{display:block;width:100%;height:auto;aspect-ratio:1200/630;object-fit:cover;border-bottom:3px solid var(--ink);background:var(--sky)}
+.info{display:flex;flex-direction:column;gap:6px;padding:14px 16px 16px;min-width:0}
+.info h2{margin:0;font-weight:900;font-size:22px;line-height:1.25}
+.info p{margin:0;font-size:15px}
+.go{align-self:flex-start;margin-top:6px;padding:6px 18px;border:2.5px solid var(--ink);border-radius:999px;background:var(--tin);color:var(--quilt);font-weight:900;font-size:15px}
+@media (prefers-reduced-motion:reduce){.game{transition:none}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Trash <span>Game</span></h1>
+    <p class="lead">一些沒什麼營養的小遊戲，打開就能玩。</p>
+  </header>
+  <main>
+    <!-- 新增遊戲：複製一個 <li>，把連結、圖片、標題、說明換掉 -->
+    <ul class="games">
+      <li>
+        <a class="game" href="beibei/">
+          <img src="beibei/og.png" width="1200" height="630" alt="一條有表情的白色棉被趴在公寓的綠色鐵皮遮雨棚上">
+          <div class="info">
+            <h2>被被撐住</h2>
+            <p>你是卡在遮雨棚上的那條棉被。按住抓緊，撐過強風、下雨、地震、颱風和鴿子，看你能撐幾天。</p>
+            <span class="go">開始玩</span>
+          </div>
+        </a>
+      </li>
+    </ul>
+  </main>
+</div>
+</body>
+</html>
