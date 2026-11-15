@@ -107,9 +107,6 @@ body{background:var(--sky);color:var(--ink);font-family:var(--body);font-weight:
 .btn{pointer-events:auto;font:inherit;font-weight:900;font-size:20px;color:var(--quilt);background:var(--tin);border:3px solid var(--ink);border-radius:16px;padding:12px 30px;box-shadow:0 5px 0 var(--ink);cursor:pointer;transition:transform .06s,box-shadow .06s}
 .btn:active{transform:translateY(4px);box-shadow:0 1px 0 var(--ink)}
 .btn.ghost{background:var(--quilt);color:var(--ink);font-size:16px;padding:10px 20px}
-.link{pointer-events:auto;font:inherit;font-weight:900;font-size:14px;color:var(--quilt);text-shadow:var(--sticker);background:none;border:0;padding:6px 10px;text-decoration:underline;text-underline-offset:4px;cursor:pointer}
-.link:focus-visible{outline:3px solid var(--sun);outline-offset:2px}
-#skip{font-size:14px;padding:7px 14px;box-shadow:0 3px 0 var(--ink)}
 .best{font-weight:900;font-size:14px;color:var(--quilt);text-shadow:var(--sticker);min-height:1.4em}
 
 #over,#pause{justify-content:center;background:rgba(47,44,69,.45)}
@@ -140,8 +137,7 @@ body{background:var(--sky);color:var(--ink);font-family:var(--body);font-weight:
 
   <div class="hud" id="hud" hidden>
     <div class="top">
-      <button class="btn ghost" id="skip" type="button" hidden>跳過教學</button>
-      <div class="day" id="dayBox"><span class="day-l">Day</span><span class="day-n" id="dayN">1</span><span class="wx" id="wx">晴</span></div>
+      <div class="day"><span class="day-l">Day</span><span class="day-n" id="dayN">1</span><span class="wx" id="wx">晴</span></div>
       <div class="side">
         <div class="wind calm" id="wind"><span id="windT">無風</span><i id="windA"></i></div>
         <button class="icon-btn" id="pauseBtn" type="button" aria-label="暫停"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="6" y="5" width="4.5" height="14" rx="1.6"/><rect x="13.5" y="5" width="4.5" height="14" rx="1.6"/></svg></button>
@@ -174,7 +170,6 @@ body{background:var(--sky);color:var(--ink);font-family:var(--body);font-weight:
     </ul>
     <button class="btn" id="start" type="button">開始曬被</button>
     <div class="best" id="best"></div>
-    <button class="link" id="replay" type="button" hidden>重看教學</button>
   </div>
 
   <div class="screen" id="over" hidden>
@@ -230,7 +225,7 @@ const POOP_AT=1.8,DIRT_MAX=4,DIRT_COST=12;
 const ST_MAX=100,ST_REGEN=15,ST_TAP=7;
 
 class Sim{
-  constructor(seed,tut){this.tut=!!tut;this.tutStep=1;this.rng=rng32(seed);this.t=0;this.day=1;this.s=14;this.v=0;this.h=0;
+  constructor(seed){this.rng=rng32(seed);this.t=0;this.day=1;this.s=14;this.v=0;this.h=0;
     this.st=ST_MAX;this.regenWait=0;this.tapCd=0;this.effort=0;
     this.wet=0;this.slick=0;this.sun=0;this.soaked=false;this.wind=0;this.gust=null;this.gustWait=1.6;this.phi=this.rng()*TAU;
     this.quake=0;this.quakeAt=-1;this.quakeWarned=false;this.hadQuake=false;this.qte=null;this.shove=0;this.shoveT=0;this.shoveCause='fall';
@@ -275,7 +270,6 @@ class Sim{
     return this.v>15||drive-lerp(MU_FREE,MU_RAIN,this.slick)*G*UX*on>40;}
   gustSpec(){
     const d=this.day,D=d/30,m=.76+.59*D,q=1+.25*Math.min(D,3);
-    if(this.tut)return null;   // 教學裡不吹陣風
     if(d===1)return{a:60,b:105,g0:2,g1:3,h0:.8,h1:1.4,right:.7};
     if(d===2)return{a:165,b:185,g0:2.2,g1:3,h0:.6,h1:.9,right:1};
     switch(this.weather){
@@ -289,7 +283,7 @@ class Sim{
   step(dt,inp){
     if(this.fallen)return;
     this.t+=dt;
-    const d=this.tut?1:1+Math.floor(this.t/DAY_LEN);
+    const d=1+Math.floor(this.t/DAY_LEN);
     if(d!==this.day){const q=this.hadQuake,tq=this.hadTor;this.hadQuake=this.hadTor=false;this.day=d;this.setupDay();this.events.push({type:'day',afterQuake:q,afterTor:tq});}
 
     // 風：背景風 + 一陣一陣的陣風（先預告再吹）
@@ -328,7 +322,7 @@ class Sim{
     if(this.qte){const q=this.qte;q.t+=dt;
       if(inp.hits)for(const i of inp.hits)if(i>=0&&i<q.n&&!q.hit[i]){q.hit[i]=true;this.events.push({type:'qteHit',i});}
       const got=q.hit.filter(Boolean).length;
-      if(got===q.n||q.t>=q.dur){const c=got/q.n,push=this.tut?0:(1-c)*(q.kind==='tor'?TOR_TOTAL:QUAKE_TOTAL);
+      if(got===q.n||q.t>=q.dur){const c=got/q.n,push=(1-c)*(q.kind==='tor'?TOR_TOTAL:QUAKE_TOTAL);
         if(push>0){this.shove+=push;this.shoveCause=q.kind==='tor'?'tornado':'quake';this.shoveT=push/520+1.6;}
         this.qte=null;if(q.kind==='tor'&&this.tor)this.tor.leave=0;
         this.events.push({type:'qteEnd',kind:q.kind,c,miss:q.n-got,push});}}
@@ -340,14 +334,14 @@ class Sim{
     const pg=this.pigeon;
     if(pg){pg.t+=dt;
       // 沒被趕走就會大便，一隻最多兩坨
-      if(pg.phase==='on'&&!this.tut&&!inp.shoo&&pg.poops<2&&pg.t>=POOP_AT*(pg.poops+1)){pg.poops++;this.dirt=Math.min(DIRT_MAX,this.dirt+1);this.events.push({type:'poop'});}
+      if(pg.phase==='on'&&!inp.shoo&&pg.poops<2&&pg.t>=POOP_AT*(pg.poops+1)){pg.poops++;this.dirt=Math.min(DIRT_MAX,this.dirt+1);this.events.push({type:'poop'});}
       if(pg.phase==='in'&&pg.t>=.8){pg.phase='on';pg.t=0;}
       else if(pg.phase==='on'&&inp.shoo&&--pg.hp>0)this.events.push({type:'peck',hp:pg.hp});   // 大隻的要多點幾下
-      else if(pg.phase==='on'&&((pg.t>=5&&!this.tut)||inp.shoo)){if(inp.shoo)this.events.push({type:'shoo'});pg.phase='out';pg.t=0;}
+      else if(pg.phase==='on'&&(pg.t>=5||inp.shoo)){if(inp.shoo)this.events.push({type:'shoo'});pg.phase='out';pg.t=0;}
       else if(pg.phase==='out'&&pg.t>=.8)this.pigeon=null;}
 
     // 樓上阿伯：探出頭、清喉嚨，沒被點到就往下吐；後面的天數會連吐好幾口
-    if(this.uncleAt>0&&this.t>=this.uncleAt&&!this.qte&&!this.tut){this.uncleAt=-1;
+    if(this.uncleAt>0&&this.t>=this.uncleAt&&!this.qte){this.uncleAt=-1;
       this.uncle={phase:'out',t:0,left:1+(this.day>=15)+(this.day>=30),wind:Math.max(.65,1.15-this.day*.01)};this.events.push({type:'uncle'});}
     const un=this.uncle;
     if(un){un.t+=dt;
@@ -363,7 +357,6 @@ class Sim{
     const sitting=!!pg&&pg.phase==='on';
     if(this.regenWait>0)this.regenWait-=dt;else if(!sitting)this.st=Math.min(this.stMax,this.st+ST_REGEN*(this.wet<.05?1.2:1)*dt);
     if(this.st>this.stMax)this.st=this.stMax;
-    if(this.tut&&this.st<35)this.st=35;              // 教學裡不會沒力
     if(inp.tap&&this.tapCd<=0&&!this.qte){
       if(this.st<ST_TAP)this.events.push({type:'tired'});
       else{this.st-=ST_TAP;this.tapCd=.09;this.regenWait=.3;this.effort=.25;
@@ -380,8 +373,7 @@ class Sim{
     if(this.shove>0){const m=Math.min(this.shove,520*dt);this.shove-=m;this.s+=m;if(this.v<0)this.v=0;}   // 被龍捲風／地震推出去
     if(this.shoveT>0)this.shoveT-=dt;
     if(this.s<0){this.s=0;if(this.v<0)this.v=0;}
-    if(this.tut){if(h>.36){this.s=8;this.v=0;this.events.push({type:'tutReset'});}}   // 教學裡不會掉，滑太遠就放回牆邊
-    else if(h>=H_FALL){this.fallen=true;this.cause=this.shoveT>0?this.shoveCause:'fall';this.events.push({type:'fall'});}
+    if(h>=H_FALL){this.fallen=true;this.cause=this.shoveT>0?this.shoveCause:'fall';this.events.push({type:'fall'});}
   }
 }
 const SIN_=UY;
@@ -533,7 +525,6 @@ function skyAt(p,storm){let i=0;while(i<SKY.length-2&&p>SKY[i+1][0])i++;const a=
 let sim=new Sim(1),cloth=new Cloth(),mode='title',time=0,windVis=0,stormVis=0,rainVis=0,shake=0,flash=0,fallT=0,runDay=1,torX=500,torA=0;
 const inp={tap:false,shoo:false,uncle:false,hits:[]},ripples=[];
 let best=parseInt(store.get('bb.best')||'0',10)||0,crawls=0;
-let tutDone=store.get('bb.tut')==='1'||store.get('bb.learned')==='1',tutT=0,tutMsgT=0,tutSlide=null;   // 教學只在第一次玩時出現，學過就記在 localStorage
 let tiredT=0,peckT=0;const PIGEON_SC=[1,1,1.3,1.6];
 const clouds=[],streaks=[],drops=[],leaves=[],feathers=[],drips=[],steam=[],sparks=[],stains=[];let poopedToday=false,spatToday=false;const UNCLE={x:134,y:150};
 {const r=rng32(5);for(let i=0;i<7;i++)clouds.push({x:-500+r()*1400,y:40+r()*250,s:.7+r()*.9,v:.5+r()});
@@ -649,7 +640,7 @@ function drawBlanket(c){
   if(sim.gripping){c.strokeStyle='#fffdf5';c.lineWidth=2;c.lineCap='round';const hx=P[1].x,hy=P[1].y-R-7;c.beginPath();for(let k=-1;k<=1;k++){c.moveTo(hx+k*7,hy-2);c.lineTo(hx+k*10,hy-8);}c.stroke();}
 }
 const wetVis=()=>(mode==='title'||mode==='over')?0:sim.wet;
-const dayPhase=()=>mode==='title'||sim.tut?.3:(sim.t%DAY_LEN)/DAY_LEN;
+const dayPhase=()=>mode==='title'?.3:(sim.t%DAY_LEN)/DAY_LEN;
 const nightAmt=()=>{const p=dayPhase();return smooth(.66,.78,p)-smooth(.94,1,p);};
 
 function render(){
@@ -746,13 +737,7 @@ function hud(dt){
   el.stam.classList.toggle('low',sim.st<ST_TAP*3);el.stam.classList.toggle('held',!!(sim.pigeon&&sim.pigeon.phase==='on'));
   if(tiredT>0)tiredT-=dt;if(peckT>0)peckT-=dt;
   el.vig.style.opacity=mode==='play'?(clamp((sim.h-.22)/.35,0,1)*(.75+.25*Math.sin(time*9))).toFixed(2):'0';
-  if(tutMsgT>0)tutMsgT-=dt;
-  if(mode==='play'&&sim.tut){const S=sim.tutStep;
-    if(S===1)setHint('連點螢幕，一下一下爬回牆邊');
-    else if(S===2)setHint(tutMsgT>0?'沒全部點到，再試一次':'圈圈出現了，在時間內全部點掉');
-    else if(S===3)setHint('點鴿子，把牠趕走');
-    else setHint('');
-  }else if(mode==='play'){
+  if(mode==='play'){
     if(sim.qte)setHint(sim.qte.kind==='tor'?'龍捲風！把圈圈全部點掉':'地震！把圈圈全部點掉');
     else if(sim.uncle&&(sim.uncle.phase==='out'||sim.uncle.phase==='hawk'))setHint('點樓上阿伯！別讓他吐痰');
     else if(tiredT>0)setHint('沒力了…停一下再點');
@@ -760,35 +745,18 @@ function hud(dt){
     else if(sim.v>20)setHint('正在滑！快連點');
     else if(sim.h>.3)setHint('連點！往牆邊爬！');
     else if(sim.h>.04&&(crawls<8||sim.day<=6))setHint('滑出去了！連點爬回牆邊');
+    else if(sim.day===1&&crawls===0)setHint('被風吹出去的時候，連點螢幕爬回牆邊');
     else setHint('');
   }
 }
 
 /* ───────── 流程 ───────── */
-const TUT=['','教學 1/3｜連點螢幕，爬回牆邊','教學 2/3｜圈圈出現，全部點掉','教學 3/3｜鴿子來了，點牠趕走','學會了！正式開始'];
-function tutGo(n){
-  sim.tutStep=n;banner(TUT[n],false,999);tutMsgT=0;
-  if(n===1)tutSlide={from:sim.s,t:0};                                  // 先把被被往外推一點，讓玩家爬回來
-  if(n===2)tutT=.6;
-  if(n===4){tutT=1.5;tutDone=true;store.set('bb.tut','1');Snd.blip(700,1200,.18,'triangle',.08);Snd.blip(900,1500,.2,'triangle',.07,.12);
-    for(const q of cloth.p)sparks.push({x:q.x+(Math.random()-.5)*10,y:q.y-R-4-Math.random()*14,life:.6+Math.random()*.5});}
-  else if(n>1)Snd.blip(520,780,.12,'triangle',.07);
-}
-function tutTick(dt){
-  const S=sim.tutStep;
-  if(S===1){if(tutSlide){tutSlide.t+=dt/.6;const e=clamp(tutSlide.t,0,1);sim.s=lerp(tutSlide.from,48,e*e*(3-2*e));sim.v=0;if(e>=1)tutSlide=null;}
-    else if(sim.s<8&&Math.abs(sim.v)<5)tutGo(2);}
-  else if(S===2){if(!sim.qte&&(tutT-=dt)<=0){sim.startQte('quake',3,5);tutT=1e9;}}   // 練習用：3 個圈、5 秒，沒全點到就再來一次
-  else if(S===3){if(!sim.pigeon)sim.pigeon={phase:'in',t:0,poops:0,lv:1,hp:1};}
-  else if((tutT-=dt)<=0)begin(false);
-}
-function start(){begin(!tutDone);}
-function begin(tut){
+function start(){
   Snd.init();Snd.blip(520,880,.16,'triangle',.1);
   paused=false;$('pause').hidden=true;
-  sim=new Sim((Math.random()*1e9)|0,tut);cloth.place(sim.s);tutSlide=null;tutMsgT=0;$('skip').hidden=!tut;$('dayBox').hidden=tut;mode='play';fallT=0;shake=0;inp.tap=inp.shoo=false;inp.hits.length=0;
+  sim=new Sim((Math.random()*1e9)|0);cloth.place(sim.s);mode='play';fallT=0;shake=0;inp.tap=inp.shoo=false;inp.hits.length=0;
   feathers.length=0;el.title.hidden=true;el.over.hidden=true;el.hud.hidden=false;el.dayN.textContent='1';el.wx.textContent=WX.sunny;lastWindKey='';lastFill=-1;lastWet=-1;lastDead=-1;torA=0;tiredT=0;crawls=0;ripples.length=0;stains.length=0;poopedToday=spatToday=false;drips.length=steam.length=sparks.length=0;
-  if(tut)tutGo(1);else banner('Day 1｜棉被被吹到鄰居的遮雨棚上了',false,3);
+  banner('Day 1｜棉被被吹到鄰居的遮雨棚上了',false,3);
 }
 function gameOver(){
   mode='over';paused=false;$('pause').hidden=true;const d=runDay;if(d>best){best=d;store.set('bb.best',String(d));}
@@ -797,7 +765,7 @@ function gameOver(){
   $('ovRank').textContent=RANKS.find(r=>d>=r[0])[1];$('ovFans').textContent=fmt(120+Math.pow(d,1.9)*40)+' 位追蹤者';
   $('copied').textContent='';el.hud.hidden=true;el.over.hidden=false;showBest();
 }
-function showBest(){el.best.textContent=best>0?`最佳紀錄　Day ${best}`:'';$('replay').hidden=!tutDone;}
+function showBest(){el.best.textContent=best>0?`最佳紀錄　Day ${best}`:'';}
 function handle(ev){
   switch(ev.type){
     case'day':{const w=sim.weather,d=sim.day,pooped=poopedToday,spat=spatToday;poopedToday=spatToday=false;el.dayN.textContent=d;el.wx.textContent=WX[w];Snd.blip(660,990,.14,'triangle',.07);
@@ -810,7 +778,6 @@ function handle(ev){
       stains.push({i:clamp(k-1-2*stains.length,4,NODES-2),off:(Math.random()-.5)*5});poopedToday=true;shake=Math.max(shake,3);
       banner('鴿子大便了！力氣上限變少，下雨才洗得掉',true,3.6);Snd.blip(260,90,.16,'square',.07);break;}
     case'clean':banner('雨把被被洗乾淨了，力氣上限恢復',false,3);Snd.blip(600,1000,.16,'triangle',.07);break;
-    case'tutReset':tutMsgT=3;cloth.place(sim.s);Snd.blip(260,180,.14,'triangle',.06);break;
     case'soaked':banner('被被濕透了：變重、爬得少，但比較不怕風',false,3.4);Snd.blip(300,180,.25,'sine',.08);break;
     case'dried':banner('曬乾了！蓬鬆的被被回力氣更快',false,3);Snd.blip(700,1200,.18,'triangle',.08);Snd.blip(900,1500,.2,'triangle',.07,.12);
       for(const n of cloth.p)if(Math.random()<.6)sparks.push({x:n.x+(Math.random()-.5)*10,y:n.y-R-4-Math.random()*14,life:.6+Math.random()*.5});break;
@@ -820,7 +787,6 @@ function handle(ev){
     case'qteHit':{const p=sim.qte?sim.qtePos(ev.i):null;if(p){ripples.push({x:p.x,y:p.y,life:.35,big:true});for(let i=0;i<4;i++)sparks.push({x:p.x+(Math.random()-.5)*26,y:p.y+(Math.random()-.5)*26,life:.5+Math.random()*.3});}
       Snd.blip(700+ev.i*90,1100+ev.i*90,.09,'triangle',.09);break;}
     case'qteEnd':{const what=ev.kind==='tor'?'龍捲風':'地震';
-      if(sim.tut){if(ev.c===1)tutGo(3);else{tutMsgT=2.6;tutT=1;Snd.blip(260,180,.14,'triangle',.06);}break;}
       if(ev.c===1){banner(`全部點到！${what}拿被被沒辦法`,false,2.6);Snd.blip(700,1200,.18,'triangle',.08);Snd.blip(900,1500,.2,'triangle',.07,.12);}
       else{banner(ev.c===0?`一個都沒點到，被被被${what}${ev.kind==='tor'?'捲':'震'}出去了！`:`漏了 ${ev.miss} 個，被被被${ev.kind==='tor'?'捲':'震'}出去一截`,true,3);shake=Math.max(shake,9);Snd.blip(320,120,.3,'sawtooth',.07);}
       break;}
@@ -832,7 +798,7 @@ function handle(ev){
     case'uncleStop':banner('阿伯被發現，縮回去了',false,1.8);Snd.blip(500,760,.1,'triangle',.08);Snd.blip(760,1000,.1,'triangle',.07,.1);break;
     case'spitDry':banner('痰乾掉了，爬得動了',false,2.2);Snd.blip(600,900,.14,'triangle',.06);break;
     case'pigeon':banner(ev.lv===3?'鴿王駕到！要點 5 下才趕得走':ev.lv===2?'胖鴿子來了！要點 3 下才趕得走':'鴿子來踩被被了，點牠趕走！',ev.lv===3,2.8);Snd.blip(430,350,.2,'sine',.08);Snd.blip(430,350,.22,'sine',.08,.26);break;
-    case'shoo':{const p=pigeonPos();if(p)for(let i=0;i<6;i++)feathers.push({x:p.x,y:p.y-10,vx:(Math.random()-.5)*120,vy:-40-Math.random()*60,a:Math.random()*TAU,life:1});Snd.blip(900,500,.1,'triangle',.06);if(sim.tut&&sim.tutStep===3)tutGo(4);break;}
+    case'shoo':{const p=pigeonPos();if(p)for(let i=0;i<6;i++)feathers.push({x:p.x,y:p.y-10,vx:(Math.random()-.5)*120,vy:-40-Math.random()*60,a:Math.random()*TAU,life:1});Snd.blip(900,500,.1,'triangle',.06);break;}
     case'crawl':cloth.crawl();crawls++;Snd.blip(230,340,.07,'sine',.09);break;
     case'tired':if(tiredT<=0)Snd.blip(180,130,.1,'triangle',.05);tiredT=1.4;break;
     case'gust':if(ev.dir>0&&ev.str>=270)Snd.blip(1300,1300,.04,'square',.025);break;
@@ -845,7 +811,6 @@ function tick(dt){
   time+=dt;
   if(mode==='play'){
 
-    if(sim.tut)tutTick(dt);
     sim.step(dt,inp);inp.tap=false;inp.shoo=false;inp.uncle=false;inp.hits.length=0;
     while(sim.events.length)handle(sim.events.shift());
     if(sim.qte)shake=Math.max(shake,sim.qte.kind==='quake'?6:3);
@@ -924,8 +889,6 @@ window.addEventListener('keydown',e=>{if(e.code==='Escape'||e.code==='KeyP'){if(
   if(mode==='title'||mode==='over'){start();return;}if(mode==='play'&&!sim.qte)inp.tap=true;});
 $('start').addEventListener('click',start);
 $('again').addEventListener('click',start);
-$('replay').addEventListener('click',()=>begin(true));
-$('skip').addEventListener('click',()=>{tutDone=true;store.set('bb.tut','1');begin(false);});
 $('pauseBtn').addEventListener('click',()=>setPaused(true));
 $('resume').addEventListener('click',()=>setPaused(false));
 el.mute.addEventListener('click',()=>{Snd.init();Snd.setOn(!Snd.on);muteIcon();});
