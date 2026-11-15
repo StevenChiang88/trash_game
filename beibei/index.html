@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
-<meta name="description" content="你是卡在遮雨棚上的那條棉被。按住抓緊，撐過強風、下雨、地震、颱風和鴿子，看你能撐幾天。">
+<meta name="description" content="你是卡在遮雨棚上的那條棉被。連點爬回牆邊、點掉圈圈，撐過強風、下雨、地震、龍捲風和鴿子，看你能撐幾天。">
 <meta name="theme-color" content="#9fd3ee">
 <link rel="canonical" href="https://stevenchiang88.github.io/trash_game/beibei/">
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
@@ -11,7 +11,7 @@
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="被被撐住">
 <meta property="og:title" content="被被撐住｜卡在遮雨棚上的棉被，今天掉了嗎？">
-<meta property="og:description" content="你是卡在遮雨棚上的那條棉被。按住抓緊，撐過強風、下雨、地震、颱風和鴿子，看你能撐幾天。">
+<meta property="og:description" content="你是卡在遮雨棚上的那條棉被。連點爬回牆邊、點掉圈圈，撐過強風、下雨、地震、龍捲風和鴿子，看你能撐幾天。">
 <meta property="og:url" content="https://stevenchiang88.github.io/trash_game/beibei/">
 <meta property="og:image" content="https://stevenchiang88.github.io/trash_game/beibei/og.png">
 <meta property="og:image:width" content="1200">
@@ -84,10 +84,6 @@ body{background:var(--sky);color:var(--ink);font-family:var(--body);font-weight:
 .post-b{min-width:0;display:flex;flex-direction:column;gap:1px;font-size:14px;line-height:1.35}
 .post-b b{font-weight:900;font-size:12px;opacity:.7}
 .post-b em{font-style:normal;font-family:var(--display);font-weight:600;font-size:13px;color:var(--alert)}
-.cue{position:absolute;left:0;right:0;top:59%;display:flex;flex-direction:column;align-items:center;gap:8px;font-weight:900;font-size:26px;color:var(--quilt);text-shadow:var(--sticker)}
-.cue i{width:60px;height:60px;border-radius:50%;border:5px solid var(--quilt);box-shadow:0 0 0 2.5px var(--ink),inset 0 0 0 2.5px var(--ink);animation:press .7s ease-in-out infinite}
-.cue.held i{background:var(--sun);animation:none;transform:scale(.82)}
-@keyframes press{50%{transform:scale(.8)}}
 .hint{align-self:center;text-align:center;font-weight:900;font-size:17px;color:var(--quilt);text-shadow:var(--sticker);min-height:1.5em;text-wrap:balance}
 .bars{display:flex;flex-direction:column;gap:6px}
 .stam span{min-width:2.3em}
@@ -99,7 +95,7 @@ body{background:var(--sky);color:var(--ink);font-family:var(--body);font-weight:
 .stam.low .fill{background:var(--alert)}
 .stam.held .track{border-style:dashed}
 .dead{position:absolute;inset:0 0 0 auto;width:0;border-left:2.5px solid var(--ink);background:repeating-linear-gradient(-45deg,var(--poop) 0 4px,var(--ink) 4px 7px)}
-.stam.lock .fill{background:repeating-linear-gradient(45deg,var(--alert) 0 6px,var(--quilt) 6px 12px)}
+
 
 .screen{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;gap:14px;padding-block:28px 24px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));text-align:center}
 .logo{margin:6vh 0 0;font-weight:900;font-size:clamp(52px,17vw,84px);line-height:1;letter-spacing:.02em;color:var(--quilt);text-shadow:var(--sticker),0 7px 0 var(--ink);transform:rotate(-4deg)}
@@ -133,7 +129,7 @@ body{background:var(--sky);color:var(--ink);font-family:var(--body);font-weight:
 .copied{font-size:13px;font-weight:900;color:var(--tin-deep);min-height:1.3em;user-select:text;-webkit-user-select:text}
 /* 比手機寬的螢幕：維持手機尺寸，置中顯示 */
 @media (min-aspect-ratio:10/16){body{background:var(--backdrop)}#game{height:min(100% - 32px,900px);border-radius:26px;box-shadow:0 0 0 3px var(--ink),0 18px 50px rgba(0,0,0,.45)}}
-@media (prefers-reduced-motion:reduce){.wind.warn,.card,.cue i{animation:none}.banner,.post{transition:none}}
+@media (prefers-reduced-motion:reduce){.wind.warn,.card{animation:none}.banner,.post{transition:none}}
 </style>
 </head>
 <body>
@@ -157,7 +153,7 @@ body{background:var(--sky);color:var(--ink);font-family:var(--body);font-weight:
       <div class="post-b"><b>棉被觀察日記</b><span id="postT"></span><em id="postL"></em></div>
     </div>
     <div class="hint" id="hint"></div>
-    <div class="cue" id="cue" hidden><i></i><span id="cueT">按住不放！</span></div>
+
     <div class="bars">
       <div class="stam wetrow"><span id="wetT">蓬鬆</span><div class="track"><div class="fill" id="wetFill" style="width:0%"></div></div></div>
       <div class="stam" id="stam"><span>力氣</span><div class="track"><div class="fill" id="fill"></div><div class="dead" id="dead" hidden></div></div></div>
@@ -169,8 +165,8 @@ body{background:var(--sky);color:var(--ink);font-family:var(--body);font-weight:
     <p class="tag">卡在遮雨棚上的那條棉被，今天掉了嗎？</p>
     <div class="gap"></div>
     <ul class="how">
-      <li><b>按住不放</b> 抓緊、煞車</li>
-      <li><b>連點</b> 沒風時爬回牆邊</li>
+      <li><b>連點</b> 頂住風、爬回牆邊</li>
+      <li><b>圈圈出現</b> 全部點掉</li>
       <li><b>點鴿子</b> 趕走牠</li>
     </ul>
     <button class="btn" id="start" type="button">開始曬被</button>
@@ -213,24 +209,36 @@ const SEG=10,NODES=15,BL=SEG*(NODES-1),S0=6,R=10;
 const A_EFF=AW_LEN-S0;
 
 /* ───────── 規則模型：棉被在鐵皮上的一維滑動 ───────── */
-const DAY_LEN=6,G=600,MU_FREE=.36,MU_RAIN=.28,MU_GRIP=1.6,H_FALL=.7;
-const KIN=.8;            // 動摩擦：一旦開始往外滑，鐵皮幾乎拉不住它，只有按住才停得下來
-const TOR_WARN=1.6,TOR_DUR=1.6,TOR_PULL=1000;   // 龍捲風：預告秒數、經過秒數、往外捲的力道（只有抓住擋得了）
-const HOLD_T=.14;        // 按住超過這麼久才算「抓」，比這短的都只是點一下
-const PIGEON_LOAD=.18,POOP_AT=1.8,DIRT_MAX=4,DIRT_COST=12;
-const ST_MAX=100,ST_DRAIN=18,ST_REGEN=15,ST_TAP=7,LOCK_T=1.1;
+const DAY_LEN=6,G=600,MU_FREE=.36,MU_RAIN=.28,H_FALL=.7;
+const KIN=.8;                        // 動摩擦：一旦開始往外滑就很難自己停下來，要點擊才煞得住
+const QTE_WARN=1.2,QTE_R=30;         // 圈圈事件（龍捲風、地震）：預告秒數、圈圈半徑
+const TOR_TOTAL=190,QUAKE_TOTAL=120; // 一個圈都沒點到時被推出去多遠；點掉幾成就少推幾成
+const PIGEON_LOAD=[0,.18,.19,.2],PIGEON_HP=[0,1,3,5];   // 鴿子等級 1～3：越大隻越重、要點越多下
+const POOP_AT=1.8,DIRT_MAX=4,DIRT_COST=12;
+const ST_MAX=100,ST_REGEN=15,ST_TAP=7;
 
 class Sim{
   constructor(seed,tut){this.tut=!!tut;this.tutStep=1;this.rng=rng32(seed);this.t=0;this.day=1;this.s=14;this.v=0;this.h=0;
-    this.st=ST_MAX;this.lock=0;this.regenWait=0;this.tapCd=0;this.gripping=false;this.holdT=0;this.gripK=0;
+    this.st=ST_MAX;this.regenWait=0;this.tapCd=0;this.effort=0;
     this.wet=0;this.slick=0;this.sun=0;this.soaked=false;this.wind=0;this.gust=null;this.gustWait=1.6;this.phi=this.rng()*TAU;
-    this.quake=0;this.quakeAt=-1;this.quakeWarned=false;this.jolt=0;this.joltT=0;this.hadQuake=false;
+    this.quake=0;this.quakeAt=-1;this.quakeWarned=false;this.hadQuake=false;this.qte=null;this.shove=0;this.shoveT=0;this.shoveCause='fall';
     this.pigeon=null;this.pigeonAt=-1;this.dirt=0;
     this.tyStart=9;this.tyLen=2;this.tyN=1;this.doomDone=false;
-    this.tor=null;this.torAt=-1;this.torPull=0;this.hadTor=false;this.cause='fall';
+    this.tor=null;this.torAt=-1;this.hadTor=false;this.cause='fall';
     this.fallen=false;this.events=[];this.weather='sunny';this.setupDay();}
   u(a,b){return a+(b-a)*this.rng()}
   get stMax(){return ST_MAX-DIRT_COST*this.dirt}   // 髒了，力氣上限就變少
+  get gripping(){return this.effort>0}             // 剛點過：正在用力
+  // 圈圈事件：龍捲風的圈會繞著轉，地震的圈會原地亂抖
+  startQte(kind,n,dur){
+    if(n===undefined)n=kind==='tor'?Math.min(8,3+Math.floor(this.day/8)):Math.min(6,3+Math.floor(this.day/12));   // 越後面圈越多
+    if(dur===undefined)dur=1+n*Math.max(.42,.62-.004*this.day);                                                  // 每個圈能用的時間越來越少
+    const q={kind,t:0,dur,n,hit:new Array(n).fill(false),a0:this.rng()*TAU,dir:this.rng()<.5?1:-1,pts:[]};
+    if(kind==='quake')for(let i=0;i<n;i++){let x,y,k=0;do{x=this.u(52,308);y=this.u(175,495);}while(k++<40&&q.pts.some(o=>Math.hypot(o.x-x,o.y-y)<78));q.pts.push({x,y});}
+    this.qte=q;this.gust=null;this.events.push({type:'qteStart',kind,n});}
+  qtePos(i){const q=this.qte;
+    if(q.kind==='tor'){const a=q.a0+i*TAU/q.n+q.dir*q.t*1.05;return{x:180+Math.cos(a)*104,y:345+Math.sin(a)*104};}
+    return{x:q.pts[i].x+Math.sin(q.t*41+i*2.3)*5,y:q.pts[i].y+Math.cos(q.t*37+i*1.7)*5};}
   setupDay(){
     const d=this.day,r=this.rng;let w;
     if(d>=this.tyStart+this.tyLen){this.tyStart=d+9+Math.floor(r()*6);this.tyLen=2+(d>40&&r()<.5?1:0);this.tyN++;w='sunny';}
@@ -243,17 +251,17 @@ class Sim{
     const t0=(d-1)*DAY_LEN;
     this.quakeAt=-1;this.quakeWarned=false;this.pigeonAt=-1;this.torAt=-1;
     if(w!=='doom'){
-      if(d===7||(d>10&&r()<.14))this.quakeAt=t0+this.u(1.6,3.6);
-      if(w!=='typhoon'&&this.quakeAt<0&&(d===6||(d>10&&r()<.12)))this.torAt=t0+this.u(2.2,3.4);
+      if(d===7||(d>10&&r()<.14))this.quakeAt=t0+this.u(1.6,3);
+      if(w!=='typhoon'&&this.quakeAt<0&&(d===6||(d>10&&r()<.12)))this.torAt=t0+this.u(1.8,2.6);
       if(w!=='typhoon'&&this.torAt<0&&(d===5||(d>6&&r()<.24)))this.pigeonAt=t0+this.u(.4,2.6);
     }
   }
   slipping(){const h=this.h,on=1-h,pg=this.pigeon;
-    const drive=G*(h*(1+.35*this.wet)+(pg&&pg.phase==='on'?PIGEON_LOAD:0)+on*SIN_)+this.wind*(.6+1.2*h)*(1-.35*this.wet);
-    return this.v>15||this.quake>0||this.torPull>0||drive-lerp(MU_FREE,MU_RAIN,this.slick)*G*UX*on>40;}
+    const drive=G*(h*(1+.35*this.wet)+(pg&&pg.phase==='on'?PIGEON_LOAD[pg.lv]:0)+on*SIN_)+this.wind*(.6+1.2*h)*(1-.35*this.wet);
+    return this.v>15||drive-lerp(MU_FREE,MU_RAIN,this.slick)*G*UX*on>40;}
   gustSpec(){
     const d=this.day,D=d/30,m=.76+.59*D,q=1+.25*Math.min(D,3);
-    if(this.tut)return this.tutStep===1?{a:200,b:215,g0:1.3,g1:1.7,h0:1.2,h1:1.4,right:1}:null;   // 教學：只在第一步吹風
+    if(this.tut)return null;   // 教學裡不吹陣風
     if(d===1)return{a:60,b:105,g0:2,g1:3,h0:.8,h1:1.4,right:.7};
     if(d===2)return{a:165,b:185,g0:2.2,g1:3,h0:.6,h1:.9,right:1};
     switch(this.weather){
@@ -271,7 +279,7 @@ class Sim{
     if(d!==this.day){const q=this.hadQuake,tq=this.hadTor;this.hadQuake=this.hadTor=false;this.day=d;this.setupDay();this.events.push({type:'day',afterQuake:q,afterTor:tq});}
 
     // 風：背景風 + 一陣一陣的陣風（先預告再吹）
-    const sp=this.gustSpec();let gustNow=0;
+    const sp=this.qte?null:this.gustSpec();let gustNow=0;   // 圈圈事件進行中先不吹陣風
     if(this.gust){const g=this.gust;g.t+=dt;const x=g.t-g.tele;
       const a=x<0?0:x<g.ramp?x/g.ramp:x<g.ramp+g.hold?1:1-(x-g.ramp-g.hold)/g.ramp;
       if(a<0){this.gust=null;this.gustWait=sp?this.u(sp.g0,sp.g1):1;}else gustNow=g.dir*g.str*a;}
@@ -293,62 +301,60 @@ class Sim{
     if(raining&&this.dirt>0){this.dirt=Math.max(0,this.dirt-(ty?.7:.5)*dt);if(this.dirt===0)this.events.push({type:'clean'});}   // 只有雨水洗得掉
     if(this.soaked&&w0>.02&&this.wet<=.02){this.soaked=false;this.events.push({type:'dried'});}
 
-    // 地震
+    // 地震、龍捲風：先預告，然後畫面上出現圈圈，點掉幾成就少被推出去幾成
     if(this.quakeAt>0){
-      if(!this.quakeWarned&&this.t>=this.quakeAt-1.2){this.quakeWarned=true;this.events.push({type:'quakeWarn'});}
-      if(this.t>=this.quakeAt){this.quakeAt=-1;this.quake=2.4;this.hadQuake=true;this.events.push({type:'quake'});}
+      if(!this.quakeWarned&&this.t>=this.quakeAt-QTE_WARN){this.quakeWarned=true;this.events.push({type:'quakeWarn'});}
+      if(this.t>=this.quakeAt&&!this.qte){this.quakeAt=-1;this.hadQuake=true;this.startQte('quake');}
     }
-    // 龍捲風：先預告，經過的那幾秒會把沒抓住的被被整條捲走
-    if(this.torAt>0&&this.t>=this.torAt-TOR_WARN){this.torAt=-1;this.tor={t:-TOR_WARN};this.hadTor=true;this.events.push({type:'torWarn'});}
-    this.torPull=0;
-    if(this.tor){const T=this.tor;T.t+=dt;this.torPull=clamp(Math.min((T.t+.3)/.3,(TOR_DUR-T.t)/.3),0,1);if(T.t>=TOR_DUR+.8)this.tor=null;}
-    if(this.quake>0){this.quake-=dt;this.joltT-=dt;if(this.joltT<=0){this.joltT=.08;this.jolt=this.u(-200,260);}}
+    if(this.torAt>0&&this.t>=this.torAt-QTE_WARN&&!this.tor){this.torAt=-1;this.tor={t:-QTE_WARN,started:false,leave:-1};this.hadTor=true;this.events.push({type:'torWarn'});}
+    if(this.tor){const T=this.tor;T.t+=dt;
+      if(!T.started&&T.t>=0&&!this.qte){T.started=true;this.startQte('tor');}
+      if(T.leave>=0&&(T.leave+=dt)>=.8)this.tor=null;}
+    if(this.qte){const q=this.qte;q.t+=dt;
+      if(inp.hits)for(const i of inp.hits)if(i>=0&&i<q.n&&!q.hit[i]){q.hit[i]=true;this.events.push({type:'qteHit',i});}
+      const got=q.hit.filter(Boolean).length;
+      if(got===q.n||q.t>=q.dur){const c=got/q.n,push=this.tut?0:(1-c)*(q.kind==='tor'?TOR_TOTAL:QUAKE_TOTAL);
+        if(push>0){this.shove+=push;this.shoveCause=q.kind==='tor'?'tornado':'quake';this.shoveT=push/520+1.6;}
+        this.qte=null;if(q.kind==='tor'&&this.tor)this.tor.leave=0;
+        this.events.push({type:'qteEnd',kind:q.kind,c,miss:q.n-got,push});}}
+    this.quake=this.qte&&this.qte.kind==='quake'?1:0;
 
     // 鴿子
-    if(this.pigeonAt>0&&this.t>=this.pigeonAt){this.pigeonAt=-1;this.pigeon={phase:'in',t:0,poops:0};this.events.push({type:'pigeon'});}
+    if(this.pigeonAt>0&&this.t>=this.pigeonAt){this.pigeonAt=-1;const x=this.rng(),lv=this.day>=20&&x<.2?3:this.day>=10&&x<.55?2:1;   // Day 10 起有胖鴿，Day 20 起有鴿王
+      this.pigeon={phase:'in',t:0,poops:0,lv,hp:PIGEON_HP[lv]};this.events.push({type:'pigeon',lv});}
     const pg=this.pigeon;
     if(pg){pg.t+=dt;
       // 沒被趕走就會大便，一隻最多兩坨
       if(pg.phase==='on'&&!this.tut&&!inp.shoo&&pg.poops<2&&pg.t>=POOP_AT*(pg.poops+1)){pg.poops++;this.dirt=Math.min(DIRT_MAX,this.dirt+1);this.events.push({type:'poop'});}
       if(pg.phase==='in'&&pg.t>=.8){pg.phase='on';pg.t=0;}
+      else if(pg.phase==='on'&&inp.shoo&&--pg.hp>0)this.events.push({type:'peck',hp:pg.hp});   // 大隻的要多點幾下
       else if(pg.phase==='on'&&((pg.t>=5&&!this.tut)||inp.shoo)){if(inp.shoo)this.events.push({type:'shoo'});pg.phase='out';pg.t=0;}
       else if(pg.phase==='out'&&pg.t>=.8)this.pigeon=null;}
 
-    // 力氣：按住抓緊會耗力，連點往內爬也耗力
-    this.tapCd-=dt;this.holdT=inp.grip?this.holdT+dt:0;
-    let grip=inp.grip&&this.holdT>=HOLD_T&&this.lock<=0&&this.st>0;
-    if(grip){this.st-=ST_DRAIN*(1+.25*this.wet)*(this.tor?.6:1)*dt;   // 龍捲風期間抓緊比較省力，不然撐不完
-     this.regenWait=.25;
-      if(this.st<=0){this.st=0;this.lock=LOCK_T;grip=false;this.events.push({type:'exhausted'});}}
-    else{this.lock=Math.max(0,this.lock-dt);
-      if(this.regenWait>0)this.regenWait-=dt;else if(!(pg&&pg.phase==='on'))this.st=Math.min(this.stMax,this.st+ST_REGEN*(this.wet<.05?1.2:1)*dt);}
+    // 力氣：每點一下都要力氣，停手才會恢復
+    this.tapCd-=dt;this.effort=Math.max(0,this.effort-dt);
+    const sitting=!!pg&&pg.phase==='on';
+    if(this.regenWait>0)this.regenWait-=dt;else if(!sitting)this.st=Math.min(this.stMax,this.st+ST_REGEN*(this.wet<.05?1.2:1)*dt);
     if(this.st>this.stMax)this.st=this.stMax;
     if(this.tut&&this.st<35)this.st=35;              // 教學裡不會沒力
-    if(inp.tap&&this.lock<=0&&this.st>=ST_TAP&&this.tapCd<=0){
-      this.tapCd=.1;this.regenWait=.25;
-      const f=this.torPull>.2?0:clamp(1-(this.wind-60)/100,0,1);        // 風往外吹時爬不動
-      if(this.v>15){this.st-=ST_TAP*.5;this.events.push({type:'skid'});}   // 正在往外滑：點擊煞不住，也爬不了
-      else if(this.st-=ST_TAP,f>0){this.v=Math.max(Math.min(this.v,0)-112*f*(1-.25*this.wet),-230);this.events.push({type:'crawl',f});}
-      else this.events.push({type:'blown'});}
-    const gk=grip?smooth(HOLD_T,HOLD_T+.08,this.holdT):0;       // 要按住一下才真的抓牢，連點不算抓
-    this.gripK=gk;this.gripping=gk>.5;
+    if(inp.tap&&this.tapCd<=0&&!this.qte){
+      if(this.st<ST_TAP)this.events.push({type:'tired'});
+      else{this.st-=ST_TAP;this.tapCd=.09;this.regenWait=.3;this.effort=.25;
+        const f=clamp(1-(this.wind-100)/600,.35,1);   // 頂著風爬，每一下爬得比較少
+        this.v=Math.max(Math.min(this.v,0)-112*f*(1-.25*this.wet),-230);this.events.push({type:'crawl',f});}}
 
     // 力學：垂在外面的越多，越會被自己拖下去
     const h=clamp((this.s+BL-A_EFF)/BL,0,1),on=1-h;this.h=h;
-    let drive=G*(h*(1+.35*this.wet)+(pg&&pg.phase==='on'?PIGEON_LOAD:0)+on*SIN_)+this.wind*(.6+1.2*h)*(1-.35*this.wet);
-    if(this.quake>0)drive+=this.jolt;
-    drive+=TOR_PULL*this.torPull*(1-gk);            // 抓牢了就完全不受龍捲風影響
-    const inward=this.v<-1||(Math.abs(this.v)<=1&&drive<0);
-    let mu=lerp(lerp(MU_FREE,MU_RAIN,this.slick)*(this.v>1?KIN:1),MU_GRIP,inward?0:gk);
-    if(this.quake>0)mu*=.6;
-    let fmax=mu*G*UX*on;
-    if(gk>0)fmax*=lerp(1,clamp(1-Math.max(0,Math.abs(this.wind)-300)/1400,.45,1),gk);
+    const drive=G*(h*(1+.35*this.wet)+(sitting?PIGEON_LOAD[pg.lv]:0)+on*SIN_)+this.wind*(.6+1.2*h)*(1-.35*this.wet);
+    const fmax=lerp(MU_FREE,MU_RAIN,this.slick)*(this.v>1?KIN:1)*G*UX*on;
     if(Math.abs(this.v)<1e-3){this.v=Math.abs(drive)<=fmax?0:(drive-Math.sign(drive)*fmax)*dt;}
     else{const nv=this.v+(drive-Math.sign(this.v)*fmax)*dt;this.v=(nv*this.v<0&&Math.abs(drive)<=fmax)?0:nv;}
     this.s+=this.v*dt;
+    if(this.shove>0){const m=Math.min(this.shove,520*dt);this.shove-=m;this.s+=m;if(this.v<0)this.v=0;}   // 被龍捲風／地震推出去
+    if(this.shoveT>0)this.shoveT-=dt;
     if(this.s<0){this.s=0;if(this.v<0)this.v=0;}
     if(this.tut){if(h>.36){this.s=8;this.v=0;this.events.push({type:'tutReset'});}}   // 教學裡不會掉，滑太遠就放回牆邊
-    else if(h>=H_FALL){this.fallen=true;this.cause=this.torPull>.3?'tornado':'fall';this.events.push({type:'fall'});}
+    else if(h>=H_FALL){this.fallen=true;this.cause=this.shoveT>0?this.shoveCause:'fall';this.events.push({type:'fall'});}
   }
 }
 const SIN_=UY;
@@ -366,7 +372,7 @@ class Cloth{
         let lift=Math.max(0,Math.sin(a*.085-o.time*12))*Math.min(aw/500,1.2)*4.5*(o.grip?.25:1)*(.35+.65*i/NODES)*(1-.6*o.wet);
         if(this.bump>=0){const dd=i-(1-this.bump)*(NODES-1);lift+=9*Math.exp(-dd*dd/3);}
         if(o.quake)lift+=Math.random()*2.5;
-        if(o.tor)lift+=o.tor.raw*(1+o.tor.k*6)*Math.random();
+        if(o.tor)lift+=o.tor.raw*(1.5+o.tor.k*6)*Math.random();
         n.px=n.x;n.py=n.y;n.x=WALL_X+UX*a+NX*(R+lift);n.y=AW_Y0+UY*a+NY*(R+lift);n.on=true;
       }else{
         const vx=(n.x-n.px)*.988,vy=(n.y-n.py)*.988,k=i/(NODES-1);
@@ -498,10 +504,10 @@ function skyAt(p,storm){let i=0;while(i<SKY.length-2&&p>SKY[i+1][0])i++;const a=
 
 /* 狀態 */
 let sim=new Sim(1),cloth=new Cloth(),mode='title',time=0,windVis=0,stormVis=0,rainVis=0,shake=0,flash=0,fallT=0,runDay=1,torX=500,torA=0;
-const inp={grip:false,tap:false,shoo:false},pointers=new Map();let keyDown=false,keyT=0;
-let best=parseInt(store.get('bb.best')||'0',10)||0,everGrip=false,everCrawl=false,crawls=0;
+const inp={tap:false,shoo:false,hits:[]},ripples=[];
+let best=parseInt(store.get('bb.best')||'0',10)||0,crawls=0;
 let tutDone=store.get('bb.tut')==='1'||store.get('bb.learned')==='1',tutT=0,tutMsgT=0,tutSlide=null;   // 教學只在第一次玩時出現，學過就記在 localStorage
-let holdAcc=0,gustRef=null,tapWarnT=0,cueOn=false,cueHeld=null,holdPt=null;
+let tiredT=0,peckT=0;const PIGEON_SC=[1,1,1.3,1.6];
 const clouds=[],streaks=[],drops=[],leaves=[],feathers=[],drips=[],steam=[],sparks=[],stains=[];let poopedToday=false;
 {const r=rng32(5);for(let i=0;i<7;i++)clouds.push({x:-500+r()*1400,y:40+r()*250,s:.7+r()*.9,v:.5+r()});
  for(let i=0;i<110;i++)drops.push({x:r()*1300-470,y:r()*900-130,l:9+r()*9});}
@@ -510,22 +516,28 @@ const laundry=[{x:150,w:22,h:34,c:'#f3b6c2',k:1},{x:182,w:26,h:26,c:'#9cc7e8',k:
 
 function pigeonPos(){const pg=sim.pigeon;if(!pg)return null;const P=cloth.p;let k=NODES-2;for(let i=1;i<NODES;i++)if(!P[i].on){k=Math.max(2,i-1);break;}
   const sx=P[k].x+NX*R,sy=P[k].y+NY*R;
-  if(pg.phase==='on')return{x:sx,y:sy+Math.abs(Math.sin(time*7))*-1.2,fly:false};
+  if(pg.phase==='on')return{x:sx,y:sy+Math.abs(Math.sin(time*7))*-1.2-(peckT>0?Math.sin(peckT/.22*Math.PI)*7:0),fly:false,lv:pg.lv,hp:pg.hp};
   const t=clamp(pg.t/.8,0,1),e=pg.phase==='in'?1-(1-t)*(1-t):1-t*t,fx=pg.phase==='in'?wx1+30:wx1+40,fy=pg.phase==='in'?210:120;
-  return{x:lerp(fx,sx,e),y:lerp(fy,sy,e)-Math.sin(e*Math.PI)*24,fly:true};}
+  return{x:lerp(fx,sx,e),y:lerp(fy,sy,e)-Math.sin(e*Math.PI)*24,fly:true,lv:pg.lv,hp:pg.hp};}
 
-function drawPigeon(c,p){c.save();c.translate(p.x,p.y);c.lineWidth=2;c.strokeStyle=INK;c.lineJoin='round';
+function drawPigeon(c,p){const sc=PIGEON_SC[p.lv],body=['','#98a1b3','#8490aa','#6f7a98'][p.lv];
+  c.save();c.translate(p.x,p.y);c.scale(sc,sc);c.lineWidth=2/sc+.6;c.strokeStyle=INK;c.lineJoin='round';
   if(!p.fly){c.strokeStyle='#e58a5b';c.beginPath();c.moveTo(-2,-3);c.lineTo(-2,0);c.moveTo(3,-3);c.lineTo(3,0);c.stroke();c.strokeStyle=INK;}
-  c.fillStyle='#98a1b3';c.beginPath();c.ellipse(1,-10,11,7.5,-.15,0,TAU);c.fill();c.stroke();
+  c.fillStyle=body;c.beginPath();c.ellipse(1,-10,p.lv>1?12.5:11,p.lv>1?8.6:7.5,-.15,0,TAU);c.fill();c.stroke();
   c.beginPath();c.moveTo(10,-11);c.lineTo(19,-8);c.lineTo(10,-6);c.closePath();c.fill();c.stroke();
-  c.fillStyle='#98a1b3';c.beginPath();c.arc(-8,-18,5.5,0,TAU);c.fill();c.stroke();
+  c.fillStyle=body;c.beginPath();c.arc(-8,-18,5.5,0,TAU);c.fill();c.stroke();
   c.fillStyle='#7ab79e';c.beginPath();c.ellipse(-6,-13,4,2.6,.5,0,TAU);c.fill();
   c.fillStyle='#f0a13c';c.beginPath();c.moveTo(-13,-18.5);c.lineTo(-18,-17);c.lineTo(-13,-16);c.closePath();c.fill();
   c.fillStyle=INK;c.beginPath();c.arc(-9.5,-19,1.2,0,TAU);c.fill();
-  c.fillStyle='#6f7889';c.beginPath();
+  c.fillStyle=p.lv===3?'#566080':'#6f7889';c.beginPath();
   if(p.fly){const f=Math.sin(time*32)*13;c.moveTo(-4,-12);c.quadraticCurveTo(3,-14-f,12,-12-f*1.25);c.lineTo(8,-9);c.closePath();}
   else c.ellipse(3,-10,7.5,4.5,.1,0,TAU);
-  c.fill();c.stroke();c.restore();}
+  c.fill();c.stroke();
+  if(p.lv===3){c.fillStyle='#ffc64a';c.beginPath();c.moveTo(-13,-23);c.lineTo(-13.5,-30);c.lineTo(-10.5,-26.5);c.lineTo(-8,-31);c.lineTo(-5.5,-26.5);c.lineTo(-2.5,-30);c.lineTo(-3,-23);c.closePath();c.fill();c.stroke();}   // 鴿王的皇冠
+  c.restore();
+  // 還要點幾下：頭上的小圓點
+  if(!p.fly&&PIGEON_HP[p.lv]>1){const n=PIGEON_HP[p.lv],top=p.y-(p.lv===3?37:27)*sc-8;
+    for(let i=0;i<n;i++){const x=p.x-8*sc+(i-(n-1)/2)*11;c.fillStyle=INK;c.beginPath();c.arc(x,top,5,0,TAU);c.fill();c.fillStyle=i<p.hp?'#ee5b3a':'#fffdf5';c.beginPath();c.arc(x,top,3.2,0,TAU);c.fill();}}}
 
 function drawBlanket(c){
   const P=cloth.p,n=NODES,wet=wetVis(),RR=R+1.2-2.2*wet;
@@ -558,7 +570,7 @@ function drawBlanket(c){
     c.beginPath();c.moveTo(-7.5,-4);c.lineTo(-3.5,-1.5);c.lineTo(-7.5,1);c.moveTo(7.5,-4);c.lineTo(3.5,-1.5);c.lineTo(7.5,1);c.stroke();
     c.beginPath();c.moveTo(-3,4.5);c.lineTo(-1,3.2);c.lineTo(1,4.5);c.lineTo(3,3.2);c.stroke();
     c.fillStyle='#8fc7ee';c.beginPath();c.ellipse(14,-6+((time*30)%7),1.6,2.6,0,0,TAU);c.fill();
-  }else if(sim.lock>0&&mode==='play'){
+  }else if(mode==='play'&&sim.st<ST_TAP){
     c.beginPath();c.moveTo(-7.5,-2.5);c.lineTo(-3,-.5);c.moveTo(7.5,-2.5);c.lineTo(3,-.5);c.stroke();c.fillStyle='#f28c96';c.beginPath();c.ellipse(0,5,2.6,3,0,0,TAU);c.fill();c.stroke();
   }else if(sleepy){
     c.beginPath();c.arc(-5,-2,2.6,.15,Math.PI-.15);c.moveTo(7.6,-1.6);c.arc(5,-2,2.6,.15,Math.PI-.15);c.stroke();c.beginPath();c.arc(0,4,1.3,0,TAU);c.fill();
@@ -607,13 +619,6 @@ function render(){
   // 棉被與鴿子
   drawBlanket(g);
   const pp=pigeonPos();if(pp)drawPigeon(g,pp);
-  // 手指按住的位置：圈圈收緊＝抓牢了
-  if(mode==='play'&&pointers.size>0&&holdPt){const k2=sim.gripK,r=30-9*k2;g.globalAlpha=.9;g.lineWidth=7;g.strokeStyle=INK;g.beginPath();g.arc(holdPt.x,holdPt.y,r,0,TAU);g.stroke();
-    g.lineWidth=3.2;g.strokeStyle=sim.lock>0?'#ee5b3a':k2>.5?'#ffc64a':'#fffdf5';g.beginPath();g.arc(holdPt.x,holdPt.y,r,0,TAU);g.stroke();g.globalAlpha=1;}
-  g.fillStyle='#7fc1f0';for(const d of drips){g.beginPath();g.moveTo(d.x,d.y-4);g.quadraticCurveTo(d.x+2.6,d.y,d.x,d.y+2);g.quadraticCurveTo(d.x-2.6,d.y,d.x,d.y-4);g.fill();}
-  g.strokeStyle='#fffdf5';g.lineWidth=1.8;g.lineCap='round';for(const w of steam){g.globalAlpha=clamp(w.life*1.4,0,.75);const q=Math.sin(w.life*9+w.p)*3;g.beginPath();g.moveTo(w.x,w.y);g.quadraticCurveTo(w.x+q,w.y-5,w.x,w.y-10);g.quadraticCurveTo(w.x-q,w.y-15,w.x,w.y-19);g.stroke();}
-  g.fillStyle='#ffe58a';for(const k of sparks){g.globalAlpha=clamp(k.life*2,0,1);const r=4*k.life+1.5;g.beginPath();g.moveTo(k.x,k.y-r);g.lineTo(k.x+r*.3,k.y-r*.3);g.lineTo(k.x+r,k.y);g.lineTo(k.x+r*.3,k.y+r*.3);g.lineTo(k.x,k.y+r);g.lineTo(k.x-r*.3,k.y+r*.3);g.lineTo(k.x-r,k.y);g.lineTo(k.x-r*.3,k.y-r*.3);g.fill();}
-  g.globalAlpha=1;
   for(const f of feathers){g.globalAlpha=clamp(f.life,0,1);g.fillStyle='#c9d0dc';g.beginPath();g.ellipse(f.x,f.y,4,1.6,f.a,0,TAU);g.fill();}g.globalAlpha=1;
   // 風的線條、落葉、雨
   g.lineCap='round';g.strokeStyle='#fffdf5';g.lineWidth=1.6;
@@ -636,11 +641,22 @@ function render(){
   if(tintA>.01){g.globalCompositeOperation='multiply';g.fillStyle=css(mix([112,120,190],[120,128,140],stormVis/(night+stormVis+.001)));g.globalAlpha=Math.min(tintA,.7);g.fillRect(0,0,W,H);g.globalAlpha=1;g.globalCompositeOperation='source-over';}
   if(night>.05){g.setTransform(k,0,0,k,(ox+sx)*dpr,(oy+sy)*dpr);g.fillStyle='#ffd98a';g.globalAlpha=night*.9;for(const l of sky.lights){if(l.x<WALL_X||l.x>wx1)continue;g.fillRect(l.x,l.y,l.w,l.h);}
     for(let x=24;x>wx0-60;x-=132){g.fillRect(x,428,20,25);g.fillRect(x+22,428,20,25);}g.globalAlpha=1;g.setTransform(1,0,0,1,0,0);}
+  g.setTransform(k,0,0,k,ox*dpr,oy*dpr);g.lineCap='round';
+  for(const r of ripples){const e=1-r.life/.35;g.globalAlpha=(1-e)*.9;g.lineWidth=3;g.strokeStyle=r.bad?'#ee5b3a':'#fffdf5';g.beginPath();g.arc(r.x,r.y,8+e*(r.big?34:20),0,TAU);g.stroke();}
+  g.globalAlpha=1;
+  if(mode==='play'&&sim.qte){const q=sim.qte,left=clamp(1-q.t/q.dur,0,1),urgent=left<.3,pulse=1+.06*Math.sin(time*14);
+    for(let i=0;i<q.n;i++){if(q.hit[i])continue;const p=sim.qtePos(i),rad=QTE_R*pulse;
+      g.fillStyle='rgba(255,253,245,.34)';g.beginPath();g.arc(p.x,p.y,rad,0,TAU);g.fill();
+      g.lineWidth=8;g.strokeStyle=INK;g.beginPath();g.arc(p.x,p.y,rad,0,TAU);g.stroke();
+      g.lineWidth=4;g.strokeStyle='#fffdf5';g.beginPath();g.arc(p.x,p.y,rad,0,TAU);g.stroke();
+      g.strokeStyle=urgent?'#ee5b3a':'#ffc64a';g.beginPath();g.arc(p.x,p.y,rad,-Math.PI/2,-Math.PI/2+TAU*left);g.stroke();   // 外圈：剩餘時間
+      g.fillStyle=INK;g.beginPath();g.arc(p.x,p.y,7,0,TAU);g.fill();g.fillStyle=urgent?'#ee5b3a':'#ffc64a';g.beginPath();g.arc(p.x,p.y,4.4,0,TAU);g.fill();}}
+  g.setTransform(1,0,0,1,0,0);
   if(flash>0){g.fillStyle='#fff';g.globalAlpha=flash*.6;g.fillRect(0,0,W,H);g.globalAlpha=1;}
 }
 
 /* ───────── HUD ───────── */
-const el={hud:$('hud'),dayN:$('dayN'),wx:$('wx'),wind:$('wind'),windT:$('windT'),windA:$('windA'),banner:$('banner'),post:$('post'),postT:$('postT'),postL:$('postL'),hint:$('hint'),stam:$('stam'),fill:$('fill'),dead:$('dead'),cue:$('cue'),cueT:$('cueT'),wetT:$('wetT'),wetFill:$('wetFill'),vig:$('vig'),title:$('title'),over:$('over'),best:$('best'),mute:$('mute')};
+const el={hud:$('hud'),dayN:$('dayN'),wx:$('wx'),wind:$('wind'),windT:$('windT'),windA:$('windA'),banner:$('banner'),post:$('post'),postT:$('postT'),postL:$('postL'),hint:$('hint'),stam:$('stam'),fill:$('fill'),dead:$('dead'),wetT:$('wetT'),wetFill:$('wetFill'),vig:$('vig'),title:$('title'),over:$('over'),best:$('best'),mute:$('mute')};
 const WX={sunny:'晴',breezy:'風大',rain:'雨',typhoon:'颱風',doom:'晴'};
 const POSTS={sunny:['還在。','今天也沒掉。','它還在。','屹立不搖。','曬得很舒服的樣子。'],breezy:['風有點大，還在。','被吹歪了一點，沒掉。','還在，只是有點皺。'],rain:['淋濕了，還在。','下雨天，它還在。','變重了，但沒掉。'],typhoon:['颱風天，還在！','放颱風假，它沒放。','風超大，它還在！'],doom:['今天是末日預言日。它還在。']};
 const RANKS=[[365,'國民棉被'],[100,'百日信仰'],[60,'地方傳奇'],[30,'滿月被被'],[14,'撐過梅雨的被被'],[7,'一週戰士'],[3,'三分鐘熱度被'],[0,'曬一下就掉了']];
@@ -658,7 +674,7 @@ function hud(dt){
   if(postT>0){postT-=dt;if(postT<=0)el.post.classList.remove('show');}
   const gst=sim.gust;let dir,str,warn=false;
   if(gst){dir=gst.dir;str=gst.str;warn=gst.t<gst.tele;}else{str=Math.abs(sim.wind);dir=str<50?0:Math.sign(sim.wind);}
-  const torOn=mode==='play'&&!!sim.tor&&sim.tor.t<TOR_DUR;if(torOn){dir=1;str=999;warn=sim.tor.t<0;}
+  const torOn=mode==='play'&&!!sim.tor&&sim.tor.leave<0;if(torOn){dir=1;str=999;warn=sim.tor.t<0;}
   const lv=str<50?0:str<160?1:str<300?2:str<480?3:4,key=dir+'|'+lv+'|'+warn+'|'+torOn;
   if(key!==lastWindKey){lastWindKey=key;el.windT.textContent=torOn?'龍捲風':['無風','微風','有風','強風','暴風'][dir?lv:0];
     el.windA.innerHTML=dir?`<svg viewBox="0 0 9 14" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="${dir>0?'M2.5 2.5 7 7l-4.5 4.5':'M6.5 2.5 2 7l4.5 4.5'}"/></svg>`.repeat(Math.min(3,Math.max(1,lv-1))):'';
@@ -667,61 +683,54 @@ function hud(dt){
   const wv=Math.round(sim.wet*100);if(wv!==lastWet){lastWet=wv;el.wetFill.style.width=wv+'%';el.wetT.textContent=wv<5?'蓬鬆':wv<35?'微濕':wv<80?'濕濕':'濕透';}
   const dd=Math.round(DIRT_COST*sim.dirt);if(dd!==lastDead){lastDead=dd;el.dead.hidden=dd<=0;el.dead.style.width=dd+'%';}
   const f=Math.round(sim.st);if(f!==lastFill){lastFill=f;el.fill.style.width=f+'%';}
-  el.stam.classList.toggle('low',sim.st<28&&sim.lock<=0);el.stam.classList.toggle('lock',sim.lock>0);el.stam.classList.toggle('held',!!(sim.pigeon&&sim.pigeon.phase==='on'));
-  if(tapWarnT>0)tapWarnT=sim.gripping?0:tapWarnT-dt;
-  const sliding=mode==='play'&&sim.v>20&&!sim.gripping;
-  const showCue=mode==='play'&&sim.lock<=0&&(torOn||(sim.tut&&sim.tutStep===1&&!!gst&&gst.dir>0));
-  if(showCue!==cueOn){cueOn=showCue;el.cue.hidden=!showCue;}
-  if(showCue&&sim.gripping!==cueHeld){cueHeld=sim.gripping;el.cue.classList.toggle('held',cueHeld);el.cueT.textContent=cueHeld?'很好，撐住！':'按住不放！';}
+  el.stam.classList.toggle('low',sim.st<ST_TAP*3);el.stam.classList.toggle('held',!!(sim.pigeon&&sim.pigeon.phase==='on'));
+  if(tiredT>0)tiredT-=dt;if(peckT>0)peckT-=dt;
   el.vig.style.opacity=mode==='play'?(clamp((sim.h-.22)/.35,0,1)*(.75+.25*Math.sin(time*9))).toFixed(2):'0';
   if(tutMsgT>0)tutMsgT-=dt;
-  if(mode==='play'&&sim.tut){const S=sim.tutStep,blowing=!!gst&&gst.dir>0;
-    if(S===1)setHint(sim.gripping&&blowing?'很好，撐住！先不要放':tutMsgT>0?'滑出去了，再試一次：風來時按住不放':blowing?'風來了！按住螢幕不放':'等風來…右上角的風向會先閃');
-    else if(S===2)setHint(sim.gripping?'現在沒風，不用按住，連點就好':'連點螢幕，一下一下爬回牆邊');
+  if(mode==='play'&&sim.tut){const S=sim.tutStep;
+    if(S===1)setHint('連點螢幕，一下一下爬回牆邊');
+    else if(S===2)setHint(tutMsgT>0?'沒全部點到，再試一次':'圈圈出現了，在時間內全部點掉');
     else if(S===3)setHint('點鴿子，把牠趕走');
     else setHint('');
   }else if(mode==='play'){
-    if(sim.lock>0)setHint('沒力了…');
-    else if(torOn)setHint('龍捲風！只有按住不放才撐得住');
-    else if(sliding)setHint('正在滑！按住不放才停得下來');
-    else if(tapWarnT>0)setHint('風大時連點沒用，要按住不放！');
-    else if(sim.pigeon&&sim.pigeon.phase==='on')setHint('鴿子踩著會往外滑，還會大便。點牠！');
-    else if(sim.h>.04&&(crawls<4||sim.day<=6))setHint(sim.wind>110?'先按住不放！等風小再連點爬回去':'滑出去了！趁風小連點爬回牆邊');
-    else if(sim.h>.3)setHint(sim.wind>110?'按住不放！':'連點！往牆邊爬！');
-    else if(!everGrip&&sim.day<=2)setHint('風往外吹的時候，按住螢幕不放');
-    else if(sim.day===3&&!everCrawl)setHint('放開休息才會回力氣');
+    if(sim.qte)setHint(sim.qte.kind==='tor'?'龍捲風！把圈圈全部點掉':'地震！把圈圈全部點掉');
+    else if(tiredT>0)setHint('沒力了…停一下再點');
+    else if(sim.pigeon&&sim.pigeon.phase==='on')setHint(sim.pigeon.hp>1?`還要點 ${sim.pigeon.hp} 下才趕得走！`:'鴿子踩著會往外滑，還會大便。點牠！');
+    else if(sim.v>20)setHint('正在滑！快連點');
+    else if(sim.h>.3)setHint('連點！往牆邊爬！');
+    else if(sim.h>.04&&(crawls<8||sim.day<=6))setHint('滑出去了！連點爬回牆邊');
     else setHint('');
   }
 }
 
 /* ───────── 流程 ───────── */
-const TUT=['','教學 1/3｜風往外吹時，按住不放','教學 2/3｜沒風時，連點爬回牆邊','教學 3/3｜鴿子來了，點牠趕走','學會了！正式開始'];
+const TUT=['','教學 1/3｜連點螢幕，爬回牆邊','教學 2/3｜圈圈出現，全部點掉','教學 3/3｜鴿子來了，點牠趕走','學會了！正式開始'];
 function tutGo(n){
   sim.tutStep=n;banner(TUT[n],false,999);tutMsgT=0;
-  if(n===2){sim.gust=null;tutSlide={from:sim.s,t:0};}                 // 把被被往外推一點，讓玩家爬回來
+  if(n===1)tutSlide={from:sim.s,t:0};                                  // 先把被被往外推一點，讓玩家爬回來
+  if(n===2)tutT=.6;
   if(n===4){tutT=1.5;tutDone=true;store.set('bb.tut','1');Snd.blip(700,1200,.18,'triangle',.08);Snd.blip(900,1500,.2,'triangle',.07,.12);
     for(const q of cloth.p)sparks.push({x:q.x+(Math.random()-.5)*10,y:q.y-R-4-Math.random()*14,life:.6+Math.random()*.5});}
-  else Snd.blip(520,780,.12,'triangle',.07);
+  else if(n>1)Snd.blip(520,780,.12,'triangle',.07);
 }
 function tutTick(dt){
-  const S=sim.tutStep,gg=sim.gust;
-  if(S===1){if(gg!==gustRef){const ok=gustRef&&gustRef.dir>0&&holdAcc>=.6;gustRef=gg;holdAcc=0;if(ok){tutGo(2);return;}}
-    if(gg&&gg.dir>0&&gg.t>gg.tele&&sim.gripping)holdAcc+=dt;}
-  else if(S===2){if(tutSlide){tutSlide.t+=dt/.5;const e=clamp(tutSlide.t,0,1);sim.s=lerp(tutSlide.from,46,e*e*(3-2*e));sim.v=0;if(e>=1)tutSlide=null;}
-    else if(sim.s<8&&Math.abs(sim.v)<5)tutGo(3);}
-  else if(S===3){if(!sim.pigeon)sim.pigeon={phase:'in',t:0,poops:0};}
+  const S=sim.tutStep;
+  if(S===1){if(tutSlide){tutSlide.t+=dt/.6;const e=clamp(tutSlide.t,0,1);sim.s=lerp(tutSlide.from,48,e*e*(3-2*e));sim.v=0;if(e>=1)tutSlide=null;}
+    else if(sim.s<8&&Math.abs(sim.v)<5)tutGo(2);}
+  else if(S===2){if(!sim.qte&&(tutT-=dt)<=0){sim.startQte('quake',3,5);tutT=1e9;}}   // 練習用：3 個圈、5 秒，沒全點到就再來一次
+  else if(S===3){if(!sim.pigeon)sim.pigeon={phase:'in',t:0,poops:0,lv:1,hp:1};}
   else if((tutT-=dt)<=0)begin(false);
 }
 function start(){begin(!tutDone);}
 function begin(tut){
   Snd.init();Snd.blip(520,880,.16,'triangle',.1);
-  sim=new Sim((Math.random()*1e9)|0,tut);cloth.place(sim.s);tutSlide=null;tutMsgT=0;$('skip').hidden=!tut;$('dayBox').hidden=tut;mode='play';fallT=0;shake=0;inp.grip=inp.tap=inp.shoo=false;pointers.clear();keyDown=false;
-  feathers.length=0;el.title.hidden=true;el.over.hidden=true;el.hud.hidden=false;el.dayN.textContent='1';el.wx.textContent=WX.sunny;lastWindKey='';lastFill=-1;lastWet=-1;lastDead=-1;torA=0;tapWarnT=0;gustRef=null;holdAcc=0;stains.length=0;poopedToday=false;drips.length=steam.length=sparks.length=0;
-  if(tut)banner(TUT[1],false,999);else banner('Day 1｜棉被被吹到鄰居的遮雨棚上了',false,3);
+  sim=new Sim((Math.random()*1e9)|0,tut);cloth.place(sim.s);tutSlide=null;tutMsgT=0;$('skip').hidden=!tut;$('dayBox').hidden=tut;mode='play';fallT=0;shake=0;inp.tap=inp.shoo=false;inp.hits.length=0;
+  feathers.length=0;el.title.hidden=true;el.over.hidden=true;el.hud.hidden=false;el.dayN.textContent='1';el.wx.textContent=WX.sunny;lastWindKey='';lastFill=-1;lastWet=-1;lastDead=-1;torA=0;tiredT=0;crawls=0;ripples.length=0;stains.length=0;poopedToday=false;drips.length=steam.length=sparks.length=0;
+  if(tut)tutGo(1);else banner('Day 1｜棉被被吹到鄰居的遮雨棚上了',false,3);
 }
 function gameOver(){
   mode='over';const d=runDay;if(d>best){best=d;store.set('bb.best',String(d));}
-  $('ovHow').textContent=sim.cause==='tornado'?'它被龍捲風捲走了。':'它掉了。';
+  $('ovHow').textContent=sim.cause==='tornado'?'它被龍捲風捲走了。':sim.cause==='quake'?'它被地震震下去了。':'它掉了。';
   $('ovDay').textContent='Day '+d;$('ovRun').textContent='Day '+d;$('ovBest').textContent='Day '+best;
   $('ovRank').textContent=RANKS.find(r=>d>=r[0])[1];$('ovFans').textContent=fmt(120+Math.pow(d,1.9)*40)+' 位追蹤者';
   $('copied').textContent='';el.hud.hidden=true;el.over.hidden=false;showBest();
@@ -731,30 +740,35 @@ function handle(ev){
   switch(ev.type){
     case'day':{const w=sim.weather,d=sim.day,pooped=poopedToday;poopedToday=false;el.dayN.textContent=d;el.wx.textContent=WX[w];Snd.blip(660,990,.14,'triangle',.07);
       const list=POSTS[w];post(ev.afterTor?'龍捲風過了，還在。':ev.afterQuake?'地震完，還在。':pooped?'被鴿子大便了，但還在。':w==='sunny'&&sim.wet>.3?'出太陽了，正在曬乾。':list[Math.floor(Math.random()*list.length)]);
-      if(w==='typhoon'&&d===sim.tyStart){banner('陸上颱風警報　抓緊！',true,3);Snd.blip(300,620,.5,'sawtooth',.05);Snd.blip(620,300,.5,'sawtooth',.05,.5);}
+      if(w==='typhoon'&&d===sim.tyStart){banner('陸上颱風警報　風會很大！',true,3);Snd.blip(300,620,.5,'sawtooth',.05);Snd.blip(620,300,.5,'sawtooth',.05,.5);}
       else if(w==='rain'&&d===4)banner('下雨了：鐵皮變滑，被被會吸水變重',false,3.2);
       else if(w==='doom')banner('聽說今天是世界末日',false,3);
-      else if(d===3)banner('沒風的時候連點，可以往牆邊爬回去',false,3);
       break;}
     case'poop':{const P=cloth.p;let k=NODES-2;for(let i=1;i<NODES;i++)if(!P[i].on){k=Math.max(2,i-1);break;}
       stains.push({i:clamp(k-1-2*stains.length,4,NODES-2),off:(Math.random()-.5)*5});poopedToday=true;shake=Math.max(shake,3);
       banner('鴿子大便了！力氣上限變少，下雨才洗得掉',true,3.6);Snd.blip(260,90,.16,'square',.07);break;}
     case'clean':banner('雨把被被洗乾淨了，力氣上限恢復',false,3);Snd.blip(600,1000,.16,'triangle',.07);break;
     case'tutReset':tutMsgT=3;cloth.place(sim.s);Snd.blip(260,180,.14,'triangle',.06);break;
-    case'soaked':banner('被被濕透了：變重、抓緊更累，但比較不怕風',false,3.4);Snd.blip(300,180,.25,'sine',.08);break;
+    case'soaked':banner('被被濕透了：變重、爬得少，但比較不怕風',false,3.4);Snd.blip(300,180,.25,'sine',.08);break;
     case'dried':banner('曬乾了！蓬鬆的被被回力氣更快',false,3);Snd.blip(700,1200,.18,'triangle',.08);Snd.blip(900,1500,.2,'triangle',.07,.12);
       for(const n of cloth.p)if(Math.random()<.6)sparks.push({x:n.x+(Math.random()-.5)*10,y:n.y-R-4-Math.random()*14,life:.6+Math.random()*.5});break;
-    case'torWarn':banner('龍捲風警報！按住不放才不會被捲走',true,3.6);for(let i=0;i<4;i++)Snd.blip(i%2?520:700,i%2?520:700,.2,'sawtooth',.05,i*.22);break;
-    case'quakeWarn':banner('國家級警報：地震，請抓緊',true,4);for(let i=0;i<3;i++)Snd.blip(880,880,.16,'square',.05,i*.24);break;
-    case'quake':shake=10;break;
-    case'pigeon':banner('鴿子來踩被被了，點牠趕走！',false,2.6);Snd.blip(430,350,.2,'sine',.08);Snd.blip(430,350,.22,'sine',.08,.26);break;
+    case'torWarn':banner('龍捲風警報！圈圈出現就全部點掉',true,3);for(let i=0;i<4;i++)Snd.blip(i%2?520:700,i%2?520:700,.2,'sawtooth',.05,i*.22);break;
+    case'quakeWarn':banner('國家級警報：地震！圈圈出現就全部點掉',true,3);for(let i=0;i<3;i++)Snd.blip(880,880,.16,'square',.05,i*.24);break;
+    case'qteStart':shake=Math.max(shake,ev.kind==='quake'?10:5);Snd.blip(300,600,.12,'square',.05);break;
+    case'qteHit':{const p=sim.qte?sim.qtePos(ev.i):null;if(p){ripples.push({x:p.x,y:p.y,life:.35,big:true});for(let i=0;i<4;i++)sparks.push({x:p.x+(Math.random()-.5)*26,y:p.y+(Math.random()-.5)*26,life:.5+Math.random()*.3});}
+      Snd.blip(700+ev.i*90,1100+ev.i*90,.09,'triangle',.09);break;}
+    case'qteEnd':{const what=ev.kind==='tor'?'龍捲風':'地震';
+      if(sim.tut){if(ev.c===1)tutGo(3);else{tutMsgT=2.6;tutT=1;Snd.blip(260,180,.14,'triangle',.06);}break;}
+      if(ev.c===1){banner(`全部點到！${what}拿被被沒辦法`,false,2.6);Snd.blip(700,1200,.18,'triangle',.08);Snd.blip(900,1500,.2,'triangle',.07,.12);}
+      else{banner(ev.c===0?`一個都沒點到，被被被${what}${ev.kind==='tor'?'捲':'震'}出去了！`:`漏了 ${ev.miss} 個，被被被${ev.kind==='tor'?'捲':'震'}出去一截`,true,3);shake=Math.max(shake,9);Snd.blip(320,120,.3,'sawtooth',.07);}
+      break;}
+    case'peck':{peckT=.22;const p=pigeonPos();if(p)for(let i=0;i<3;i++)feathers.push({x:p.x,y:p.y-12,vx:(Math.random()-.5)*110,vy:-30-Math.random()*50,a:Math.random()*TAU,life:.8});Snd.blip(520,380,.08,'square',.05);break;}
+    case'pigeon':banner(ev.lv===3?'鴿王駕到！要點 5 下才趕得走':ev.lv===2?'胖鴿子來了！要點 3 下才趕得走':'鴿子來踩被被了，點牠趕走！',ev.lv===3,2.8);Snd.blip(430,350,.2,'sine',.08);Snd.blip(430,350,.22,'sine',.08,.26);break;
     case'shoo':{const p=pigeonPos();if(p)for(let i=0;i<6;i++)feathers.push({x:p.x,y:p.y-10,vx:(Math.random()-.5)*120,vy:-40-Math.random()*60,a:Math.random()*TAU,life:1});Snd.blip(900,500,.1,'triangle',.06);if(sim.tut&&sim.tutStep===3)tutGo(4);break;}
-    case'crawl':cloth.crawl();everCrawl=true;crawls++;Snd.blip(230,340,.07,'sine',.09);if(ev.f<.4)tapWarnT=2.6;break;
-    case'skid':tapWarnT=0;shake=Math.max(shake,3);Snd.blip(160,120,.09,'sawtooth',.05);break;
-    case'blown':cloth.crawl();tapWarnT=2.6;shake=Math.max(shake,4);Snd.blip(180,110,.12,'sawtooth',.06);break;
-    case'exhausted':Snd.blip(320,140,.3,'triangle',.08);break;
+    case'crawl':cloth.crawl();crawls++;Snd.blip(230,340,.07,'sine',.09);break;
+    case'tired':if(tiredT<=0)Snd.blip(180,130,.1,'triangle',.05);tiredT=1.4;break;
     case'gust':if(ev.dir>0&&ev.str>=270)Snd.blip(1300,1300,.04,'square',.025);break;
-    case'fall':mode='fall';fallT=0;runDay=sim.day;shake=8;el.vig.style.opacity='0';setHint('');el.cue.hidden=true;cueOn=false;
+    case'fall':mode='fall';fallT=0;runDay=sim.day;shake=8;el.vig.style.opacity='0';setHint('');
       if(sim.cause==='tornado')Snd.blip(200,1400,.9,'sine',.1);else Snd.blip(950,110,1.1,'sine',.1);break;
   }
 }
@@ -762,22 +776,21 @@ const H=1/120;let acc=0,last=0;
 function tick(dt){
   time+=dt;
   if(mode==='play'){
-    inp.grip=pointers.size>0||keyDown;if(inp.grip&&sim.gripping)everGrip=true;
+
     if(sim.tut)tutTick(dt);
-    sim.step(dt,inp);inp.tap=false;inp.shoo=false;
+    sim.step(dt,inp);inp.tap=false;inp.shoo=false;inp.hits.length=0;
     while(sim.events.length)handle(sim.events.shift());
-    if(sim.quake>0)shake=Math.max(shake,7);
-    if(sim.torPull>0)shake=Math.max(shake,2+3*sim.torPull);
+    if(sim.qte)shake=Math.max(shake,sim.qte.kind==='quake'?6:3);
     if(sim.weather==='typhoon'&&Math.random()<dt*.12)flash=1;
   }
   const idle=mode==='title'||mode==='over';
   const wind=idle?70*Math.sin(time*.8)+45*Math.sin(time*2.1):sim.wind;
   // 龍捲風的位置：從右邊逼近 → 停在棚子上方 → 離開
   const TT=mode==='play'?sim.tor:null,sucked=mode==='fall'&&sim.cause==='tornado';
-  if(TT){const e=clamp(1+TT.t/TOR_WARN,0,1);torX=TT.t<0?lerp(wx1+110,286,e*e*(3-2*e)):TT.t<TOR_DUR?286+Math.sin(time*3)*10:lerp(286,wx1+150,(TT.t-TOR_DUR)/.8);torA=Math.min(1,torA+dt*2.5);}
+  if(TT){const e=clamp(1+TT.t/QTE_WARN,0,1);torX=TT.t<0?lerp(wx1+110,286,e*e*(3-2*e)):TT.leave<0?286+Math.sin(time*3)*10:lerp(286,wx1+150,TT.leave/.8);torA=Math.min(1,torA+dt*2.5);}
   else if(sucked){torX+=(260-torX)*Math.min(1,dt*3);torA=Math.min(1,torA+dt*2.5);}
   else torA=Math.max(0,torA-dt*2.5);
-  const torArg=torA>0&&!idle?{x:torX,raw:sucked?1:mode==='play'?sim.torPull:0,k:sucked?1:mode==='play'?sim.torPull*(1-sim.gripK):0}:null;
+  const torArg=torA>0&&!idle?{x:torX,raw:sucked||(mode==='play'&&sim.qte&&sim.qte.kind==='tor')?1:0,k:sucked?1:0}:null;
   cloth.step(dt,{s:idle?14:sim.s,wind,grip:mode==='play'&&sim.gripping,fallen:mode==='fall',time,wet:idle?0:sim.wet,quake:mode==='play'&&sim.quake>0,tor:torArg});
   if(mode==='over')cloth.place(14);
   windVis+=(wind-windVis)*Math.min(1,dt*6);
@@ -800,6 +813,7 @@ function tick(dt){
   for(let i=drips.length-1;i>=0;i--){const d=drips[i];d.vy+=620*dt;d.y+=d.vy*dt;d.x+=windVis*.12*dt;if(d.y>wy1+10||(d.land&&d.vy>70))drips.splice(i,1);}
   for(let i=steam.length-1;i>=0;i--){const w=steam[i];w.y-=22*dt;w.x+=windVis*.1*dt;w.life-=dt;if(w.life<=0)steam.splice(i,1);}
   for(let i=sparks.length-1;i>=0;i--){const k=sparks[i];k.y-=14*dt;k.life-=dt*1.1;if(k.life<=0)sparks.splice(i,1);}
+  for(let i=ripples.length-1;i>=0;i--){if((ripples[i].life-=dt)<=0)ripples.splice(i,1);}
   for(let i=feathers.length-1;i>=0;i--){const f=feathers[i];f.x+=(f.vx+windVis*.3)*dt;f.y+=f.vy*dt;f.vy+=120*dt;f.a+=4*dt;f.life-=dt*.9;if(f.life<=0)feathers.splice(i,1);}
   while(mode==='play'&&stains.length>Math.ceil(sim.dirt-1e-6))stains.pop();
   if(mode==='fall'){fallT+=dt;let top=1e9,bot=-1e9;for(const n of cloth.p){top=Math.min(top,n.y);bot=Math.max(bot,n.y);}if(top>wy1+40||bot<wy0-40||fallT>3)gameOver();}
@@ -811,31 +825,28 @@ function frame(now){
   requestAnimationFrame(frame);
 }
 
-/* 輸入：按住＝抓緊，短按＝往內爬，點到鴿子＝趕走 */
-const TAP_MS=HOLD_T*1000;
-function down(id,cx,cy){
+/* 輸入：只有「點」。圈圈事件時點圈圈，鴿子在就點鴿子，其他時候點一下＝往牆邊爬一步 */
+function down(cx,cy){
   if(mode!=='play')return;
-  const b=gameEl.getBoundingClientRect(),x=(cx-b.left-ox)/scale,y=(cy-b.top-oy)/scale,p=pigeonPos();
-  if(p&&sim.pigeon.phase!=='out'&&Math.hypot(x-p.x,y-(p.y-10))<40){if(sim.pigeon.phase==='in'){sim.pigeon.phase='on';sim.pigeon.t=0;}inp.shoo=true;return;}
-  pointers.set(id,performance.now());holdPt={x,y};
+  const b=gameEl.getBoundingClientRect(),x=(cx-b.left-ox)/scale,y=(cy-b.top-oy)/scale;
+  if(sim.qte){let best=-1,bd=QTE_R+16;for(let i=0;i<sim.qte.n;i++){if(sim.qte.hit[i]||inp.hits.includes(i))continue;const p=sim.qtePos(i),d=Math.hypot(x-p.x,y-p.y);if(d<bd){bd=d;best=i;}}
+    if(best>=0)inp.hits.push(best);else{ripples.push({x,y,life:.35,bad:true});Snd.blip(170,130,.07,'triangle',.04);}return;}
+  const p=pigeonPos();
+  if(p&&sim.pigeon.phase!=='out'&&Math.hypot(x-p.x,y-(p.y-10*PIGEON_SC[p.lv]))<30+10*PIGEON_SC[p.lv]){if(sim.pigeon.phase==='in'){sim.pigeon.phase='on';sim.pigeon.t=0;}inp.shoo=true;return;}
+  inp.tap=true;ripples.push({x,y,life:.35});
 }
-function up(id){const t=pointers.get(id);if(t===undefined)return;pointers.delete(id);if(mode==='play'&&performance.now()-t<TAP_MS)inp.tap=true;}
-gameEl.addEventListener('pointerdown',e=>{if(e.target.closest('button'))return;e.preventDefault();Snd.init();down(e.pointerId,e.clientX,e.clientY);});
-window.addEventListener('pointerup',e=>up(e.pointerId));
-window.addEventListener('pointercancel',e=>pointers.delete(e.pointerId));
+gameEl.addEventListener('pointerdown',e=>{if(e.target.closest('button'))return;e.preventDefault();Snd.init();down(e.clientX,e.clientY);});
 gameEl.addEventListener('contextmenu',e=>e.preventDefault());
-window.addEventListener('blur',()=>{pointers.clear();keyDown=false;});
-document.addEventListener('visibilitychange',()=>{pointers.clear();keyDown=false;last=0;});
+document.addEventListener('visibilitychange',()=>{last=0;});
 window.addEventListener('keydown',e=>{if(e.code!=='Space'&&e.code!=='ArrowUp')return;if(e.target.closest&&e.target.closest('button'))return;e.preventDefault();if(e.repeat)return;
-  if(mode==='title'||mode==='over'){start();return;}keyDown=true;keyT=performance.now();});
-window.addEventListener('keyup',e=>{if(e.code!=='Space'&&e.code!=='ArrowUp')return;if(!keyDown)return;keyDown=false;if(mode==='play'&&performance.now()-keyT<TAP_MS)inp.tap=true;});
+  if(mode==='title'||mode==='over'){start();return;}if(mode==='play'&&!sim.qte)inp.tap=true;});
 $('start').addEventListener('click',start);
 $('again').addEventListener('click',start);
 $('replay').addEventListener('click',()=>begin(true));
 $('skip').addEventListener('click',()=>{tutDone=true;store.set('bb.tut','1');begin(false);});
 el.mute.addEventListener('click',()=>{Snd.init();Snd.setOn(!Snd.on);muteIcon();});
 $('share').addEventListener('click',async()=>{
-  const text=`我的被被在遮雨棚上撐到 Day ${runDay} 才${sim.cause==='tornado'?'被龍捲風捲走':'掉下去'}，封號「${$('ovRank').textContent}」。你的能撐幾天？`+(document.querySelector('link[rel=canonical]')?' '+document.querySelector('link[rel=canonical]').href:''),out=$('copied');
+  const text=`我的被被在遮雨棚上撐到 Day ${runDay} 才${sim.cause==='tornado'?'被龍捲風捲走':sim.cause==='quake'?'被地震震下去':'掉下去'}，封號「${$('ovRank').textContent}」。你的能撐幾天？`+(document.querySelector('link[rel=canonical]')?' '+document.querySelector('link[rel=canonical]').href:''),out=$('copied');
   try{await navigator.clipboard.writeText(text);out.textContent='已複製，貼到脆上炫耀吧';}
   catch(e){out.textContent=text;const r=document.createRange();r.selectNodeContents(out);const s=getSelection();s.removeAllRanges();s.addRange(r);}
 });
@@ -843,7 +854,7 @@ window.addEventListener('resize',resize);
 if(window.ResizeObserver)new ResizeObserver(resize).observe(gameEl);
 
 muteIcon();showBest();resize();requestAnimationFrame(frame);
-window.__bb={Sim,DAY_LEN,get sim(){return sim},get mode(){return mode},start,pigeonXY(){const p=pigeonPos();if(!p)return null;const b=gameEl.getBoundingClientRect();return{x:b.left+ox+p.x*scale,y:b.top+oy+(p.y-10)*scale};}};
+window.__bb={Sim,DAY_LEN,get sim(){return sim},get mode(){return mode},start,pigeonXY(){const p=pigeonPos();if(!p)return null;const b=gameEl.getBoundingClientRect();return{x:b.left+ox+p.x*scale,y:b.top+oy+(p.y-10*PIGEON_SC[p.lv])*scale};},qteXY(i){const p=sim.qtePos(i),b=gameEl.getBoundingClientRect();return{x:b.left+ox+p.x*scale,y:b.top+oy+p.y*scale};}};
 })();
 </script>
 <!--/PAGE-->
