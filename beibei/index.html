@@ -245,7 +245,9 @@ class Sim{
     this.qte=q;this.gust=null;this.events.push({type:'qteStart',kind,n});}
   qteR(){const q=this.qte;return QTE_R*(.5+.5*smooth(0,.5,1-q.t/q.dur));}   // 時間剩不到一半就開始縮，最後縮到一半大
   qtePos(i){const q=this.qte;
-    if(q.kind==='tor'){const a=q.a0+i*TAU/q.n+q.dir*q.t*1.05;return{x:180+Math.cos(a)*104,y:345+Math.sin(a)*104};}
+    if(q.kind==='tor'){   // 一邊轉一邊被捲向漏斗雲：半徑越來越小、轉得越來越快
+      const e=clamp(q.t/q.dur,0,1),k=Math.pow(e,1.3),r=lerp(112,44,k),a=q.a0+i*TAU/q.n+q.dir*q.t*(1.05+1.8*e);
+      return{x:lerp(180,262,k)+Math.cos(a)*r,y:345+Math.sin(a)*r};}
     return{x:q.pts[i].x+Math.sin(q.t*41+i*2.3)*5,y:q.pts[i].y+Math.cos(q.t*37+i*1.7)*5};}
   setupDay(){
     const d=this.day,r=this.rng;let w;
