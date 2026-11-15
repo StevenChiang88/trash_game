@@ -313,8 +313,8 @@ class Sim{
     const dry=.012+.11*this.sun+.03*Math.min(Math.abs(this.wind)/300,1),w0=this.wet;
     this.wet=clamp(this.wet+(raining?(ty?.3:.22):-dry)*dt,0,1);               // 棉被吸水：要靠太陽慢慢曬乾
     if(!this.soaked&&this.wet>=.6){this.soaked=true;this.events.push({type:'soaked'});}
-    if(raining&&this.dirt>0){this.dirt=Math.max(0,this.dirt-(ty?.7:.5)*dt);if(this.dirt===0)this.events.push({type:'clean'});}   // 只有雨水洗得掉
-    if(this.spit>0){this.spit=Math.max(0,this.spit-(.06+.2*this.sun+(raining?.45:0))*dt);if(this.spit===0)this.events.push({type:'spitDry'});}   // 痰：太陽曬或雨淋才會好
+    if(raining&&this.dirt>0){this.dirt=Math.max(0,this.dirt-(ty?.3:.2)*dt);if(this.dirt===0)this.events.push({type:'clean'});}   // 只有雨水洗得掉
+    if(this.spit>0){this.spit=Math.max(0,this.spit-(.025+.065*this.sun+(raining?.14:0))*dt);if(this.spit===0)this.events.push({type:'spitDry'});}   // 痰：太陽曬或雨淋才會好
     if(this.soaked&&w0>.02&&this.wet<=.02){this.soaked=false;this.events.push({type:'dried'});}
 
     // 地震、龍捲風：先預告，然後畫面上出現圈圈，點掉幾成就少被推出去幾成
@@ -538,7 +538,7 @@ let sim=new Sim(1),cloth=new Cloth(),mode='title',time=0,windVis=0,stormVis=0,ra
 const inp={tap:false,shoo:false,uncle:false,hits:[]},ripples=[];
 let best=parseInt(store.get('bb.best')||'0',10)||0,crawls=0;
 let tiredT=0,peckT=0;const PIGEON_SC=[1,1,1.3,1.6];
-const clouds=[],streaks=[],drops=[],leaves=[],feathers=[],drips=[],steam=[],sparks=[],stains=[],judges=[];let poopedToday=false,spatToday=false;const UNCLE={x:134,y:150};
+const clouds=[],streaks=[],drops=[],leaves=[],feathers=[],drips=[],steam=[],sparks=[],stains=[],judges=[],bursts=[];let poopedToday=false,spatToday=false;const UNCLE={x:134,y:150};
 {const r=rng32(5);for(let i=0;i<7;i++)clouds.push({x:-500+r()*1400,y:40+r()*250,s:.7+r()*.9,v:.5+r()});
  for(let i=0;i<110;i++)drops.push({x:r()*1300-470,y:r()*900-130,l:9+r()*9});}
 const stars=(()=>{const r=rng32(3),a=[];for(let i=0;i<70;i++)a.push({x:-600+r()*1600,y:-200+r()*640,r:.5+r()*1.1,p:r()*TAU});return a;})();
@@ -569,6 +569,39 @@ function drawPigeon(c,p){const sc=PIGEON_SC[p.lv],body=['','#98a1b3','#8490aa','
   if(!p.fly&&PIGEON_HP[p.lv]>1){const n=PIGEON_HP[p.lv],top=p.y-(p.lv===3?37:27)*sc-8;
     for(let i=0;i<n;i++){const x=p.x-8*sc+(i-(n-1)/2)*11;c.fillStyle=INK;c.beginPath();c.arc(x,top,5,0,TAU);c.fill();c.fillStyle=i<p.hp?'#ee5b3a':'#fffdf5';c.beginPath();c.arc(x,top,3.2,0,TAU);c.fill();}}}
 
+// 圈圈事件的圓鈕：有厚度的白底鈕、主題色的鈕面和圖案（龍捲風＝漩渦、地震＝裂痕），外面是發光的縮圈
+const NOTE={tor:{hi:'#b7dcf6',mid:'#5c9fd6',lo:'#356fa8'},quake:{hi:'#ffdf9a',mid:'#f0a13c',lo:'#c4702a'}};
+function drawNote(c,x,y,kind,d,A,ring){
+  const T=NOTE[kind],now=Math.abs(d)<=QTE_PERF,late=d>QTE_PERF,ap=clamp((d+A)/.18,0,1),gone=late?clamp((d-QTE_PERF)/(QTE_GOOD-QTE_PERF),0,1):0;
+  const back=1+2.2*Math.pow(ap-1,3)+1.2*Math.pow(ap-1,2);                     // 冒出來時彈一下
+  const sc=(ap<1?.55+.45*back:1)*(now?1.09+.025*Math.sin(time*38):1)*(1-.1*gone),R0=QTE_R;
+  c.save();c.translate(x,y);c.globalAlpha=ap*(1-.6*gone);c.lineJoin='round';c.lineCap='round';
+  // 縮圈：越靠近越粗越亮，帶一圈光暈
+  if(!late){const near=clamp(1-(ring-R0)/(R0*.9),0,1);
+    c.shadowColor=T.mid;c.shadowBlur=9+8*near;c.lineWidth=6+1.5*near;c.strokeStyle=INK;c.beginPath();c.arc(0,0,ring,0,TAU);c.stroke();c.shadowBlur=0;
+    c.lineWidth=3.4+1.4*near;c.strokeStyle=near>.85?'#fffdf5':T.hi;c.beginPath();c.arc(0,0,ring,0,TAU);c.stroke();
+    c.lineWidth=1.3;c.strokeStyle='rgba(255,255,255,.85)';c.beginPath();c.arc(0,0,ring-1.6,-2.5,-1.2);c.stroke();}
+  c.scale(sc,sc);
+  // 鈕的厚度（往下的硬陰影）
+  c.fillStyle=INK;c.beginPath();c.arc(0,5,R0,0,TAU);c.fill();
+  // 白色鈕座
+  let gr=c.createRadialGradient(-9,-11,3,0,0,R0);gr.addColorStop(0,'#ffffff');gr.addColorStop(1,'#ece5d2');
+  c.fillStyle=gr;c.beginPath();c.arc(0,0,R0,0,TAU);c.fill();c.lineWidth=3.5;c.strokeStyle=INK;c.stroke();
+  // 主題色鈕面
+  gr=c.createRadialGradient(-6,-8,2,0,0,R0-7);gr.addColorStop(0,now?'#fffdf5':T.hi);gr.addColorStop(.55,now?T.hi:T.mid);gr.addColorStop(1,now?T.mid:T.lo);
+  c.fillStyle=gr;c.beginPath();c.arc(0,0,R0-7,0,TAU);c.fill();c.lineWidth=2.4;c.strokeStyle=INK;c.stroke();
+  // 圖案
+  c.strokeStyle=INK;c.lineWidth=6.2;icon();c.stroke();c.strokeStyle='#fffdf5';c.lineWidth=3;icon();c.stroke();
+  function icon(){c.beginPath();
+    if(kind==='tor'){c.moveTo(-11,-8);c.lineTo(11,-8);c.moveTo(-7,-1.5);c.lineTo(8,-1.5);c.moveTo(-3,5);c.lineTo(5,5);c.moveTo(0,10.5);c.lineTo(2.5,10.5);}   // 漏斗雲
+    else{c.moveTo(-5,-12);c.lineTo(3,-4);c.lineTo(-4,1);c.lineTo(5,12);}}                                                                                            // 裂痕
+  // 高光
+  c.strokeStyle='rgba(255,255,255,.8)';c.lineWidth=3;c.beginPath();c.arc(0,0,R0-3.6,-2.75,-1.95);c.stroke();
+  // 時機到了：鈕緣發亮、外面一圈光芒
+  if(now){c.lineWidth=3.5;c.strokeStyle='#fffdf5';c.beginPath();c.arc(0,0,R0+2.5,0,TAU);c.stroke();
+    c.strokeStyle='#ffc64a';c.lineWidth=3.2;c.beginPath();for(let k=0;k<10;k++){const a=time*2.4+k*TAU/10;c.moveTo(Math.cos(a)*(R0+8),Math.sin(a)*(R0+8));c.lineTo(Math.cos(a)*(R0+14),Math.sin(a)*(R0+14));}c.stroke();}
+  c.restore();
+}
 function drawUncle(c){
   const u=sim.uncle,off=u.phase==='out'?(1-clamp(u.t/.35,0,1))*-50:u.phase==='back'?clamp(u.t/.4,0,1)*-50:0;
   const hawk=u.phase==='hawk',spit=u.phase==='spit',x=UNCLE.x+off+(hawk?Math.sin(time*46)*1.3*clamp(u.t/u.wind,0,1):0),y=UNCLE.y;
@@ -708,19 +741,20 @@ function render(){
   for(const r of ripples){const e=1-r.life/.35;g.globalAlpha=(1-e)*.9;g.lineWidth=3;g.strokeStyle=r.bad?'#ee5b3a':'#fffdf5';g.beginPath();g.arc(r.x,r.y,8+e*(r.big?34:20),0,TAU);g.stroke();}
   g.globalAlpha=1;
   if(mode==='play'&&sim.qte){const q=sim.qte;
-    for(let i=q.n-1;i>=0;i--){if(!sim.qteShown(i))continue;const o=q.notes[i],d=q.t-o.at,now=Math.abs(d)<=QTE_PERF,late=d>QTE_PERF,ring=sim.qteRing(i);
-      g.globalAlpha=clamp((d+q.A)/.12,0,1);
-      // 要點的地方：一顆實心的圓鈕（不畫成圈，畫面上只有外面那一圈在縮）
-      g.fillStyle=now?'#2f9a7c':late?'#ee5b3a':'#fffdf5';g.beginPath();g.arc(o.x,o.y,QTE_R,0,TAU);g.fill();
-      g.lineWidth=3.5;g.strokeStyle=INK;g.beginPath();g.arc(o.x,o.y,QTE_R,0,TAU);g.stroke();
-      // 縮圈：貼上的那一瞬間變綠，過頭變紅
-      const col=now?'#2f9a7c':late?'#ee5b3a':'#ffc64a';
-      g.lineWidth=now?9:6.5;g.strokeStyle=INK;g.beginPath();g.arc(o.x,o.y,ring,0,TAU);g.stroke();
-      g.lineWidth=now?5.5:3.2;g.strokeStyle=col;g.beginPath();g.arc(o.x,o.y,ring,0,TAU);g.stroke();}
+    for(let i=q.n-1;i>=0;i--){if(!sim.qteShown(i))continue;const o=q.notes[i],d=q.t-o.at;drawNote(g,o.x,o.y,q.kind,d,q.A,sim.qteRing(i));}
     g.globalAlpha=1;}
+  // 點中時爆開的光環與光芒
+  g.lineCap='round';
+  for(const u of bursts){const e=1-u.life/u.dur,r=QTE_R*(1+e*(u.big?1.5:.9));g.globalAlpha=(1-e)*(1-e);
+    g.lineWidth=7*(1-e)+1.5;g.strokeStyle=u.col;g.beginPath();g.arc(u.x,u.y,r,0,TAU);g.stroke();
+    if(u.big){g.lineWidth=3;g.strokeStyle='#fffdf5';g.beginPath();g.arc(u.x,u.y,r*.72,0,TAU);g.stroke();}
+    g.lineWidth=3.5*(1-e)+1;g.strokeStyle=u.big?'#ffc64a':u.col;g.beginPath();
+    for(let k=0;k<u.rays;k++){const a=u.a0+k*TAU/u.rays,r0=QTE_R*.9+e*46,r1=r0+(u.big?17:11)*(1-e);g.moveTo(u.x+Math.cos(a)*r0,u.y+Math.sin(a)*r0);g.lineTo(u.x+Math.cos(a)*r1,u.y+Math.sin(a)*r1);}
+    g.stroke();}
+  g.globalAlpha=1;
   // 判定字樣
   g.textAlign='center';g.textBaseline='middle';g.font='900 19px "Chiron GoRound TC","PingFang TC",sans-serif';g.lineJoin='round';
-  for(const j of judges){const e=1-j.life/.75;g.globalAlpha=clamp(j.life*4,0,1);g.lineWidth=5;g.strokeStyle=INK;g.strokeText(j.text,j.x,j.y-44-e*16);g.fillStyle=j.col;g.fillText(j.text,j.x,j.y-44-e*16);}
+  for(const j of judges){const e=1-j.life/j.dur,pop=1+.55*Math.pow(clamp(1-e*6,0,1),2);g.globalAlpha=clamp(j.life*4,0,1);g.save();g.translate(j.x,j.y-46-e*14);g.scale(pop,pop);g.lineWidth=5.5;g.strokeStyle=INK;g.strokeText(j.text,0,0);g.fillStyle=j.col;g.fillText(j.text,0,0);g.restore();}
   g.globalAlpha=1;g.textAlign='left';g.textBaseline='alphabetic';
   g.setTransform(1,0,0,1,0,0);
   if(flash>0){g.fillStyle='#fff';g.globalAlpha=flash*.6;g.fillRect(0,0,W,H);g.globalAlpha=1;}
@@ -775,7 +809,7 @@ function start(){
   Snd.init();Snd.blip(520,880,.16,'triangle',.1);
   paused=false;$('pause').hidden=true;
   sim=new Sim((Math.random()*1e9)|0);cloth.place(sim.s);mode='play';fallT=0;shake=0;inp.tap=inp.shoo=false;inp.hits.length=0;
-  feathers.length=0;el.title.hidden=true;el.over.hidden=true;el.hud.hidden=false;el.dayN.textContent='1';el.wx.textContent=WX.sunny;lastWindKey='';lastFill=-1;lastWet=-1;lastDead=-1;torA=0;tiredT=0;crawls=0;ripples.length=0;judges.length=0;stains.length=0;poopedToday=spatToday=false;drips.length=steam.length=sparks.length=0;
+  feathers.length=0;el.title.hidden=true;el.over.hidden=true;el.hud.hidden=false;el.dayN.textContent='1';el.wx.textContent=WX.sunny;lastWindKey='';lastFill=-1;lastWet=-1;lastDead=-1;torA=0;tiredT=0;crawls=0;ripples.length=0;judges.length=0;bursts.length=0;stains.length=0;poopedToday=spatToday=false;drips.length=steam.length=sparks.length=0;
   banner('Day 1｜棉被被吹到鄰居的遮雨棚上了',false,3);
 }
 function gameOver(){
@@ -806,9 +840,10 @@ function handle(ev){
     case'qteStart':shake=Math.max(shake,ev.kind==='quake'?10:5);break;
     case'qteNote':if(sim.qte&&sim.qte.kind==='quake')shake=Math.max(shake,9);Snd.blip(sim.qte&&sim.qte.kind==='quake'?120:330,sim.qte&&sim.qte.kind==='quake'?70:300,.06,'square',.035);break;   // 每個圈冒出來時的拍點
     case'qteHit':{const o=sim.qte?sim.qte.notes[ev.i]:null,G={perfect:['完美','#ffc64a'],good:['不錯','#fffdf5'],bad:['太早','#ee5b3a'],miss:['漏掉','#ee5b3a']}[ev.grade];
-      if(o){judges.push({x:o.x,y:o.y,text:G[0],col:G[1],life:.75});
-        if(ev.grade==='perfect'||ev.grade==='good'){ripples.push({x:o.x,y:o.y,life:.35,big:true});for(let i=0;i<(ev.grade==='perfect'?6:3);i++)sparks.push({x:o.x+(Math.random()-.5)*30,y:o.y+(Math.random()-.5)*30,life:.5+Math.random()*.3});}
-        else ripples.push({x:o.x,y:o.y,life:.35,big:true,bad:true});}
+      if(o){const T=NOTE[sim.qte.kind],pf=ev.grade==='perfect';judges.push({x:o.x,y:o.y,text:G[0],col:G[1],life:.8,dur:.8});
+        if(pf||ev.grade==='good'){bursts.push({x:o.x,y:o.y,life:pf?.45:.34,dur:pf?.45:.34,col:T.hi,rays:pf?12:7,big:pf,a0:Math.random()*TAU});
+          if(pf)for(let i=0;i<5;i++)sparks.push({x:o.x+(Math.random()-.5)*46,y:o.y+(Math.random()-.5)*46,life:.5+Math.random()*.3});}
+        else bursts.push({x:o.x,y:o.y,life:.3,dur:.3,col:'#ee5b3a',rays:0,big:false,a0:0});}
       if(ev.grade==='perfect'){Snd.blip(880,1320,.1,'triangle',.1);Snd.blip(1320,1760,.1,'triangle',.07,.05);}
       else if(ev.grade==='good')Snd.blip(660,880,.09,'triangle',.08);
       else if(ev.grade==='bad')Snd.blip(300,220,.1,'square',.05);
@@ -875,6 +910,7 @@ function tick(dt){
   for(let i=steam.length-1;i>=0;i--){const w=steam[i];w.y-=22*dt;w.x+=windVis*.1*dt;w.life-=dt;if(w.life<=0)steam.splice(i,1);}
   for(let i=sparks.length-1;i>=0;i--){const k=sparks[i];k.y-=14*dt;k.life-=dt*1.1;if(k.life<=0)sparks.splice(i,1);}
   for(let i=judges.length-1;i>=0;i--){if((judges[i].life-=dt)<=0)judges.splice(i,1);}
+  for(let i=bursts.length-1;i>=0;i--){if((bursts[i].life-=dt)<=0)bursts.splice(i,1);}
   for(let i=ripples.length-1;i>=0;i--){if((ripples[i].life-=dt)<=0)ripples.splice(i,1);}
   for(let i=feathers.length-1;i>=0;i--){const f=feathers[i];f.x+=(f.vx+windVis*.3)*dt;f.y+=f.vy*dt;f.vy+=120*dt;f.a+=4*dt;f.life-=dt*.9;if(f.life<=0)feathers.splice(i,1);}
   while(mode==='play'&&stains.length>Math.ceil(sim.dirt-1e-6))stains.pop();
@@ -904,7 +940,7 @@ function down(cx,cy){
   if(sim.qte){const q=sim.qte;let hit=-1;   // 點到哪個圈：照出現順序找第一個手指壓到的
     for(let i=0;i<q.n;i++){if(!sim.qteShown(i)||inp.hits.includes(i))continue;const o=q.notes[i];if(Math.hypot(x-o.x,y-o.y)<QTE_R+16){hit=i;break;}}
     if(hit<0){ripples.push({x,y,life:.35,bad:true});Snd.blip(170,130,.07,'triangle',.04);}
-    else if(q.t-q.notes[hit].at<-QTE_EARLY){const o=q.notes[hit];judges.push({x:o.x,y:o.y,text:'還沒',col:'#fffdf5',life:.5});}   // 縮圈還很遠：不算，可以再點
+    else if(q.t-q.notes[hit].at<-QTE_EARLY){const o=q.notes[hit];judges.push({x:o.x,y:o.y,text:'還沒',col:'#fffdf5',life:.5,dur:.5});}   // 縮圈還很遠：不算，可以再點
     else inp.hits.push(hit);
     return;}
   if(sim.uncle&&(sim.uncle.phase==='out'||sim.uncle.phase==='hawk')&&Math.hypot(x-UNCLE.x,y-UNCLE.y)<38){inp.uncle=true;ripples.push({x:UNCLE.x,y:UNCLE.y,life:.35,big:true});return;}
