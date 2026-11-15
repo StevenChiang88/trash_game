@@ -165,8 +165,8 @@ body{background:var(--sky);color:var(--ink);font-family:var(--body);font-weight:
     <p class="tag">卡在遮雨棚上的那條棉被，今天掉了嗎？</p>
     <div class="gap"></div>
     <ul class="how">
-      <li><b>按住不放</b> 風大時抓緊</li>
-      <li><b>連點</b> 風小時爬回牆邊</li>
+      <li><b>按住不放</b> 抓緊、煞車</li>
+      <li><b>連點</b> 沒風時爬回牆邊</li>
       <li><b>點鴿子</b> 趕走牠</li>
     </ul>
     <button class="btn" id="start" type="button">開始曬被</button>
@@ -209,8 +209,10 @@ const A_EFF=AW_LEN-S0;
 
 /* ───────── 規則模型：棉被在鐵皮上的一維滑動 ───────── */
 const DAY_LEN=6,G=600,MU_FREE=.36,MU_RAIN=.28,MU_GRIP=1.6,H_FALL=.7;
+const KIN=.8;            // 動摩擦：一旦開始往外滑，鐵皮幾乎拉不住它，只有按住才停得下來
+const HOLD_T=.14;        // 按住超過這麼久才算「抓」，比這短的都只是點一下
 const PIGEON_LOAD=.18,POOP_AT=1.8,DIRT_MAX=4,DIRT_COST=12;
-const ST_MAX=100,ST_DRAIN=24,ST_REGEN=15,ST_TAP=6,LOCK_T=1.1;
+const ST_MAX=100,ST_DRAIN=18,ST_REGEN=15,ST_TAP=7,LOCK_T=1.1;
 
 class Sim{
   constructor(seed){this.rng=rng32(seed);this.t=0;this.day=1;this.s=14;this.v=0;this.h=0;
@@ -226,8 +228,7 @@ class Sim{
     const d=this.day,r=this.rng;let w;
     if(d>=this.tyStart+this.tyLen){this.tyStart=d+9+Math.floor(r()*6);this.tyLen=2+(d>40&&r()<.5?1:0);this.tyN++;w='sunny';}
     else if(d>=this.tyStart)w='typhoon';
-    else if(d<=2)w='sunny';
-    else if(d===3)w='breezy';
+    else if(d<=3)w='sunny';
     else if(d===4)w='rain';
     else if(d>=20&&!this.doomDone){w='doom';this.doomDone=true;}
     else{const x=r();w=x<.34?'sunny':x<.68?'breezy':'rain';}
@@ -243,9 +244,9 @@ class Sim{
     const drive=G*(h*(1+.35*this.wet)+(pg&&pg.phase==='on'?PIGEON_LOAD:0)+on*SIN_)+this.wind*(.6+1.2*h)*(1-.35*this.wet);
     return this.v>15||this.quake>0||drive-lerp(MU_FREE,MU_RAIN,this.slick)*G*UX*on>40;}
   gustSpec(){
-    const d=this.day,D=d/30,m=.82+.53*D,q=1+.25*Math.min(D,3);
+    const d=this.day,D=d/30,m=.76+.59*D,q=1+.25*Math.min(D,3);
     if(d===1)return{a:60,b:105,g0:2,g1:3,h0:.8,h1:1.4,right:.7};
-    if(d===2)return{a:185,b:225,g0:2,g1:3,h0:.8,h1:1.2,right:1};
+    if(d===2)return{a:165,b:185,g0:2.2,g1:3,h0:.6,h1:.9,right:1};
     switch(this.weather){
       case'doom':return null;
       case'sunny':return{a:110*m,b:220*m,g0:2.2/q,g1:4/q,h0:.7,h1:1.4,right:.62};
@@ -302,18 +303,19 @@ class Sim{
 
     // 力氣：按住抓緊會耗力，連點往內爬也耗力
     this.tapCd-=dt;this.holdT=inp.grip?this.holdT+dt:0;
-    let grip=inp.grip&&this.lock<=0&&this.st>0;
+    let grip=inp.grip&&this.holdT>=HOLD_T&&this.lock<=0&&this.st>0;
     if(grip){this.st-=ST_DRAIN*(1+.25*this.wet)*dt;this.regenWait=.25;
       if(this.st<=0){this.st=0;this.lock=LOCK_T;grip=false;this.events.push({type:'exhausted'});}}
     else{this.lock=Math.max(0,this.lock-dt);
       if(this.regenWait>0)this.regenWait-=dt;else if(!(pg&&pg.phase==='on'))this.st=Math.min(this.stMax,this.st+ST_REGEN*(this.wet<.05?1.2:1)*dt);}
     if(this.st>this.stMax)this.st=this.stMax;
     if(inp.tap&&this.lock<=0&&this.st>=ST_TAP&&this.tapCd<=0){
-      this.st-=ST_TAP;this.tapCd=.1;this.regenWait=.25;
-      const f=clamp(1-(this.wind-90)/150,-.6,1);      // 風往外吹時爬不動；風太大，一鬆手就被吹走
-      if(f>0){this.v=Math.max(Math.min(this.v,0)-112*f*(1-.25*this.wet),-230);this.events.push({type:'crawl',f});}
-      else{this.v=Math.max(this.v,0)+90*-f;this.events.push({type:'blown'});}}
-    const gk=grip?smooth(.03,.12,this.holdT):0;       // 要按住一下才真的抓牢，連點不算抓
+      this.tapCd=.1;this.regenWait=.25;
+      const f=clamp(1-(this.wind-60)/100,0,1);        // 風往外吹時爬不動
+      if(this.v>15){this.st-=ST_TAP*.5;this.events.push({type:'skid'});}   // 正在往外滑：點擊煞不住，也爬不了
+      else if(this.st-=ST_TAP,f>0){this.v=Math.max(Math.min(this.v,0)-112*f*(1-.25*this.wet),-230);this.events.push({type:'crawl',f});}
+      else this.events.push({type:'blown'});}
+    const gk=grip?smooth(HOLD_T,HOLD_T+.08,this.holdT):0;       // 要按住一下才真的抓牢，連點不算抓
     this.gripK=gk;this.gripping=gk>.5;
 
     // 力學：垂在外面的越多，越會被自己拖下去
@@ -321,7 +323,7 @@ class Sim{
     let drive=G*(h*(1+.35*this.wet)+(pg&&pg.phase==='on'?PIGEON_LOAD:0)+on*SIN_)+this.wind*(.6+1.2*h)*(1-.35*this.wet);
     if(this.quake>0)drive+=this.jolt;
     const inward=this.v<-1||(Math.abs(this.v)<=1&&drive<0);
-    let mu=lerp(lerp(MU_FREE,MU_RAIN,this.slick),MU_GRIP,inward?0:gk);
+    let mu=lerp(lerp(MU_FREE,MU_RAIN,this.slick)*(this.v>1?KIN:1),MU_GRIP,inward?0:gk);
     if(this.quake>0)mu*=.6;
     let fmax=mu*G*UX*on;
     if(gk>0)fmax*=lerp(1,clamp(1-Math.max(0,Math.abs(this.wind)-300)/1400,.45,1),gk);
@@ -529,7 +531,7 @@ function drawBlanket(c){
   c.save();c.translate((P[1].x+P[2].x)/2,(P[1].y+P[2].y)/2);c.rotate(ang);c.lineCap='round';
   c.fillStyle='rgba(242,140,150,.55)';c.beginPath();c.ellipse(-10,2.5,3,2,0,0,TAU);c.ellipse(10,2.5,3,2,0,0,TAU);c.fill();
   c.strokeStyle=INK;c.fillStyle=INK;c.lineWidth=1.8;
-  if(falling||(danger&&!sim.gripping)){
+  if(falling||((danger||(mode==='play'&&sim.v>25))&&!sim.gripping)){
     c.fillStyle='#fff';c.beginPath();c.arc(-5,-1.5,3.6,0,TAU);c.arc(5,-1.5,3.6,0,TAU);c.fill();c.lineWidth=1.3;c.beginPath();c.arc(-5,-1.5,3.6,0,TAU);c.moveTo(8.6,-1.5);c.arc(5,-1.5,3.6,0,TAU);c.stroke();
     c.fillStyle=INK;c.beginPath();c.arc(-5,-1.5,1.3,0,TAU);c.arc(5,-1.5,1.3,0,TAU);c.fill();c.beginPath();c.ellipse(0,5,2.2,falling?3.2:2.4,0,0,TAU);c.fill();
   }else if(sim.gripping){
@@ -638,12 +640,14 @@ function hud(dt){
   const f=Math.round(sim.st);if(f!==lastFill){lastFill=f;el.fill.style.width=f+'%';}
   el.stam.classList.toggle('low',sim.st<28&&sim.lock<=0);el.stam.classList.toggle('lock',sim.lock>0);el.stam.classList.toggle('held',!!(sim.pigeon&&sim.pigeon.phase==='on'));
   if(tapWarnT>0)tapWarnT=sim.gripping?0:tapWarnT-dt;
-  const showCue=mode==='play'&&holds<3&&sim.lock<=0&&!!gst&&gst.dir>0&&gst.str>=170;
+  const sliding=mode==='play'&&sim.v>20&&!sim.gripping;
+  const showCue=mode==='play'&&holds<3&&sim.lock<=0&&((!!gst&&gst.dir>0&&gst.str>=150)||sim.v>20);
   if(showCue!==cueOn){cueOn=showCue;el.cue.hidden=!showCue;}
   if(showCue&&sim.gripping!==cueHeld){cueHeld=sim.gripping;el.cue.classList.toggle('held',cueHeld);el.cueT.textContent=cueHeld?'很好，撐住！':'按住不放！';}
   el.vig.style.opacity=mode==='play'?(clamp((sim.h-.22)/.35,0,1)*(.75+.25*Math.sin(time*9))).toFixed(2):'0';
   if(mode==='play'){
     if(sim.lock>0)setHint('沒力了…');
+    else if(sliding)setHint('正在滑！按住不放才停得下來');
     else if(tapWarnT>0)setHint('風大時連點沒用，要按住不放！');
     else if(sim.pigeon&&sim.pigeon.phase==='on')setHint('鴿子踩著會往外滑，還會大便。點牠！');
     else if(sim.h>.04&&(crawls<4||sim.day<=6))setHint(sim.wind>110?'先按住不放！等風小再連點爬回去':'滑出去了！趁風小連點爬回牆邊');
@@ -675,7 +679,7 @@ function handle(ev){
       if(w==='typhoon'&&d===sim.tyStart){banner('陸上颱風警報　抓緊！',true,3);Snd.blip(300,620,.5,'sawtooth',.05);Snd.blip(620,300,.5,'sawtooth',.05,.5);}
       else if(w==='rain'&&d===4)banner('下雨了：鐵皮變滑，被被會吸水變重',false,3.2);
       else if(w==='doom')banner('聽說今天是世界末日',false,3);
-      else if(d===3)banner('連點螢幕，可以往牆邊爬回去',false,3);
+      else if(d===3)banner('沒風的時候連點，可以往牆邊爬回去',false,3);
       break;}
     case'poop':{const P=cloth.p;let k=NODES-2;for(let i=1;i<NODES;i++)if(!P[i].on){k=Math.max(2,i-1);break;}
       stains.push({i:clamp(k-1-2*stains.length,4,NODES-2),off:(Math.random()-.5)*5});poopedToday=true;shake=Math.max(shake,3);
@@ -689,6 +693,7 @@ function handle(ev){
     case'pigeon':banner('鴿子來踩被被了，點牠趕走！',false,2.6);Snd.blip(430,350,.2,'sine',.08);Snd.blip(430,350,.22,'sine',.08,.26);break;
     case'shoo':{const p=pigeonPos();if(p)for(let i=0;i<6;i++)feathers.push({x:p.x,y:p.y-10,vx:(Math.random()-.5)*120,vy:-40-Math.random()*60,a:Math.random()*TAU,life:1});Snd.blip(900,500,.1,'triangle',.06);break;}
     case'crawl':cloth.crawl();everCrawl=true;crawls++;Snd.blip(230,340,.07,'sine',.09);if(ev.f<.4)tapWarnT=2.6;break;
+    case'skid':tapWarnT=0;shake=Math.max(shake,3);Snd.blip(160,120,.09,'sawtooth',.05);break;
     case'blown':cloth.crawl();tapWarnT=2.6;shake=Math.max(shake,4);Snd.blip(180,110,.12,'sawtooth',.06);break;
     case'exhausted':Snd.blip(320,140,.3,'triangle',.08);break;
     case'gust':if(ev.dir>0&&ev.str>=270)Snd.blip(1300,1300,.04,'square',.025);break;
@@ -744,7 +749,7 @@ function frame(now){
 }
 
 /* 輸入：按住＝抓緊，短按＝往內爬，點到鴿子＝趕走 */
-const TAP_MS=210;
+const TAP_MS=HOLD_T*1000;
 function down(id,cx,cy){
   if(mode!=='play')return;
   const b=gameEl.getBoundingClientRect(),x=(cx-b.left-ox)/scale,y=(cy-b.top-oy)/scale,p=pigeonPos();
