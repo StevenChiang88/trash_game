@@ -23,6 +23,7 @@
   --alert:#ee5b3a;      /* 颱風警報橘紅 */
   --sun:#ffc64a;        /* 力氣條、太陽 */
   --sky:#9fd3ee;
+  --water:#5fb0ea;      /* 濕度條、水滴 */
   --display:"Fredoka","Chiron GoRound TC","PingFang TC","Microsoft JhengHei",sans-serif;
   --body:"Chiron GoRound TC","PingFang TC","Noto Sans TC","Microsoft JhengHei",sans-serif;
   --sticker:-2px -2px 0 var(--ink),2px -2px 0 var(--ink),-2px 2px 0 var(--ink),2px 2px 0 var(--ink),0 -2.5px 0 var(--ink),0 2.5px 0 var(--ink),-2.5px 0 0 var(--ink),2.5px 0 0 var(--ink);
@@ -64,6 +65,10 @@ body{background:var(--sky);color:var(--ink);font-family:var(--body);font-weight:
 .post-b b{font-weight:900;font-size:12px;opacity:.7}
 .post-b em{font-style:normal;font-family:var(--display);font-weight:600;font-size:13px;color:var(--alert)}
 .hint{align-self:center;text-align:center;font-weight:900;font-size:17px;color:var(--quilt);text-shadow:var(--sticker);min-height:1.5em;text-wrap:balance}
+.bars{display:flex;flex-direction:column;gap:6px}
+.stam span{min-width:2.3em}
+.wetrow .track{height:12px}
+.wetrow .fill{background:var(--water);border-right:0}
 .stam{display:flex;align-items:center;gap:8px;font-weight:900;font-size:14px;color:var(--quilt);text-shadow:var(--sticker)}
 .track{flex:1;height:18px;border:2.5px solid var(--ink);border-radius:999px;background:var(--quilt);overflow:hidden}
 .fill{height:100%;width:100%;background:var(--sun);border-right:2.5px solid var(--ink);transform-origin:left center}
@@ -120,7 +125,10 @@ body{background:var(--sky);color:var(--ink);font-family:var(--body);font-weight:
       <div class="post-b"><b>棉被觀察日記</b><span id="postT"></span><em id="postL"></em></div>
     </div>
     <div class="hint" id="hint"></div>
-    <div class="stam" id="stam"><span>力氣</span><div class="track"><div class="fill" id="fill"></div></div></div>
+    <div class="bars">
+      <div class="stam wetrow"><span id="wetT">蓬鬆</span><div class="track"><div class="fill" id="wetFill" style="width:0%"></div></div></div>
+      <div class="stam" id="stam"><span>力氣</span><div class="track"><div class="fill" id="fill"></div></div></div>
+    </div>
   </div>
 
   <div class="screen" id="title">
@@ -177,7 +185,7 @@ const ST_MAX=100,ST_DRAIN=24,ST_REGEN=15,ST_TAP=6,LOCK_T=1.1;
 class Sim{
   constructor(seed){this.rng=rng32(seed);this.t=0;this.day=1;this.s=14;this.v=0;this.h=0;
     this.st=ST_MAX;this.lock=0;this.regenWait=0;this.tapCd=0;this.gripping=false;
-    this.wet=0;this.wind=0;this.gust=null;this.gustWait=1.6;this.phi=this.rng()*TAU;
+    this.wet=0;this.slick=0;this.sun=0;this.soaked=false;this.wind=0;this.gust=null;this.gustWait=1.6;this.phi=this.rng()*TAU;
     this.quake=0;this.quakeAt=-1;this.quakeWarned=false;this.jolt=0;this.joltT=0;this.hadQuake=false;
     this.pigeon=null;this.pigeonAt=-1;
     this.tyStart=9;this.tyLen=2;this.tyN=1;this.doomDone=false;
@@ -201,8 +209,8 @@ class Sim{
     }
   }
   slipping(){const h=this.h,on=1-h,pg=this.pigeon;
-    const drive=G*(h+(pg&&pg.phase==='on'?.09:0)+on*SIN_)+this.wind*(.6+1.2*h)*(1-.25*this.wet);
-    return this.v>15||this.quake>0||drive-lerp(MU_FREE,MU_RAIN,this.wet)*G*UX*on>40;}
+    const drive=G*(h*(1+.35*this.wet)+(pg&&pg.phase==='on'?.09:0)+on*SIN_)+this.wind*(.6+1.2*h)*(1-.35*this.wet);
+    return this.v>15||this.quake>0||drive-lerp(MU_FREE,MU_RAIN,this.slick)*G*UX*on>40;}
   gustSpec(){
     const d=this.day,D=d/30,m=1+.35*D,q=1+.25*Math.min(D,3);
     if(d===1)return{a:60,b:105,g0:2,g1:3,h0:.8,h1:1.4,right:.7};
@@ -235,7 +243,13 @@ class Sim{
 
     // 天氣：濕度
     const raining=this.weather==='rain'||ty;
-    this.wet=clamp(this.wet+(raining?.5:-.12)*dt,0,1);
+    const ph=(this.t%DAY_LEN)/DAY_LEN,light=1-(smooth(.66,.78,ph)-smooth(.94,1,ph));
+    this.sun=raining?0:light*(this.weather==='breezy'?.7:1);                 // 太陽有多曬
+    this.slick=clamp(this.slick+(raining?2:-.5)*dt,0,1);                      // 鐵皮濕滑：雨停很快就乾
+    const dry=.012+.11*this.sun+.03*Math.min(Math.abs(this.wind)/300,1),w0=this.wet;
+    this.wet=clamp(this.wet+(raining?(ty?.3:.22):-dry)*dt,0,1);               // 棉被吸水：要靠太陽慢慢曬乾
+    if(!this.soaked&&this.wet>=.6){this.soaked=true;this.events.push({type:'soaked'});}
+    if(this.soaked&&w0>.02&&this.wet<=.02){this.soaked=false;this.events.push({type:'dried'});}
 
     // 地震
     if(this.quakeAt>0){
@@ -255,21 +269,21 @@ class Sim{
     // 力氣：按住抓緊會耗力，連點往內爬也耗力
     this.tapCd-=dt;
     let grip=inp.grip&&this.lock<=0&&this.st>0;
-    if(grip){this.st-=ST_DRAIN*dt;this.regenWait=.25;
+    if(grip){this.st-=ST_DRAIN*(1+.25*this.wet)*dt;this.regenWait=.25;
       if(this.st<=0){this.st=0;this.lock=LOCK_T;grip=false;this.events.push({type:'exhausted'});}}
     else{this.lock=Math.max(0,this.lock-dt);
-      if(this.regenWait>0)this.regenWait-=dt;else this.st=Math.min(ST_MAX,this.st+ST_REGEN*dt);}
+      if(this.regenWait>0)this.regenWait-=dt;else this.st=Math.min(ST_MAX,this.st+ST_REGEN*(this.wet<.05?1.2:1)*dt);}
     if(inp.tap&&this.lock<=0&&this.st>=ST_TAP&&this.tapCd<=0){
       this.st-=ST_TAP;this.tapCd=.1;this.regenWait=.25;
-      this.v=Math.max(Math.min(this.v,0)-112*(1-.2*this.wet),-230);this.events.push({type:'crawl'});}
+      this.v=Math.max(Math.min(this.v,0)-112*(1-.25*this.wet),-230);this.events.push({type:'crawl'});}
     this.gripping=grip;
 
     // 力學：垂在外面的越多，越會被自己拖下去
     const h=clamp((this.s+BL-A_EFF)/BL,0,1),on=1-h;this.h=h;
-    let drive=G*(h+(pg&&pg.phase==='on'?.09:0)+on*SIN_)+this.wind*(.6+1.2*h)*(1-.25*this.wet);
+    let drive=G*(h*(1+.35*this.wet)+(pg&&pg.phase==='on'?.09:0)+on*SIN_)+this.wind*(.6+1.2*h)*(1-.35*this.wet);
     if(this.quake>0)drive+=this.jolt;
     const inward=this.v<-1||(Math.abs(this.v)<=1&&drive<0);
-    let mu=grip&&!inward?MU_GRIP:lerp(MU_FREE,MU_RAIN,this.wet);
+    let mu=grip&&!inward?MU_GRIP:lerp(MU_FREE,MU_RAIN,this.slick);
     if(this.quake>0)mu*=.6;
     let fmax=mu*G*UX*on;
     if(grip)fmax*=clamp(1-Math.max(0,Math.abs(this.wind)-300)/1400,.45,1);
@@ -292,14 +306,14 @@ class Cloth{
     if(this.bump>=0){this.bump+=dt/.28;if(this.bump>1)this.bump=-1;}
     for(let i=0;i<NODES;i++){const n=P[i],a=S0+o.s+i*SEG;
       if(!o.fallen&&a<=AW_LEN){
-        let lift=Math.max(0,Math.sin(a*.085-o.time*12))*Math.min(aw/500,1.2)*4.5*(o.grip?.25:1)*(.35+.65*i/NODES);
+        let lift=Math.max(0,Math.sin(a*.085-o.time*12))*Math.min(aw/500,1.2)*4.5*(o.grip?.25:1)*(.35+.65*i/NODES)*(1-.6*o.wet);
         if(this.bump>=0){const dd=i-(1-this.bump)*(NODES-1);lift+=9*Math.exp(-dd*dd/3);}
         if(o.quake)lift+=Math.random()*2.5;
         n.px=n.x;n.py=n.y;n.x=WALL_X+UX*a+NX*(R+lift);n.y=AW_Y0+UY*a+NY*(R+lift);n.on=true;
       }else{
         const vx=(n.x-n.px)*.988,vy=(n.y-n.py)*.988,k=i/(NODES-1);
         const turb=Math.sin(o.time*10+i*.8)+.6*Math.sin(o.time*17.3+i*1.7);
-        const ax=w*1.5+turb*aw*.35,ay=900-aw*.45*k+turb*aw*.5;
+        const lt=1-.5*o.wet,ax=(w*1.5+turb*aw*.35)*lt,ay=900-(aw*.45*k-turb*aw*.5)*lt;
         n.px=n.x;n.py=n.y;n.x+=vx+ax*dt*dt;n.y+=vy+ay*dt*dt;n.on=false;
       }}
     for(let it=0;it<8;it++){
@@ -427,7 +441,7 @@ function skyAt(p,storm){let i=0;while(i<SKY.length-2&&p>SKY[i+1][0])i++;const a=
 let sim=new Sim(1),cloth=new Cloth(),mode='title',time=0,windVis=0,stormVis=0,rainVis=0,shake=0,flash=0,fallT=0,runDay=1;
 const inp={grip:false,tap:false,shoo:false},pointers=new Map();let keyDown=false,keyT=0;
 let best=parseInt(store.get('bb.best')||'0',10)||0,everGrip=false,everCrawl=false,crawls=0;
-const clouds=[],streaks=[],drops=[],leaves=[],feathers=[];
+const clouds=[],streaks=[],drops=[],leaves=[],feathers=[],drips=[],steam=[],sparks=[];
 {const r=rng32(5);for(let i=0;i<7;i++)clouds.push({x:-500+r()*1400,y:40+r()*250,s:.7+r()*.9,v:.5+r()});
  for(let i=0;i<110;i++)drops.push({x:r()*1300-470,y:r()*900-130,l:9+r()*9});}
 const stars=(()=>{const r=rng32(3),a=[];for(let i=0;i<70;i++)a.push({x:-600+r()*1600,y:-200+r()*640,r:.5+r()*1.1,p:r()*TAU});return a;})();
@@ -453,12 +467,12 @@ function drawPigeon(c,p){c.save();c.translate(p.x,p.y);c.lineWidth=2;c.strokeSty
   c.fill();c.stroke();c.restore();}
 
 function drawBlanket(c){
-  const P=cloth.p,n=NODES,wet=sim.wet;
+  const P=cloth.p,n=NODES,wet=wetVis(),RR=R+1.2-2.2*wet;
   const path=()=>{c.beginPath();c.moveTo(P[0].x,P[0].y);for(let i=1;i<n-1;i++)c.quadraticCurveTo(P[i].x,P[i].y,(P[i].x+P[i+1].x)/2,(P[i].y+P[i+1].y)/2);c.lineTo(P[n-1].x,P[n-1].y);};
   c.lineCap='round';c.lineJoin='round';
-  c.strokeStyle=INK;c.lineWidth=2*R+4.5;path();c.stroke();
-  c.strokeStyle=css(mix([221,220,236],[178,190,214],wet));c.lineWidth=2*R;path();c.stroke();
-  c.save();c.translate(0,-2.6);c.strokeStyle=css(mix([255,253,245],[214,224,238],wet));c.lineWidth=2*R-5;path();c.stroke();c.restore();
+  c.strokeStyle=INK;c.lineWidth=2*RR+4.5;path();c.stroke();
+  c.strokeStyle=css(mix([221,220,236],[146,168,206],wet));c.lineWidth=2*RR;path();c.stroke();
+  c.save();c.translate(0,-2.6);c.strokeStyle=css(mix([255,253,245],[186,206,233],wet));c.lineWidth=2*RR-5;path();c.stroke();c.restore();
   // 車縫線與被尾的藍色滾邊
   c.lineCap='butt';
   for(let i=4;i<n;i++){const a=P[i-1],b=P[Math.min(i+1,n-1)],dx=b.x-a.x,dy=b.y-a.y,d=Math.hypot(dx,dy)||1,nx=-dy/d,ny=dx/d,last=i===n-1;
@@ -481,6 +495,11 @@ function drawBlanket(c){
     c.beginPath();c.moveTo(-7.5,-2.5);c.lineTo(-3,-.5);c.moveTo(7.5,-2.5);c.lineTo(3,-.5);c.stroke();c.fillStyle='#f28c96';c.beginPath();c.ellipse(0,5,2.6,3,0,0,TAU);c.fill();c.stroke();
   }else if(sleepy){
     c.beginPath();c.arc(-5,-2,2.6,.15,Math.PI-.15);c.moveTo(7.6,-1.6);c.arc(5,-2,2.6,.15,Math.PI-.15);c.stroke();c.beginPath();c.arc(0,4,1.3,0,TAU);c.fill();
+  }else if(wet>.6){   // 濕透：一臉委屈
+    c.beginPath();c.arc(-5,-1,2,0,TAU);c.arc(5,-1,2,0,TAU);c.fill();c.beginPath();c.moveTo(-8,-5);c.lineTo(-3.5,-4);c.moveTo(8,-5);c.lineTo(3.5,-4);c.stroke();
+    c.beginPath();c.arc(0,6.5,2.6,Math.PI+.3,TAU-.3);c.stroke();
+  }else if(mode==='play'&&sim.sun>.5&&wet>.05&&Math.abs(sim.wind)<160){   // 曬太陽：舒服
+    c.beginPath();c.arc(-5,-.5,2.6,Math.PI+.2,TAU-.2);c.moveTo(7.5,-1);c.arc(5,-.5,2.6,Math.PI+.2,TAU-.2);c.stroke();c.beginPath();c.arc(0,2.5,2.6,.2,Math.PI-.2);c.stroke();
   }else{
     const blink=(time%3.7)<.12;
     if(blink){c.beginPath();c.moveTo(-7,-1.5);c.lineTo(-3,-1.5);c.moveTo(3,-1.5);c.lineTo(7,-1.5);c.stroke();}
@@ -491,6 +510,7 @@ function drawBlanket(c){
   if(sleepy){c.fillStyle='#fffdf5';c.font='700 12px Fredoka,sans-serif';const zt=(time*.6)%1;c.globalAlpha=1-zt;c.fillText('z',P[1].x+8+zt*8,P[1].y-16-zt*16);c.globalAlpha=1;}
   if(sim.gripping){c.strokeStyle='#fffdf5';c.lineWidth=2;c.lineCap='round';const hx=P[1].x,hy=P[1].y-R-7;c.beginPath();for(let k=-1;k<=1;k++){c.moveTo(hx+k*7,hy-2);c.lineTo(hx+k*10,hy-8);}c.stroke();}
 }
+const wetVis=()=>(mode==='title'||mode==='over')?0:sim.wet;
 const dayPhase=()=>mode==='title'?.3:(sim.t%DAY_LEN)/DAY_LEN;
 const nightAmt=()=>{const p=dayPhase();return smooth(.66,.78,p)-smooth(.94,1,p);};
 
@@ -520,6 +540,10 @@ function render(){
   // 棉被與鴿子
   drawBlanket(g);
   const pp=pigeonPos();if(pp)drawPigeon(g,pp);
+  g.fillStyle='#7fc1f0';for(const d of drips){g.beginPath();g.moveTo(d.x,d.y-4);g.quadraticCurveTo(d.x+2.6,d.y,d.x,d.y+2);g.quadraticCurveTo(d.x-2.6,d.y,d.x,d.y-4);g.fill();}
+  g.strokeStyle='#fffdf5';g.lineWidth=1.8;g.lineCap='round';for(const w of steam){g.globalAlpha=clamp(w.life*1.4,0,.75);const q=Math.sin(w.life*9+w.p)*3;g.beginPath();g.moveTo(w.x,w.y);g.quadraticCurveTo(w.x+q,w.y-5,w.x,w.y-10);g.quadraticCurveTo(w.x-q,w.y-15,w.x,w.y-19);g.stroke();}
+  g.fillStyle='#ffe58a';for(const k of sparks){g.globalAlpha=clamp(k.life*2,0,1);const r=4*k.life+1.5;g.beginPath();g.moveTo(k.x,k.y-r);g.lineTo(k.x+r*.3,k.y-r*.3);g.lineTo(k.x+r,k.y);g.lineTo(k.x+r*.3,k.y+r*.3);g.lineTo(k.x,k.y+r);g.lineTo(k.x-r*.3,k.y+r*.3);g.lineTo(k.x-r,k.y);g.lineTo(k.x-r*.3,k.y-r*.3);g.fill();}
+  g.globalAlpha=1;
   for(const f of feathers){g.globalAlpha=clamp(f.life,0,1);g.fillStyle='#c9d0dc';g.beginPath();g.ellipse(f.x,f.y,4,1.6,f.a,0,TAU);g.fill();}g.globalAlpha=1;
   // 風的線條、落葉、雨
   g.lineCap='round';g.strokeStyle='#fffdf5';g.lineWidth=1.6;
@@ -538,12 +562,12 @@ function render(){
 }
 
 /* ───────── HUD ───────── */
-const el={hud:$('hud'),dayN:$('dayN'),wx:$('wx'),wind:$('wind'),windT:$('windT'),windA:$('windA'),banner:$('banner'),post:$('post'),postT:$('postT'),postL:$('postL'),hint:$('hint'),stam:$('stam'),fill:$('fill'),vig:$('vig'),title:$('title'),over:$('over'),best:$('best'),mute:$('mute')};
+const el={hud:$('hud'),dayN:$('dayN'),wx:$('wx'),wind:$('wind'),windT:$('windT'),windA:$('windA'),banner:$('banner'),post:$('post'),postT:$('postT'),postL:$('postL'),hint:$('hint'),stam:$('stam'),fill:$('fill'),wetT:$('wetT'),wetFill:$('wetFill'),vig:$('vig'),title:$('title'),over:$('over'),best:$('best'),mute:$('mute')};
 const WX={sunny:'晴',breezy:'風大',rain:'雨',typhoon:'颱風',doom:'晴'};
 const POSTS={sunny:['還在。','今天也沒掉。','它還在。','屹立不搖。','曬得很舒服的樣子。'],breezy:['風有點大，還在。','被吹歪了一點，沒掉。','還在，只是有點皺。'],rain:['淋濕了，還在。','下雨天，它還在。','變重了，但沒掉。'],typhoon:['颱風天，還在！','放颱風假，它沒放。','風超大，它還在！'],doom:['今天是末日預言日。它還在。']};
 const RANKS=[[365,'國民棉被'],[100,'百日信仰'],[60,'地方傳奇'],[30,'滿月被被'],[14,'撐過梅雨的被被'],[7,'一週戰士'],[3,'三分鐘熱度被'],[0,'曬一下就掉了']];
 const fmt=n=>n>=1e4?(n/1e4).toFixed(1)+'萬':String(Math.round(n));
-let bannerT=0,postT=0,lastWindKey='',lastFill=-1,lastHint='';
+let bannerT=0,postT=0,lastWindKey='',lastFill=-1,lastWet=-1,lastHint='';
 function banner(text,alert,dur){el.banner.textContent=text;el.banner.classList.toggle('alert',!!alert);el.banner.classList.add('show');bannerT=dur||2.2;}
 function post(text){const d=sim.day;el.postT.textContent=`Day ${d}。${text}`;el.postL.textContent='♡ '+fmt((300+Math.pow(d,1.5)*90)*(.8+Math.random()*.4));el.post.classList.add('show');postT=2.6;}
 function setHint(t){if(t!==lastHint){lastHint=t;el.hint.textContent=t;}}
@@ -561,6 +585,7 @@ function hud(dt){
     el.windA.textContent=dir?(dir>0?'›':'‹').repeat(Math.min(3,Math.max(1,lv-1))):'';
     el.wind.className='wind '+(dir===0?'calm':dir>0?'out':'in')+(lv>=3?' hard':'')+(warn?' warn':'');
     el.wind.style.flexDirection=dir<0?'row-reverse':'row';}
+  const wv=Math.round(sim.wet*100);if(wv!==lastWet){lastWet=wv;el.wetFill.style.width=wv+'%';el.wetT.textContent=wv<5?'蓬鬆':wv<35?'微濕':wv<80?'濕濕':'濕透';}
   const f=Math.round(sim.st);if(f!==lastFill){lastFill=f;el.fill.style.width=f+'%';}
   el.stam.classList.toggle('low',sim.st<28&&sim.lock<=0);el.stam.classList.toggle('lock',sim.lock>0);
   el.vig.style.opacity=mode==='play'?(clamp((sim.h-.22)/.35,0,1)*(.75+.25*Math.sin(time*9))).toFixed(2):'0';
@@ -579,7 +604,7 @@ function hud(dt){
 function start(){
   Snd.init();Snd.blip(520,880,.16,'triangle',.1);
   sim=new Sim((Math.random()*1e9)|0);cloth.place(sim.s);mode='play';fallT=0;shake=0;inp.grip=inp.tap=inp.shoo=false;pointers.clear();keyDown=false;
-  feathers.length=0;el.title.hidden=true;el.over.hidden=true;el.hud.hidden=false;el.dayN.textContent='1';el.wx.textContent=WX.sunny;lastWindKey='';lastFill=-1;
+  feathers.length=0;el.title.hidden=true;el.over.hidden=true;el.hud.hidden=false;el.dayN.textContent='1';el.wx.textContent=WX.sunny;lastWindKey='';lastFill=-1;lastWet=-1;drips.length=steam.length=sparks.length=0;
   banner('Day 1｜棉被被吹到鄰居的遮雨棚上了',false,3);
 }
 function gameOver(){
@@ -592,12 +617,15 @@ function showBest(){el.best.textContent=best>0?`最佳紀錄　Day ${best}`:'';}
 function handle(ev){
   switch(ev.type){
     case'day':{const w=sim.weather,d=sim.day;el.dayN.textContent=d;el.wx.textContent=WX[w];Snd.blip(660,990,.14,'triangle',.07);
-      const list=POSTS[w];post(ev.afterQuake?'地震完，還在。':list[Math.floor(Math.random()*list.length)]);
+      const list=POSTS[w];post(ev.afterQuake?'地震完，還在。':w==='sunny'&&sim.wet>.3?'出太陽了，正在曬乾。':list[Math.floor(Math.random()*list.length)]);
       if(w==='typhoon'&&d===sim.tyStart){banner('陸上颱風警報　抓緊！',true,3);Snd.blip(300,620,.5,'sawtooth',.05);Snd.blip(620,300,.5,'sawtooth',.05,.5);}
-      else if(w==='rain'&&d===4)banner('下雨了，鐵皮變得很滑',false,3);
+      else if(w==='rain'&&d===4)banner('下雨了：鐵皮變滑，被被會吸水變重',false,3.2);
       else if(w==='doom')banner('聽說今天是世界末日',false,3);
       else if(d===3)banner('連點螢幕，可以往牆邊爬回去',false,3);
       break;}
+    case'soaked':banner('被被濕透了：變重、抓緊更累，但比較不怕風',false,3.4);Snd.blip(300,180,.25,'sine',.08);break;
+    case'dried':banner('曬乾了！蓬鬆的被被回力氣更快',false,3);Snd.blip(700,1200,.18,'triangle',.08);Snd.blip(900,1500,.2,'triangle',.07,.12);
+      for(const n of cloth.p)if(Math.random()<.6)sparks.push({x:n.x+(Math.random()-.5)*10,y:n.y-R-4-Math.random()*14,life:.6+Math.random()*.5});break;
     case'quakeWarn':banner('國家級警報：地震，請抓緊',true,4);for(let i=0;i<3;i++)Snd.blip(880,880,.16,'square',.05,i*.24);break;
     case'quake':shake=10;break;
     case'pigeon':banner('鴿子來踩被被了，點牠！',false,2.6);Snd.blip(430,350,.2,'sine',.08);Snd.blip(430,350,.22,'sine',.08,.26);break;
@@ -620,7 +648,7 @@ function tick(dt){
   }
   const idle=mode==='title'||mode==='over';
   const wind=idle?70*Math.sin(time*.8)+45*Math.sin(time*2.1):sim.wind;
-  cloth.step(dt,{s:idle?14:sim.s,wind,grip:mode==='play'&&sim.gripping,fallen:mode==='fall',time,quake:mode==='play'&&sim.quake>0});
+  cloth.step(dt,{s:idle?14:sim.s,wind,grip:mode==='play'&&sim.gripping,fallen:mode==='fall',time,wet:idle?0:sim.wet,quake:mode==='play'&&sim.quake>0});
   if(mode==='over')cloth.place(14);
   windVis+=(wind-windVis)*Math.min(1,dt*6);
   const stormT=idle?0:sim.weather==='typhoon'?1:sim.weather==='rain'?.55:0,rainT=idle?0:(sim.weather==='typhoon'||sim.weather==='rain')?1:0;
@@ -634,6 +662,14 @@ function tick(dt){
   for(let i=leaves.length-1;i>=0;i--){const l=leaves[i];l.x+=windVis*1.1*dt;l.y+=(l.vy+Math.sin(time*5+i)*40)*dt;l.a+=l.va*dt;if(l.x<wx0-30||l.x>wx1+30)leaves.splice(i,1);}
   for(const c of clouds){c.x+=(7*c.v+windVis*.05)*dt;if(c.x>900)c.x=-520;else if(c.x<-520)c.x=900;}
   if(rainVis>.02)for(const d of drops){d.y+=760*dt;d.x+=windVis*.5*dt;if(d.y>wy1+10){d.y=wy0-20-Math.random()*40;d.x=wx0-150+Math.random()*(wx1-wx0+300);}}
+  // 水滴（濕的被被會滴水）、蒸氣（太陽在曬）
+  if(mode==='play'||mode==='fall'){const P=cloth.p,wt=sim.wet;
+    if(wt>.2&&Math.random()<dt*wt*7){let n=P[NODES-1];const fr=P.filter(q=>!q.on);if(fr.length)n=fr[(Math.random()*fr.length)|0];else if(Math.random()<.6)n=P[(NODES*.4+Math.random()*NODES*.6)|0];
+      drips.push({x:n.x+(Math.random()-.5)*8,y:n.y+R,vy:20,land:n.on});}
+    if(mode==='play'&&sim.sun>.3&&wt>.04&&Math.random()<dt*sim.sun*(2.5+6*wt)){const n=P[(Math.random()*NODES)|0];if(n.on)steam.push({x:n.x,y:n.y-R-2,p:Math.random()*TAU,life:.9});}}
+  for(let i=drips.length-1;i>=0;i--){const d=drips[i];d.vy+=620*dt;d.y+=d.vy*dt;d.x+=windVis*.12*dt;if(d.y>wy1+10||(d.land&&d.vy>70))drips.splice(i,1);}
+  for(let i=steam.length-1;i>=0;i--){const w=steam[i];w.y-=22*dt;w.x+=windVis*.1*dt;w.life-=dt;if(w.life<=0)steam.splice(i,1);}
+  for(let i=sparks.length-1;i>=0;i--){const k=sparks[i];k.y-=14*dt;k.life-=dt*1.1;if(k.life<=0)sparks.splice(i,1);}
   for(let i=feathers.length-1;i>=0;i--){const f=feathers[i];f.x+=(f.vx+windVis*.3)*dt;f.y+=f.vy*dt;f.vy+=120*dt;f.a+=4*dt;f.life-=dt*.9;if(f.life<=0)feathers.splice(i,1);}
   if(mode==='fall'){fallT+=dt;let top=1e9;for(const n of cloth.p)top=Math.min(top,n.y);if(top>wy1+40||fallT>3)gameOver();}
 }
