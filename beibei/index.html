@@ -242,13 +242,15 @@ class Sim{
     if(dur===undefined)dur=1+n*Math.max(.42,.62-.004*this.day);                                                  // 每個圈能用的時間越來越少
     const q={kind,t:0,dur,n,hit:new Array(n).fill(false),a0:this.rng()*TAU,dir:this.rng()<.5?1:-1,pts:[]};
     if(kind==='quake')for(let i=0;i<n;i++){let x,y,k=0;do{x=this.u(52,308);y=this.u(175,495);}while(k++<40&&q.pts.some(o=>Math.hypot(o.x-x,o.y-y)<78));q.pts.push({x,y});}
+    q.every=Math.max(.5,.8-.005*this.day);q.next=q.every;   // 地震：每隔這麼久一次強震，圈會被震到別的地方
     this.qte=q;this.gust=null;this.events.push({type:'qteStart',kind,n});}
   qteR(){const q=this.qte;return QTE_R*(.5+.5*smooth(0,.5,1-q.t/q.dur));}   // 時間剩不到一半就開始縮，最後縮到一半大
   qtePos(i){const q=this.qte;
     if(q.kind==='tor'){   // 一邊轉一邊被捲向漏斗雲：半徑越來越小、轉得越來越快
       const e=clamp(q.t/q.dur,0,1),k=Math.pow(e,1.3),r=lerp(112,44,k),a=q.a0+i*TAU/q.n+q.dir*q.t*(1.05+1.8*e);
       return{x:lerp(180,262,k)+Math.cos(a)*r,y:345+Math.sin(a)*r};}
-    return{x:q.pts[i].x+Math.sin(q.t*41+i*2.3)*5,y:q.pts[i].y+Math.cos(q.t*37+i*1.7)*5};}
+    const amp=5+9*(q.next<q.dur-.25?smooth(q.next-.18,q.next,q.t):0);   // 強震前一瞬間會抖得特別厲害
+    return{x:q.pts[i].x+Math.sin(q.t*41+i*2.3)*amp,y:q.pts[i].y+Math.cos(q.t*37+i*1.7)*amp};}
   setupDay(){
     const d=this.day,r=this.rng;let w;
     if(d>=this.tyStart+this.tyLen){this.tyStart=d+9+Math.floor(r()*6);this.tyLen=2+(d>40&&r()<.5?1:0);this.tyN++;w='sunny';}
@@ -323,6 +325,11 @@ class Sim{
       if(T.leave>=0&&(T.leave+=dt)>=.8)this.tor=null;}
     if(this.qte){const q=this.qte;q.t+=dt;
       if(inp.hits)for(const i of inp.hits)if(i>=0&&i<q.n&&!q.hit[i]){q.hit[i]=true;this.events.push({type:'qteHit',i});}
+      if(q.kind==='quake'&&q.t>=q.next&&q.t<q.dur-.25&&q.hit.includes(false)){q.next+=q.every;const from=[];   // 強震：還沒點掉的圈瞬間跳到新位置
+        for(let i=0;i<q.n;i++){if(q.hit[i])continue;const o=q.pts[i];from.push({x:o.x,y:o.y});let x,y,k=0;
+          do{x=this.u(52,308);y=this.u(175,495);}while(k++<40&&(Math.hypot(o.x-x,o.y-y)<70||q.pts.some((w,j)=>j!==i&&!q.hit[j]&&Math.hypot(w.x-x,w.y-y)<78)));
+          q.pts[i]={x,y};}
+        this.events.push({type:'qteJump',from});}
       const got=q.hit.filter(Boolean).length;
       if(got===q.n||q.t>=q.dur){const c=got/q.n,push=(1-c)*(q.kind==='tor'?TOR_TOTAL:QUAKE_TOTAL);
         if(push>0){this.shove+=push;this.shoveCause=q.kind==='tor'?'tornado':'quake';this.shoveT=push/520+1.6;}
@@ -786,6 +793,7 @@ function handle(ev){
     case'torWarn':banner('龍捲風警報！圈圈出現就全部點掉',true,3);for(let i=0;i<4;i++)Snd.blip(i%2?520:700,i%2?520:700,.2,'sawtooth',.05,i*.22);break;
     case'quakeWarn':banner('國家級警報：地震！圈圈出現就全部點掉',true,3);for(let i=0;i<3;i++)Snd.blip(880,880,.16,'square',.05,i*.24);break;
     case'qteStart':shake=Math.max(shake,ev.kind==='quake'?10:5);Snd.blip(300,600,.12,'square',.05);break;
+    case'qteJump':shake=Math.max(shake,12);Snd.blip(95,48,.16,'square',.09);for(const f of ev.from)ripples.push({x:f.x,y:f.y,life:.35,big:true});break;
     case'qteHit':{const p=sim.qte?sim.qtePos(ev.i):null;if(p){ripples.push({x:p.x,y:p.y,life:.35,big:true});for(let i=0;i<4;i++)sparks.push({x:p.x+(Math.random()-.5)*26,y:p.y+(Math.random()-.5)*26,life:.5+Math.random()*.3});}
       Snd.blip(700+ev.i*90,1100+ev.i*90,.09,'triangle',.09);break;}
     case'qteEnd':{const what=ev.kind==='tor'?'龍捲風':'地震';
