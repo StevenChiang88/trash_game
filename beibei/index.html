@@ -236,6 +236,7 @@ class Sim{
     const q={kind,t:0,dur,n,hit:new Array(n).fill(false),a0:this.rng()*TAU,dir:this.rng()<.5?1:-1,pts:[]};
     if(kind==='quake')for(let i=0;i<n;i++){let x,y,k=0;do{x=this.u(52,308);y=this.u(175,495);}while(k++<40&&q.pts.some(o=>Math.hypot(o.x-x,o.y-y)<78));q.pts.push({x,y});}
     this.qte=q;this.gust=null;this.events.push({type:'qteStart',kind,n});}
+  qteR(){const q=this.qte;return QTE_R*(.5+.5*smooth(0,.5,1-q.t/q.dur));}   // 時間剩不到一半就開始縮，最後縮到一半大
   qtePos(i){const q=this.qte;
     if(q.kind==='tor'){const a=q.a0+i*TAU/q.n+q.dir*q.t*1.05;return{x:180+Math.cos(a)*104,y:345+Math.sin(a)*104};}
     return{x:q.pts[i].x+Math.sin(q.t*41+i*2.3)*5,y:q.pts[i].y+Math.cos(q.t*37+i*1.7)*5};}
@@ -645,12 +646,12 @@ function render(){
   for(const r of ripples){const e=1-r.life/.35;g.globalAlpha=(1-e)*.9;g.lineWidth=3;g.strokeStyle=r.bad?'#ee5b3a':'#fffdf5';g.beginPath();g.arc(r.x,r.y,8+e*(r.big?34:20),0,TAU);g.stroke();}
   g.globalAlpha=1;
   if(mode==='play'&&sim.qte){const q=sim.qte,left=clamp(1-q.t/q.dur,0,1),urgent=left<.3,pulse=1+.06*Math.sin(time*14);
-    for(let i=0;i<q.n;i++){if(q.hit[i])continue;const p=sim.qtePos(i),rad=QTE_R*pulse;
+    for(let i=0;i<q.n;i++){if(q.hit[i])continue;const p=sim.qtePos(i),rad=sim.qteR()*pulse,dot=rad/QTE_R;
       g.fillStyle='rgba(255,253,245,.34)';g.beginPath();g.arc(p.x,p.y,rad,0,TAU);g.fill();
       g.lineWidth=8;g.strokeStyle=INK;g.beginPath();g.arc(p.x,p.y,rad,0,TAU);g.stroke();
       g.lineWidth=4;g.strokeStyle='#fffdf5';g.beginPath();g.arc(p.x,p.y,rad,0,TAU);g.stroke();
       g.strokeStyle=urgent?'#ee5b3a':'#ffc64a';g.beginPath();g.arc(p.x,p.y,rad,-Math.PI/2,-Math.PI/2+TAU*left);g.stroke();   // 外圈：剩餘時間
-      g.fillStyle=INK;g.beginPath();g.arc(p.x,p.y,7,0,TAU);g.fill();g.fillStyle=urgent?'#ee5b3a':'#ffc64a';g.beginPath();g.arc(p.x,p.y,4.4,0,TAU);g.fill();}}
+      g.fillStyle=INK;g.beginPath();g.arc(p.x,p.y,7*dot,0,TAU);g.fill();g.fillStyle=urgent?'#ee5b3a':'#ffc64a';g.beginPath();g.arc(p.x,p.y,4.4*dot,0,TAU);g.fill();}}
   g.setTransform(1,0,0,1,0,0);
   if(flash>0){g.fillStyle='#fff';g.globalAlpha=flash*.6;g.fillRect(0,0,W,H);g.globalAlpha=1;}
 }
@@ -829,7 +830,7 @@ function frame(now){
 function down(cx,cy){
   if(mode!=='play')return;
   const b=gameEl.getBoundingClientRect(),x=(cx-b.left-ox)/scale,y=(cy-b.top-oy)/scale;
-  if(sim.qte){let best=-1,bd=QTE_R+16;for(let i=0;i<sim.qte.n;i++){if(sim.qte.hit[i]||inp.hits.includes(i))continue;const p=sim.qtePos(i),d=Math.hypot(x-p.x,y-p.y);if(d<bd){bd=d;best=i;}}
+  if(sim.qte){let best=-1,bd=sim.qteR()+16;for(let i=0;i<sim.qte.n;i++){if(sim.qte.hit[i]||inp.hits.includes(i))continue;const p=sim.qtePos(i),d=Math.hypot(x-p.x,y-p.y);if(d<bd){bd=d;best=i;}}
     if(best>=0)inp.hits.push(best);else{ripples.push({x,y,life:.35,bad:true});Snd.blip(170,130,.07,'triangle',.04);}return;}
   const p=pigeonPos();
   if(p&&sim.pigeon.phase!=='out'&&Math.hypot(x-p.x,y-(p.y-10*PIGEON_SC[p.lv]))<30+10*PIGEON_SC[p.lv]){if(sim.pigeon.phase==='in'){sim.pigeon.phase='on';sim.pigeon.t=0;}inp.shoo=true;return;}
