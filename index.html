@@ -24,17 +24,18 @@
   --sun:#ffc64a;        /* 力氣條、太陽 */
   --sky:#9fd3ee;
   --water:#5fb0ea;      /* 濕度條、水滴 */
+  --backdrop:#211f33;   /* 電腦版：手機畫面外的底色 */
   --display:"Fredoka","Chiron GoRound TC","PingFang TC","Microsoft JhengHei",sans-serif;
   --body:"Chiron GoRound TC","PingFang TC","Noto Sans TC","Microsoft JhengHei",sans-serif;
   --sticker:-2px -2px 0 var(--ink),2px -2px 0 var(--ink),-2px 2px 0 var(--ink),2px 2px 0 var(--ink),0 -2.5px 0 var(--ink),0 2.5px 0 var(--ink),-2.5px 0 0 var(--ink),2.5px 0 0 var(--ink);
 }
 html,body{height:100%}
-body{background:var(--sky);color:var(--ink);font-family:var(--body);font-weight:500;overflow:hidden;overscroll-behavior:none}
-#game{position:relative;height:100%;overflow:hidden;touch-action:none;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent}
+body{background:var(--sky);color:var(--ink);font-family:var(--body);font-weight:500;overflow:hidden;overscroll-behavior:none;display:grid;place-items:center}
+#game{position:relative;height:100%;aspect-ratio:9/16;max-width:100%;overflow:hidden;touch-action:none;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent}
 #c{position:absolute;inset:0;width:100%;height:100%;display:block}
 #vig{position:absolute;inset:0;pointer-events:none;opacity:0;background:radial-gradient(ellipse at 50% 50%,transparent 45%,var(--alert) 130%)}
 
-.hud{position:absolute;inset:0;max-width:480px;margin-inline:auto;pointer-events:none;display:flex;flex-direction:column;gap:10px;padding-block:12px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.hud{position:absolute;inset:0;pointer-events:none;display:flex;flex-direction:column;gap:10px;padding-block:12px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
 .top{display:flex;align-items:flex-start;justify-content:space-between;gap:8px}
 .day{display:flex;align-items:baseline;gap:6px;font-family:var(--display);color:var(--quilt);text-shadow:var(--sticker);line-height:1}
 .day-l{font-size:18px;font-weight:700}
@@ -73,6 +74,7 @@ body{background:var(--sky);color:var(--ink);font-family:var(--body);font-weight:
 .track{flex:1;height:18px;border:2.5px solid var(--ink);border-radius:999px;background:var(--quilt);overflow:hidden}
 .fill{height:100%;width:100%;background:var(--sun);border-right:2.5px solid var(--ink);transform-origin:left center}
 .stam.low .fill{background:var(--alert)}
+.stam.held .track{border-style:dashed}
 .stam.lock .fill{background:repeating-linear-gradient(45deg,var(--alert) 0 6px,var(--quilt) 6px 12px)}
 
 .screen{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;gap:14px;padding-block:28px 24px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));text-align:center}
@@ -102,6 +104,8 @@ body{background:var(--sky);color:var(--ink);font-family:var(--body);font-weight:
 .stats .wide{grid-column:1/-1}
 .acts{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
 .copied{font-size:13px;font-weight:900;color:var(--tin-deep);min-height:1.3em;user-select:text;-webkit-user-select:text}
+/* 比手機寬的螢幕：維持手機尺寸，置中顯示 */
+@media (min-aspect-ratio:10/16){body{background:var(--backdrop)}#game{height:min(100% - 32px,900px);border-radius:26px;box-shadow:0 0 0 3px var(--ink),0 18px 50px rgba(0,0,0,.45)}}
 @media (prefers-reduced-motion:reduce){.wind.warn,.card{animation:none}.banner,.post{transition:none}}
 </style>
 </head>
@@ -180,6 +184,7 @@ const A_EFF=AW_LEN-S0;
 
 /* ───────── 規則模型：棉被在鐵皮上的一維滑動 ───────── */
 const DAY_LEN=6,G=600,MU_FREE=.36,MU_RAIN=.28,MU_GRIP=1.6,H_FALL=.7;
+const PIGEON_LOAD=.18;
 const ST_MAX=100,ST_DRAIN=24,ST_REGEN=15,ST_TAP=6,LOCK_T=1.1;
 
 class Sim{
@@ -209,7 +214,7 @@ class Sim{
     }
   }
   slipping(){const h=this.h,on=1-h,pg=this.pigeon;
-    const drive=G*(h*(1+.35*this.wet)+(pg&&pg.phase==='on'?.09:0)+on*SIN_)+this.wind*(.6+1.2*h)*(1-.35*this.wet);
+    const drive=G*(h*(1+.35*this.wet)+(pg&&pg.phase==='on'?PIGEON_LOAD:0)+on*SIN_)+this.wind*(.6+1.2*h)*(1-.35*this.wet);
     return this.v>15||this.quake>0||drive-lerp(MU_FREE,MU_RAIN,this.slick)*G*UX*on>40;}
   gustSpec(){
     const d=this.day,D=d/30,m=1+.35*D,q=1+.25*Math.min(D,3);
@@ -272,7 +277,7 @@ class Sim{
     if(grip){this.st-=ST_DRAIN*(1+.25*this.wet)*dt;this.regenWait=.25;
       if(this.st<=0){this.st=0;this.lock=LOCK_T;grip=false;this.events.push({type:'exhausted'});}}
     else{this.lock=Math.max(0,this.lock-dt);
-      if(this.regenWait>0)this.regenWait-=dt;else this.st=Math.min(ST_MAX,this.st+ST_REGEN*(this.wet<.05?1.2:1)*dt);}
+      if(this.regenWait>0)this.regenWait-=dt;else if(!(pg&&pg.phase==='on'))this.st=Math.min(ST_MAX,this.st+ST_REGEN*(this.wet<.05?1.2:1)*dt);}
     if(inp.tap&&this.lock<=0&&this.st>=ST_TAP&&this.tapCd<=0){
       this.st-=ST_TAP;this.tapCd=.1;this.regenWait=.25;
       this.v=Math.max(Math.min(this.v,0)-112*(1-.25*this.wet),-230);this.events.push({type:'crawl'});}
@@ -280,7 +285,7 @@ class Sim{
 
     // 力學：垂在外面的越多，越會被自己拖下去
     const h=clamp((this.s+BL-A_EFF)/BL,0,1),on=1-h;this.h=h;
-    let drive=G*(h*(1+.35*this.wet)+(pg&&pg.phase==='on'?.09:0)+on*SIN_)+this.wind*(.6+1.2*h)*(1-.35*this.wet);
+    let drive=G*(h*(1+.35*this.wet)+(pg&&pg.phase==='on'?PIGEON_LOAD:0)+on*SIN_)+this.wind*(.6+1.2*h)*(1-.35*this.wet);
     if(this.quake>0)drive+=this.jolt;
     const inward=this.v<-1||(Math.abs(this.v)<=1&&drive<0);
     let mu=grip&&!inward?MU_GRIP:lerp(MU_FREE,MU_RAIN,this.slick);
@@ -587,11 +592,11 @@ function hud(dt){
     el.wind.style.flexDirection=dir<0?'row-reverse':'row';}
   const wv=Math.round(sim.wet*100);if(wv!==lastWet){lastWet=wv;el.wetFill.style.width=wv+'%';el.wetT.textContent=wv<5?'蓬鬆':wv<35?'微濕':wv<80?'濕濕':'濕透';}
   const f=Math.round(sim.st);if(f!==lastFill){lastFill=f;el.fill.style.width=f+'%';}
-  el.stam.classList.toggle('low',sim.st<28&&sim.lock<=0);el.stam.classList.toggle('lock',sim.lock>0);
+  el.stam.classList.toggle('low',sim.st<28&&sim.lock<=0);el.stam.classList.toggle('lock',sim.lock>0);el.stam.classList.toggle('held',!!(sim.pigeon&&sim.pigeon.phase==='on'));
   el.vig.style.opacity=mode==='play'?(clamp((sim.h-.22)/.35,0,1)*(.75+.25*Math.sin(time*9))).toFixed(2):'0';
   if(mode==='play'){
     if(sim.lock>0)setHint('沒力了…');
-    else if(sim.pigeon&&sim.pigeon.phase==='on')setHint('點鴿子，趕走牠！');
+    else if(sim.pigeon&&sim.pigeon.phase==='on')setHint('被鴿子踩著：會往外滑、力氣回不來。點牠！');
     else if(sim.h>.04&&(crawls<4||sim.day<=6))setHint('滑出去了！連點螢幕往牆邊爬');
     else if(sim.h>.3)setHint('連點！往牆邊爬！');
     else if(!everGrip&&sim.day<=2)setHint('風往外吹的時候，按住螢幕抓緊');
@@ -628,7 +633,7 @@ function handle(ev){
       for(const n of cloth.p)if(Math.random()<.6)sparks.push({x:n.x+(Math.random()-.5)*10,y:n.y-R-4-Math.random()*14,life:.6+Math.random()*.5});break;
     case'quakeWarn':banner('國家級警報：地震，請抓緊',true,4);for(let i=0;i<3;i++)Snd.blip(880,880,.16,'square',.05,i*.24);break;
     case'quake':shake=10;break;
-    case'pigeon':banner('鴿子來踩被被了，點牠！',false,2.6);Snd.blip(430,350,.2,'sine',.08);Snd.blip(430,350,.22,'sine',.08,.26);break;
+    case'pigeon':banner('鴿子來踩被被了，點牠趕走！',false,2.6);Snd.blip(430,350,.2,'sine',.08);Snd.blip(430,350,.22,'sine',.08,.26);break;
     case'shoo':{const p=pigeonPos();if(p)for(let i=0;i<6;i++)feathers.push({x:p.x,y:p.y-10,vx:(Math.random()-.5)*120,vy:-40-Math.random()*60,a:Math.random()*TAU,life:1});Snd.blip(900,500,.1,'triangle',.06);break;}
     case'crawl':cloth.crawl();everCrawl=true;crawls++;Snd.blip(230,340,.07,'sine',.09);break;
     case'exhausted':Snd.blip(320,140,.3,'triangle',.08);break;
