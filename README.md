@@ -34,6 +34,23 @@
 沒有任何建置步驟，直接用瀏覽器打開 `index.html` 就能玩（電腦上會以手機尺寸置中顯示），也可以整個資料夾丟上 GitHub Pages。
 畫面、物理與音效全部寫在這一個檔案裡（Canvas 2D + Web Audio 即時合成），只有字型從 Google Fonts 載入。
 
+## 部署到 GitHub Pages
+
+1. 把這些檔案合併到 `main`。
+2. repo 設為 public（免費帳號的 Pages 只支援 public repo）。
+3. Settings → Pages → Source 選「Deploy from a branch」，分支選 `main`、資料夾選 `/ (root)`，按 Save。
+
+大約一分鐘後就能在 `https://stevenchiang88.github.io/trash_game/` 玩。
+
+| 檔案 | 用途 |
+| --- | --- |
+| `index.html` | 遊戲本體 |
+| `og.png` | 貼連結到 Threads、LINE 時顯示的預覽圖（1200×630） |
+| `favicon.svg`、`apple-touch-icon.png` | 瀏覽器分頁與手機主畫面的圖示 |
+| `.nojekyll` | 讓 Pages 原樣提供檔案，不經過 Jekyll |
+
+`index.html` 開頭的分享預覽標籤和「複製戰績」附上的連結都寫死上面那個網址；如果換了 repo 名稱或自訂網域，要一起改 `og:url`、`og:image` 和 `canonical`。
+
 ## 說明
 
 這是粉絲向的原創作品，與原觀察帳號無關，沒有使用任何原貼文的照片或內容。

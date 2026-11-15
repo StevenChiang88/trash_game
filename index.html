@@ -3,6 +3,22 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<meta name="description" content="你是卡在遮雨棚上的那條棉被。按住抓緊，撐過強風、下雨、地震、颱風和鴿子，看你能撐幾天。">
+<meta name="theme-color" content="#9fd3ee">
+<link rel="canonical" href="https://stevenchiang88.github.io/trash_game/">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="被被撐住">
+<meta property="og:title" content="被被撐住｜卡在遮雨棚上的棉被，今天掉了嗎？">
+<meta property="og:description" content="你是卡在遮雨棚上的那條棉被。按住抓緊，撐過強風、下雨、地震、颱風和鴿子，看你能撐幾天。">
+<meta property="og:url" content="https://stevenchiang88.github.io/trash_game/">
+<meta property="og:image" content="https://stevenchiang88.github.io/trash_game/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="一條有表情的白色棉被趴在公寓的綠色鐵皮遮雨棚上">
+<meta property="og:locale" content="zh_TW">
+<meta name="twitter:card" content="summary_large_image">
 <style>
   /* 與發佈環境相同的最小底座：上下避開瀏海與手勢列 */
   html{box-sizing:border-box;padding:env(safe-area-inset-top,0px) 0 env(safe-area-inset-bottom,0px)}
@@ -749,7 +765,7 @@ $('start').addEventListener('click',start);
 $('again').addEventListener('click',start);
 el.mute.addEventListener('click',()=>{Snd.init();Snd.setOn(!Snd.on);muteIcon();});
 $('share').addEventListener('click',async()=>{
-  const text=`我的被被在遮雨棚上撐到 Day ${runDay} 才掉下去，封號「${$('ovRank').textContent}」。你的能撐幾天？`,out=$('copied');
+  const text=`我的被被在遮雨棚上撐到 Day ${runDay} 才掉下去，封號「${$('ovRank').textContent}」。你的能撐幾天？`+(document.querySelector('link[rel=canonical]')?' '+document.querySelector('link[rel=canonical]').href:''),out=$('copied');
   try{await navigator.clipboard.writeText(text);out.textContent='已複製，貼到脆上炫耀吧';}
   catch(e){out.textContent=text;const r=document.createRange();r.selectNodeContents(out);const s=getSelection();s.removeAllRanges();s.addRange(r);}
 });
