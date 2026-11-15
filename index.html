@@ -43,8 +43,10 @@ body{background:var(--sky);color:var(--ink);font-family:var(--body);font-weight:
 .day-n{font-size:46px;font-weight:700;font-variant-numeric:tabular-nums}
 .wx{font-family:var(--body);font-weight:900;font-size:15px;margin-left:2px}
 .side{display:flex;align-items:center;gap:8px}
-.wind{display:flex;align-items:center;gap:6px;min-width:96px;justify-content:center;padding:6px 12px;border:2.5px solid var(--ink);border-radius:999px;background:var(--quilt);font-weight:900;font-size:15px;line-height:1.2;white-space:nowrap}
-.wind i{font-family:var(--display);font-style:normal;font-size:20px;line-height:.8;letter-spacing:-2px}
+.wind{display:flex;align-items:center;gap:6px;min-width:96px;height:36px;box-sizing:border-box;justify-content:center;padding:0 12px;border:2.5px solid var(--ink);border-radius:999px;background:var(--quilt);font-weight:900;font-size:15px;line-height:1;white-space:nowrap}
+.wind i{display:flex;align-items:center}
+.wind i:empty{display:none}
+.wind i svg{display:block;width:9px;height:14px;margin-inline:-1px}
 .wind.calm{opacity:.75}
 .wind.in{background:var(--tin);color:var(--quilt)}
 .wind.out{background:var(--sun)}
@@ -600,7 +602,7 @@ function hud(dt){
   if(gst){dir=gst.dir;str=gst.str;warn=gst.t<gst.tele;}else{str=Math.abs(sim.wind);dir=str<50?0:Math.sign(sim.wind);}
   const lv=str<50?0:str<160?1:str<300?2:str<480?3:4,key=dir+'|'+lv+'|'+warn;
   if(key!==lastWindKey){lastWindKey=key;el.windT.textContent=['無風','微風','有風','強風','暴風'][dir?lv:0];
-    el.windA.textContent=dir?(dir>0?'›':'‹').repeat(Math.min(3,Math.max(1,lv-1))):'';
+    el.windA.innerHTML=dir?`<svg viewBox="0 0 9 14" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="${dir>0?'M2.5 2.5 7 7l-4.5 4.5':'M6.5 2.5 2 7l4.5 4.5'}"/></svg>`.repeat(Math.min(3,Math.max(1,lv-1))):'';
     el.wind.className='wind '+(dir===0?'calm':dir>0?'out':'in')+(lv>=3?' hard':'')+(warn?' warn':'');
     el.wind.style.flexDirection=dir<0?'row-reverse':'row';}
   const wv=Math.round(sim.wet*100);if(wv!==lastWet){lastWet=wv;el.wetFill.style.width=wv+'%';el.wetT.textContent=wv<5?'蓬鬆':wv<35?'微濕':wv<80?'濕濕':'濕透';}
