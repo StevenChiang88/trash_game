@@ -228,14 +228,14 @@ class Sim{
   constructor(seed){this.rng=rng32(seed);this.t=0;this.day=1;this.s=14;this.v=0;this.h=0;
     this.st=ST_MAX;this.regenWait=0;this.tapCd=0;this.effort=0;
     this.wet=0;this.slick=0;this.sun=0;this.soaked=false;this.wind=0;this.gust=null;this.gustWait=1.6;this.phi=this.rng()*TAU;
-    this.quake=0;this.quakeAt=-1;this.quakeWarned=false;this.hadQuake=false;this.qte=null;this.shove=0;this.shoveT=0;this.shoveCause='fall';
+    this.quake=0;this.quakeAt=-1;this.quakeWarned=false;this.hadQuake=false;this.qte=null;this.shove=0;this.shoveT=0;this.shoveCause='fall';this.brace=0;
     this.pigeon=null;this.pigeonAt=-1;this.dirt=0;this.uncle=null;this.uncleAt=-1;this.spit=0;
     this.tyStart=9;this.tyLen=2;this.tyN=1;this.doomDone=false;
     this.tor=null;this.torAt=-1;this.hadTor=false;this.cause='fall';
     this.fallen=false;this.events=[];this.weather='sunny';this.setupDay();}
   u(a,b){return a+(b-a)*this.rng()}
   get stMax(){return ST_MAX-DIRT_COST*this.dirt}   // 髒了，力氣上限就變少
-  get gripping(){return this.effort>0}             // 剛點過：正在用力
+  get gripping(){return this.effort>0||!!this.qte}             // 剛點過：正在用力
   // 圈圈事件：龍捲風的圈會繞著轉，地震的圈會原地亂抖
   startQte(kind,n,dur){
     if(n===undefined)n=kind==='tor'?Math.min(8,3+Math.floor(this.day/8)):Math.min(6,3+Math.floor(this.day/12));   // 越後面圈越多
@@ -243,7 +243,7 @@ class Sim{
     const q={kind,t:0,dur,n,hit:new Array(n).fill(false),a0:this.rng()*TAU,dir:this.rng()<.5?1:-1,pts:[]};
     if(kind==='quake')for(let i=0;i<n;i++){let x,y,k=0;do{x=this.u(52,308);y=this.u(175,495);}while(k++<40&&q.pts.some(o=>Math.hypot(o.x-x,o.y-y)<78));q.pts.push({x,y});}
     q.every=Math.max(.5,.8-.005*this.day);q.next=q.every;   // 地震：每隔這麼久一次強震，圈會被震到別的地方
-    this.qte=q;this.gust=null;this.events.push({type:'qteStart',kind,n});}
+    this.qte=q;this.gust=null;this.v=0;this.events.push({type:'qteStart',kind,n});}   // 事件一開始被被就縮緊不動，風也先停
   qteR(){const q=this.qte;return QTE_R*(.5+.5*smooth(0,.5,1-q.t/q.dur));}   // 時間剩不到一半就開始縮，最後縮到一半大
   qtePos(i){const q=this.qte;
     if(q.kind==='tor'){   // 一邊轉一邊被捲向漏斗雲：半徑越來越小、轉得越來越快
@@ -291,11 +291,12 @@ class Sim{
     if(d!==this.day){const q=this.hadQuake,tq=this.hadTor;this.hadQuake=this.hadTor=false;this.day=d;this.setupDay();this.events.push({type:'day',afterQuake:q,afterTor:tq});}
 
     // 風：背景風 + 一陣一陣的陣風（先預告再吹）
+    const warn=(this.quakeAt>0&&this.quakeWarned)||(!!this.tor&&this.tor.t<0);   // 警報響了：不再起新的陣風，也不來鴿子
     const sp=this.qte?null:this.gustSpec();let gustNow=0;   // 圈圈事件進行中先不吹陣風
     if(this.gust){const g=this.gust;g.t+=dt;const x=g.t-g.tele;
       const a=x<0?0:x<g.ramp?x/g.ramp:x<g.ramp+g.hold?1:1-(x-g.ramp-g.hold)/g.ramp;
       if(a<0){this.gust=null;this.gustWait=sp?this.u(sp.g0,sp.g1):1;}else gustNow=g.dir*g.str*a;}
-    else if(sp){this.gustWait-=dt;if(this.gustWait<=0){
+    else if(sp&&!warn){this.gustWait-=dt;if(this.gustWait<=0){
       this.gust={t:0,dir:this.rng()<sp.right?1:-1,str:this.u(sp.a,sp.b),tele:Math.max(.45,.85-.1*this.day/30),ramp:.28,hold:this.u(sp.h0,sp.h1)};
       this.events.push({type:'gust',dir:this.gust.dir,str:this.gust.str});}}
     const ty=this.weather==='typhoon';
@@ -334,14 +335,15 @@ class Sim{
       if(got===q.n||q.t>=q.dur){const c=got/q.n,push=(1-c)*(q.kind==='tor'?TOR_TOTAL:QUAKE_TOTAL);
         if(push>0){this.shove+=push;this.shoveCause=q.kind==='tor'?'tornado':'quake';this.shoveT=push/520+1.6;}
         this.qte=null;if(q.kind==='tor'&&this.tor)this.tor.leave=0;
+        this.gust=null;this.gustWait=Math.max(this.gustWait,1.8);this.brace=.7;   // 事件結束後先喘口氣：不會馬上又來一陣風，被被也多撐 0.7 秒不滑
         this.events.push({type:'qteEnd',kind:q.kind,c,miss:q.n-got,push});}}
     this.quake=this.qte&&this.qte.kind==='quake'?1:0;
 
     // 鴿子
-    if(this.pigeonAt>0&&this.t>=this.pigeonAt){this.pigeonAt=-1;const x=this.rng(),lv=this.day>=20&&x<.2?3:this.day>=10&&x<.55?2:1;   // Day 10 起有胖鴿，Day 20 起有鴿王
+    if(this.pigeonAt>0&&this.t>=this.pigeonAt&&!warn&&!this.qte){this.pigeonAt=-1;const x=this.rng(),lv=this.day>=20&&x<.2?3:this.day>=10&&x<.55?2:1;   // Day 10 起有胖鴿，Day 20 起有鴿王
       this.pigeon={phase:'in',t:0,poops:0,lv,hp:PIGEON_HP[lv]};this.events.push({type:'pigeon',lv});}
     const pg=this.pigeon;
-    if(pg){pg.t+=dt;
+    if(pg){if(!this.qte)pg.t+=dt;   // 圈圈事件中鴿子的計時暫停（這時候點不到牠，不該被偷大便）
       // 沒被趕走就會大便，一隻最多兩坨
       if(pg.phase==='on'&&!inp.shoo&&pg.poops<2&&pg.t>=POOP_AT*(pg.poops+1)){pg.poops++;this.dirt=Math.min(DIRT_MAX,this.dirt+1);this.events.push({type:'poop'});}
       if(pg.phase==='in'&&pg.t>=.8){pg.phase='on';pg.t=0;}
@@ -378,6 +380,8 @@ class Sim{
     const fmax=lerp(MU_FREE,MU_RAIN,this.slick)*(this.v>1?KIN:1)*G*UX*on;
     if(Math.abs(this.v)<1e-3){this.v=Math.abs(drive)<=fmax?0:(drive-Math.sign(drive)*fmax)*dt;}
     else{const nv=this.v+(drive-Math.sign(this.v)*fmax)*dt;this.v=(nv*this.v<0&&Math.abs(drive)<=fmax)?0:nv;}
+    if(this.brace>0&&!this.qte&&this.shove<=0)this.brace-=dt;
+    if(this.qte||(this.brace>0&&this.v>0))this.v=0;   // 圈圈事件中（和剛結束的一瞬間）不會往外滑：這段時間點不了被被，只看圈圈點得怎樣
     this.s+=this.v*dt;
     if(this.shove>0){const m=Math.min(this.shove,520*dt);this.shove-=m;this.s+=m;if(this.v<0)this.v=0;}   // 被龍捲風／地震推出去
     if(this.shoveT>0)this.shoveT-=dt;
