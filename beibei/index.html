@@ -707,14 +707,12 @@ function render(){
   g.setTransform(k,0,0,k,ox*dpr,oy*dpr);g.lineCap='round';
   for(const r of ripples){const e=1-r.life/.35;g.globalAlpha=(1-e)*.9;g.lineWidth=3;g.strokeStyle=r.bad?'#ee5b3a':'#fffdf5';g.beginPath();g.arc(r.x,r.y,8+e*(r.big?34:20),0,TAU);g.stroke();}
   g.globalAlpha=1;
-  if(mode==='play'&&sim.qte){const q=sim.qte;g.textAlign='center';g.textBaseline='middle';
+  if(mode==='play'&&sim.qte){const q=sim.qte;
     for(let i=q.n-1;i>=0;i--){if(!sim.qteShown(i))continue;const o=q.notes[i],d=q.t-o.at,now=Math.abs(d)<=QTE_PERF,late=d>QTE_PERF,ring=sim.qteRing(i);
       g.globalAlpha=clamp((d+q.A)/.12,0,1);
-      // 要點的圈：大小固定，裡面的數字是順序
-      g.fillStyle=now?'rgba(255,253,245,.8)':'rgba(255,253,245,.4)';g.beginPath();g.arc(o.x,o.y,QTE_R,0,TAU);g.fill();
-      g.lineWidth=8;g.strokeStyle=INK;g.beginPath();g.arc(o.x,o.y,QTE_R,0,TAU);g.stroke();
-      g.lineWidth=4;g.strokeStyle='#fffdf5';g.beginPath();g.arc(o.x,o.y,QTE_R,0,TAU);g.stroke();
-      g.font='700 24px Fredoka,"Chiron GoRound TC",sans-serif';g.lineWidth=5;g.strokeStyle='#fffdf5';g.strokeText(i+1,o.x,o.y+1.5);g.fillStyle=INK;g.fillText(i+1,o.x,o.y+1.5);
+      // 要點的地方：一顆實心的圓鈕（不畫成圈，畫面上只有外面那一圈在縮）
+      g.fillStyle=now?'#2f9a7c':late?'#ee5b3a':'#fffdf5';g.beginPath();g.arc(o.x,o.y,QTE_R,0,TAU);g.fill();
+      g.lineWidth=3.5;g.strokeStyle=INK;g.beginPath();g.arc(o.x,o.y,QTE_R,0,TAU);g.stroke();
       // 縮圈：貼上的那一瞬間變綠，過頭變紅
       const col=now?'#2f9a7c':late?'#ee5b3a':'#ffc64a';
       g.lineWidth=now?9:6.5;g.strokeStyle=INK;g.beginPath();g.arc(o.x,o.y,ring,0,TAU);g.stroke();
