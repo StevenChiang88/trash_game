@@ -313,8 +313,8 @@ class Sim{
     const dry=.012+.11*this.sun+.03*Math.min(Math.abs(this.wind)/300,1),w0=this.wet;
     this.wet=clamp(this.wet+(raining?(ty?.3:.22):-dry)*dt,0,1);               // 棉被吸水：要靠太陽慢慢曬乾
     if(!this.soaked&&this.wet>=.6){this.soaked=true;this.events.push({type:'soaked'});}
-    if(raining&&this.dirt>0){this.dirt=Math.max(0,this.dirt-(ty?.7:.5)*dt);if(this.dirt===0)this.events.push({type:'clean'});}   // 只有雨水洗得掉
-    if(this.spit>0){this.spit=Math.max(0,this.spit-(.06+.2*this.sun+(raining?.45:0))*dt);if(this.spit===0)this.events.push({type:'spitDry'});}   // 痰：太陽曬或雨淋才會好
+    if(raining&&this.dirt>0){this.dirt=Math.max(0,this.dirt-(ty?.3:.2)*dt);if(this.dirt===0)this.events.push({type:'clean'});}   // 只有雨水洗得掉
+    if(this.spit>0){this.spit=Math.max(0,this.spit-(.025+.065*this.sun+(raining?.14:0))*dt);if(this.spit===0)this.events.push({type:'spitDry'});}   // 痰：太陽曬或雨淋才會好
     if(this.soaked&&w0>.02&&this.wet<=.02){this.soaked=false;this.events.push({type:'dried'});}
 
     // 地震、龍捲風：先預告，然後畫面上出現圈圈，點掉幾成就少被推出去幾成
