@@ -60,9 +60,10 @@ body{background:var(--dusk);color:var(--ink);font-family:var(--body);font-weight
 .pill{display:flex;align-items:center;gap:6px;padding:3px 11px 3px 8px;border:2.5px solid var(--ink);border-radius:999px;background:var(--paper);font-weight:900;font-size:15px;font-variant-numeric:tabular-nums}
 .pill svg{width:22px;height:18px;display:block}
 .side{display:flex;align-items:center;gap:8px}
-.bolts{display:flex;gap:2px;padding:5px 9px;border:2.5px solid var(--ink);border-radius:999px;background:var(--paper)}
-.bolts svg{width:20px;height:24px;display:block;fill:var(--paper);stroke:var(--ink);stroke-width:2.2;stroke-linejoin:round}
-.bolts svg.hit{fill:var(--volt)}
+.bolts{display:flex;gap:3px;padding:7px 10px;border:2.5px solid var(--ink);border-radius:999px;background:var(--paper)}
+/* 剩幾條命：紅心是還剩的，被電到一次就空一顆 */
+.bolts svg{width:22px;height:20px;display:block;fill:var(--paper);stroke:var(--ink);stroke-width:2.2;stroke-linejoin:round;opacity:.45}
+.bolts svg.on{fill:var(--alert);opacity:1}
 .icon-btn{pointer-events:auto;width:40px;height:40px;display:grid;place-items:center;border:2.5px solid var(--ink);border-radius:50%;background:var(--paper);color:var(--ink);cursor:pointer;padding:0}
 .icon-btn svg{width:20px;height:20px}
 .icon-btn:focus-visible,.btn:focus-visible{outline:3px solid var(--volt);outline-offset:3px}
@@ -110,7 +111,7 @@ body{background:var(--dusk);color:var(--ink);font-family:var(--body);font-weight
         <div class="pill" aria-label="撿到的報紙"><svg viewBox="0 0 22 18" aria-hidden="true"><rect x="1.2" y="1.2" width="19.6" height="15.6" fill="#f4efe2" stroke="#2b2a3a" stroke-width="2"/><rect x="4" y="4" width="14" height="3.4" fill="#2b2a3a"/><rect x="4" y="9.4" width="6.5" height="1.4" fill="#2b2a3a"/><rect x="4" y="12.2" width="6.5" height="1.4" fill="#2b2a3a"/><rect x="12" y="9.2" width="6" height="4.6" fill="#8a8f9c"/></svg><span id="papers">0</span></div>
       </div>
       <div class="side">
-        <div class="bolts" id="bolts" aria-label="Chu克還撐得住幾次"></div>
+        <div class="bolts" id="bolts" aria-label="Chu克還能被電幾次"></div>
         <button class="icon-btn" id="pauseBtn" type="button" aria-label="暫停"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="6" y="5" width="4.5" height="14" rx="1.6"/><rect x="13.5" y="5" width="4.5" height="14" rx="1.6"/></svg></button>
         <button class="icon-btn" id="mute" type="button" aria-label="聲音開關"></button>
       </div>
@@ -177,7 +178,7 @@ const mix=(a,b,t)=>{const A=rgb(a),B=rgb(b);return`rgb(${Math.round(lerp(A[0],B[
 /* ───────── 世界：三條線、往遠方縮小的馬路 ─────────
    x 是第幾條線（-1 左、0 中、1 右），z 是離 Chu克多遠（往前為正），y 是離地高度；1 單位大約一公尺，在 Chu克腳邊畫成 100px */
 const VW=360,VH=640,CX=180,HOR=176,GY=572,F=11,U=100,CHU=.82,SPAWN_Z=62,Z_NEAR=-2.6;
-const V0=10.5,VMAX=25,JUMP_V=6.6,GRAV=22,SLIDE_T=.62,LANE_V=9.5,PAIN_MAX=3,PAPER_HEAL=100,DARK_T=6;
+const V0=10.5,JUMP_V=6.6,GRAV=22,SLIDE_T=.62,LANE_V=9.5,PAIN_MAX=3,PAPER_HEAL=100,DARK_T=6;
 const S=z=>F/(F+z);
 /* 路上的東西。kind：full 只能換線閃開、low 要跳、high 要蹲；w=3 表示橫跨三條線 */
 const OB={
@@ -227,7 +228,7 @@ const Snd={ctx:null,on:store.get('ds.mute')!=='1',
 let mode='title',time=0,dist=0,speed=V0,lane=0,px=0,py=0,vy=0,slide=0,wantSlide=false,jumpBuf=0,lastLaneT=-9;
 let pain=0,invuln=0,shield=false,darkT=0,slow=0,papers=0,pStreak=0,pLast=-9,nearT=0,lastMile=0,dieT=0,lastHit='';
 let best=parseInt(store.get('ds.dist')||'0',10)||0,runs=parseInt(store.get('ds.runs')||'0',10)||0;
-let shake=0,flash=0,manSay='',manSayT=0,nextWz=0,nextPow=0,rowN=0,lastWide=-9,tutor=false;
+let tier=0,stepPh=0,shake=0,flash=0,manSay='',manSayT=0,nextWz=0,nextPow=0,rowN=0,lastWide=-9,tutor=false;
 const obs=[],items=[],sparks=[],pops=[],glows=[];
 
 function addOb(t,x,wz,extra){const d=OB[t],o=Object.assign({t,kind:d.kind,w:d.w||1,x,wz,done:false,ph:Math.random()*TAU,amp:0,sayT:0},extra);obs.push(o);return o;}
@@ -538,6 +539,8 @@ function bubble(c,text,x,y,al,up){
   c.globalAlpha=al;c.fillStyle=PAPER;c.strokeStyle=INK;c.lineWidth=2.5;c.lineJoin='round';rrect(c,bx,by,w,28,11);c.fill();c.stroke();c.beginPath();c.moveTo(tx-7,ty);c.lineTo(tx,ty+d*10);c.lineTo(tx+7,ty);c.fill();c.stroke();c.fillRect(tx-5.5,up?y+1:y-4,11,3);
   c.fillStyle=INK;c.textAlign='center';c.textBaseline='middle';c.fillText(text,bx+w/2,by+14.5);c.textBaseline='alphabetic';c.textAlign='left';c.globalAlpha=1;
 }
+// 越跑越快：前面加得快（500 公尺 17、1 公里 20、2 公里 23），2.5 公里後再慢慢加到 31
+const vAt=d=>V0+14*(1-Math.exp(-d/800))+clamp((d-2500)/700,0,7);
 const nightK=()=>{const ph=(dist/2400)%1;return smooth(.24,.44,ph)-smooth(.8,.98,ph);};
 const obX=o=>o.amp?clamp(o.x+Math.sin(time*1.5+o.ph)*o.amp,-1,1):o.x;
 function render(){
@@ -597,6 +600,10 @@ function render(){
   if(manSayT>0&&mode==='play')bubble(g,manSay,CX+px*U,GY+26,clamp(manSayT*4,0,1),true);
   if(darkT>0&&mode==='play'){const w=120,f=darkT/DARK_T;g.lineWidth=2.5;g.strokeStyle=INK;g.fillStyle=INK;rrect(g,CX-w/2,128,w,12,6);g.fill();g.stroke();g.fillStyle=VOLT;rrect(g,CX-w/2+2,130,Math.max(8,(w-4)*f),8,4);g.fill();
     g.font='900 14px '+FONT;g.textAlign='center';g.lineWidth=4.5;g.lineJoin='round';g.strokeText('停電中',CX,120);g.fillStyle=PAPER;g.fillText('停電中',CX,120);g.textAlign='left';}
+  // 速度線：跑得越快，從遠方往畫面外飛的白線越多、越長
+  const fast=mode==='play'?clamp((speed-13)/12,0,1):0;
+  if(fast>0&&!reduced){g.lineCap='round';g.strokeStyle=PAPER;for(let i=0;i<22;i++){const a=hash(i,41)*TAU;if(Math.sin(a)>.55)continue;const u=(time*(.9+hash(i,42)*.8)*(.6+fast)+hash(i,43))%1,r0=60+u*u*520,r1=r0+(26+90*fast)*(.3+u);
+    g.globalAlpha=(.1+.3*fast)*Math.min(1,u*4)*(1-u);g.lineWidth=1.5+2.5*u;g.beginPath();g.moveTo(CX+Math.cos(a)*r0,HOR+30+Math.sin(a)*r0);g.lineTo(CX+Math.cos(a)*r1,HOR+30+Math.sin(a)*r1);g.stroke();}g.globalAlpha=1;}
   // 特效
   for(const s of sparks){g.globalAlpha=clamp(s.life*2.5,0,1);g.fillStyle=s.col;g.beginPath();g.arc(s.x,s.y,s.r,0,TAU);g.fill();}
   g.textAlign='center';g.textBaseline='middle';g.font='900 19px '+FONT;g.lineJoin='round';
@@ -611,7 +618,7 @@ const el={hud:$('hud'),num:$('num'),papers:$('papers'),bolts:$('bolts'),hint:$('
 const RANKS=[[3000,'絕命電師'],[2000,'人體避雷針'],[1300,'太空毯飛毛腿'],[800,'整條街都繞過了'],[400,'巷口跑得掉'],[150,'出門拿個報紙'],[0,'剛踏出家門']];
 let lastHint='',lastNum=-1,lastPap=-1,paused=false;
 function setHint(t){if(t!==lastHint){lastHint=t;el.hint.textContent=t;}}
-function drawBolts(){el.bolts.innerHTML='';for(let i=0;i<PAIN_MAX;i++)el.bolts.insertAdjacentHTML('beforeend',`<svg viewBox="0 0 20 24" class="${i<pain?'hit':''}" aria-hidden="true"><path d="M12 1.5 3 13.5h6l-2 9 10-13h-6.5z"/></svg>`);}
+function drawBolts(){el.bolts.innerHTML='';for(let i=0;i<PAIN_MAX;i++)el.bolts.insertAdjacentHTML('beforeend',`<svg viewBox="0 0 22 20" class="${i<PAIN_MAX-pain?'on':''}" aria-hidden="true"><path d="M11 18.2C4.6 13.6 1.6 10.3 1.6 6.6a4.7 4.7 0 0 1 9.4-1.3 4.7 4.7 0 0 1 9.4 1.3c0 3.7-3 7-9.400 11.600z"/></svg>`);}
 function muteIcon(){el.mute.innerHTML=Snd.on
   ?'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9.5v5h3.5L12 18.5v-13L7.5 9.5z" fill="currentColor"/><path d="M15.5 9a4.2 4.2 0 0 1 0 6M18 6.5a8 8 0 0 1 0 11"/></svg>'
   :'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9.5v5h3.5L12 18.5v-13L7.5 9.5z" fill="currentColor"/><path d="M16 9.5l5 5M21 9.5l-5 5"/></svg>';
@@ -625,7 +632,7 @@ const manXY=()=>[CX+px*U,GY-py*U-66];
 function start(){
   Snd.init();Snd.blip(420,640,.14,'triangle',.1);paused=false;$('pause').hidden=true;
   dist=0;speed=V0;lane=0;px=0;py=0;vy=0;slide=0;wantSlide=false;jumpBuf=0;pain=0;invuln=0;shield=false;darkT=0;slow=0;papers=0;pStreak=0;nearT=0;lastMile=0;lastHit='';manSayT=0;
-  obs.length=items.length=sparks.length=pops.length=0;shake=flash=0;rowN=0;lastWide=-9;nextWz=34;nextPow=260;tutor=runs<2;runs++;store.set('ds.runs',String(runs));
+  obs.length=items.length=sparks.length=pops.length=0;shake=flash=0;rowN=0;lastWide=-9;tier=0;stepPh=0;nextWz=34;nextPow=260;tutor=runs<2;runs++;store.set('ds.runs',String(runs));
   mode='play';lastNum=lastPap=-1;el.title.hidden=true;el.over.hidden=true;el.hud.hidden=false;drawBolts();say('報紙…我只是去拿報紙。',2);
 }
 function jump(){vy=JUMP_V;py=.001;slide=0;wantSlide=false;jumpBuf=0;Snd.blip(300,640,.15,'triangle',.08);}
@@ -662,14 +669,13 @@ function tick(dt){
   for(let i=pops.length-1;i>=0;i--)if((pops[i].life-=dt)<=0)pops.splice(i,1);
   if(mode==='dying'){dieT+=dt;if(Math.random()<.5){const[mx,my]=manXY();burst(mx,my,1,VOLT,180);}if(dieT>1.3)gameOver();return;}
   if(mode!=='play')return;
-  // 越跑越快：2.5 公里前加到 25，之後再慢慢加到 32
-  const vT=Math.min(VMAX,V0+dist/170)+clamp((dist-2500)/700,0,7);slow=Math.max(0,slow-dt);speed=vT*(1-.45*clamp(slow/.9,0,1));dist+=speed*dt;
+  const vT=vAt(dist);slow=Math.max(0,slow-dt);speed=vT*(1-.45*clamp(slow/.9,0,1));dist+=speed*dt;
   px+=clamp(lane-px,-LANE_V*dt,LANE_V*dt);
   if(jumpBuf>0)jumpBuf-=dt;if(invuln>0)invuln-=dt;if(manSayT>0)manSayT-=dt;if(nearT>0)nearT-=dt;if(slide>0)slide-=dt;
   if(darkT>0){darkT-=dt;if(darkT<=0){darkT=0;invuln=Math.max(invuln,.7);pop(CX,150,'電來了！',VOLT);Snd.blip(80,500,.3,'sawtooth',.07);}}
   if(py>0){vy-=GRAV*dt;py+=vy*dt;if(py<=0){py=0;vy=0;if(wantSlide)doSlide();else if(jumpBuf>0)jump();}}
   // 排新的障礙
-  while(nextWz<dist+SPAWN_Z){const gap=vT*lerp(1.08,.56,smooth(0,4200,dist));spawnRow(nextWz,gap,vT);nextWz+=gap;}
+  while(nextWz<dist+SPAWN_Z){const gap=vT*lerp(1.08,.56,smooth(0,3200,dist));spawnRow(nextWz,gap,vT);nextWz+=gap;}
   // 碰撞：東西經過腳邊那一小段距離時，看有沒有做對動作
   const low=slide>0&&py<=0;
   for(let i=obs.length-1;i>=0;i--){const o=obs[i],z=o.wz-dist,half=o.kind==='low'?.5:.36;if(o.sayT>0)o.sayT-=dt;
@@ -683,6 +689,9 @@ function tick(dt){
   const mid=py+(low?.3:.7);
   for(let i=items.length-1;i>=0;i--){const it=items[i],z=it.wz-dist;if(z<Z_NEAR-.4){items.splice(i,1);continue;}
     if(!it.got&&z<.6&&z>-.6&&Math.abs(px-it.x)<.6&&Math.abs(mid-it.y)<(it.t==='paper'?.8:1.2))collect(it);}
+  // 腳步聲跟著速度變快；每快一級提示一次
+  const ph=Math.floor(dist*1.9/Math.PI);if(ph!==stepPh){stepPh=ph;if(py<=0&&slide<=0)Snd.blip(150,90,.035,'square',.022);}
+  const tr=Math.floor((vT-V0)/3);if(tr>tier){tier=tr;pop(CX,205,'越跑越快！',PAPER);Snd.blip(500,900,.18,'sawtooth',.05);}
   const mile=Math.floor(dist/500);if(mile>lastMile){lastMile=mile;pop(CX,170,`${mile*500} 公尺！`,LAMP,true);say(pick(MAN_MILE),1.8);Snd.blip(660,990,.12,'triangle',.08);Snd.blip(990,1320,.14,'triangle',.06,.1);}
 }
 function hud(){
@@ -733,7 +742,7 @@ window.addEventListener('resize',resize);
 if(window.ResizeObserver)new ResizeObserver(resize).observe(gameEl);
 
 muteIcon();showBest();drawBolts();resize();requestAnimationFrame(frame);
-window.__ds={OB,obs,items,act,start,tick,obX,addOb,PEDS,set hold(v){hold=v;},set lane(v){lane=px=v;},get mode(){return mode},get dist(){return dist},set dist(v){dist=v;nextWz=Math.max(nextWz,v+30);},get speed(){return speed},get pain(){return pain},set pain(v){pain=v;drawBolts();},get paused(){return paused},
+window.__ds={OB,obs,items,act,start,tick,obX,addOb,PEDS,set hold(v){hold=v;},set lane(v){lane=px=v;},get mode(){return mode},get dist(){return dist},set dist(v){dist=v;nextWz=Math.max(nextWz,v+30);},get speed(){return speed},vAt,get pain(){return pain},set pain(v){pain=v;drawBolts();},get paused(){return paused},
   get lane(){return lane},get px(){return px},get runs(){return runs},set runs(v){runs=v;},get lastHit(){return lastHit},get py(){return py},get slide(){return slide},get papers(){return papers},get shield(){return shield},set shield(v){shield=v;},get darkT(){return darkT},set darkT(v){darkT=v;},
   xy(wx,wy){const b=gameEl.getBoundingClientRect();return{x:b.left+ox+wx*scale,y:b.top+oy+wy*scale};}};
 })();
