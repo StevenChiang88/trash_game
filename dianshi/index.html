@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover, user-scalable=no">
-<meta name="description" content="夸克對電過敏。客人進門前，把他們身上帶電的東西全部丟進信箱，漏掉一樣他就會發作。">
+<meta name="description" content="Chu克對電過敏。客人進門前，把他們身上帶電的東西全部丟進信箱，漏掉一樣他就會發作。">
 <meta name="theme-color" content="#f3d9a4">
 <link rel="canonical" href="https://stevenchiang88.github.io/trash_game/dianshi/">
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
@@ -11,7 +11,7 @@
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="絕命電師">
 <meta property="og:title" content="絕命電師｜客人進門前，先把電留在信箱">
-<meta property="og:description" content="夸克對電過敏。客人進門前，把他們身上帶電的東西全部丟進信箱，漏掉一樣他就會發作。">
+<meta property="og:description" content="Chu克對電過敏。客人進門前，把他們身上帶電的東西全部丟進信箱，漏掉一樣他就會發作。">
 <meta property="og:url" content="https://stevenchiang88.github.io/trash_game/dianshi/">
 <meta property="og:image" content="https://stevenchiang88.github.io/trash_game/dianshi/og.png">
 <meta property="og:image:width" content="1200">
@@ -30,7 +30,7 @@
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chiron+GoRound+TC:wght@500;900&family=Fredoka:wght@600;700&display=swap">
 <style>
-/* 版面：門口的一格畫面。夸克裹著太空毯站在左下角的門邊，客人站中間，要檢查的東西是他身邊的一顆顆圓鈕，信箱在右下角 */
+/* 版面：門口的一格畫面。Chu克裹著太空毯站在左下角的門邊，客人站中間，要檢查的東西是他身邊的一顆顆圓鈕，信箱在右下角 */
 :root{
   --ink:#2b2a3a;        /* 描邊與文字 */
   --paper:#fff8ea;      /* 圓鈕、卡片的紙白 */
@@ -108,7 +108,7 @@ body{background:var(--dusk);color:var(--ink);font-family:var(--body);font-weight
     <div class="top">
       <div class="count"><small>第</small><b id="num">1</b><small>位客人</small></div>
       <div class="side">
-        <div class="bolts" id="bolts" aria-label="夸克還撐得住幾次"></div>
+        <div class="bolts" id="bolts" aria-label="Chu克還撐得住幾次"></div>
         <button class="icon-btn" id="pauseBtn" type="button" aria-label="暫停"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="6" y="5" width="4.5" height="14" rx="1.6"/><rect x="13.5" y="5" width="4.5" height="14" rx="1.6"/></svg></button>
         <button class="icon-btn" id="mute" type="button" aria-label="聲音開關"></button>
       </div>
@@ -121,11 +121,12 @@ body{background:var(--dusk);color:var(--ink);font-family:var(--body);font-weight
 
   <div class="screen" id="title">
     <h1 class="logo">絕命<span>電</span>師</h1>
-    <p class="tag">夸克對電過敏。客人進門前，把帶電的東西全部丟進信箱。</p>
+    <p class="tag">Chu克對電過敏。客人進門前，把帶電的東西全部丟進信箱。</p>
     <div class="gap"></div>
     <ul class="how">
       <li><b>點帶電的</b> 丟進信箱</li>
       <li><b>沒電的</b> 別亂點</li>
+      <li><b>有靜電</b> 點釋放器</li>
       <li><b>檢查完</b> 按「請進」</li>
     </ul>
     <button class="btn" id="start" type="button">開門</button>
@@ -135,7 +136,7 @@ body{background:var(--dusk);color:var(--ink);font-family:var(--body);font-weight
 
   <div class="screen" id="over" hidden>
     <div class="card">
-      <p class="verdict">夸克發作了。<br>撐過 <span class="n" id="ovN">0</span> 位客人。</p>
+      <p class="verdict">Chu克發作了。<br>撐過 <span class="n" id="ovN">0</span> 位客人。</p>
       <dl class="stats">
         <div><dt>這次</dt><dd id="ovRun">0 位</dd></div>
         <div><dt>最佳紀錄</dt><dd id="ovBest">0 位</dd></div>
@@ -183,6 +184,9 @@ const IT={
   calc:{n:'計算機',e:1,d(c){c.fillStyle='#55596e';rrect(c,-11,-16,22,32,3.5);c.fill();c.stroke();c.fillStyle='#bfe6c9';c.fillRect(-8,-13,16,8);c.fillStyle=INK;c.font='700 7px Fredoka,sans-serif';c.textAlign='right';c.fillText('88.8',7,-6.5);for(let r=0;r<3;r++)for(let q=0;q<3;q++){c.fillStyle=r===2&&q===2?'#ee5b3a':PAPER;c.fillRect(-8+q*6,-2+r*5.5,4,3.6);}}},
   efan:{n:'手持電風扇',e:1,d(c){c.fillStyle=PAPER;rrect(c,-3.5,3,7,15,3);c.fill();c.stroke();c.fillStyle='#8fdcf7';c.beginPath();c.arc(0,10,1.5,0,TAU);c.fill();c.fillStyle='#dfe6ea';c.beginPath();c.arc(0,-6,12,0,TAU);c.fill();c.stroke();c.fillStyle='#7ab8d8';for(let i=0;i<3;i++){c.save();c.translate(0,-6);c.rotate(i*TAU/3+.3);c.beginPath();c.ellipse(0,-5.5,3,5.5,.4,0,TAU);c.fill();c.restore();}c.fillStyle=INK;c.beginPath();c.arc(0,-6,2,0,TAU);c.fill();}},
   battery:{n:'電池',e:1,d(c){c.save();c.rotate(.5);c.fillStyle='#c9ced6';c.fillRect(-3,-18,6,4);c.strokeRect(-3,-18,6,4);c.fillStyle='#ee9b3a';rrect(c,-7,-14,14,30,2.5);c.fill();c.stroke();c.fillStyle=INK;c.fillRect(-7,2,14,14);c.fillStyle=PAPER;c.font='700 11px Fredoka,sans-serif';c.textAlign='center';c.fillText('+',0,-4);c.restore();}},
+  camera:{n:'相機',e:1,d(c){c.fillStyle='#3a3d52';rrect(c,-15,-9,30,21,3.5);c.fill();c.stroke();c.fillRect(-8,-13,10,5);c.strokeRect(-8,-13,10,5);c.fillStyle='#c9ced6';c.beginPath();c.arc(0,2,7.5,0,TAU);c.fill();c.stroke();c.fillStyle='#8fdcf7';c.beginPath();c.arc(0,2,4,0,TAU);c.fill();c.fillStyle='#ee5b3a';c.beginPath();c.arc(10.5,-5,1.6,0,TAU);c.fill();}},
+  recorder:{n:'錄音筆',e:1,d(c){c.save();c.rotate(.5);c.fillStyle='#55596e';rrect(c,-5,-17,10,34,4);c.fill();c.stroke();c.fillStyle='#8fdcf7';c.fillRect(-3,-8,6,7);c.fillStyle='#ee5b3a';c.beginPath();c.arc(0,5,2.2,0,TAU);c.fill();c.fillStyle='#c9ced6';for(let i=0;i<3;i++)c.fillRect(-3,-15+i*2.2,6,1);c.restore();}},
+  drill:{n:'電鑽',e:1,d(c){c.fillStyle='#f0a13c';rrect(c,-14,-11,22,12,3);c.fill();c.stroke();c.fillStyle='#3a3d52';rrect(c,-8,1,9,15,2.5);c.fill();c.stroke();c.fillRect(-11,14,15,5);c.strokeRect(-11,14,15,5);c.fillStyle='#c9ced6';c.fillRect(8,-8,5,6);c.strokeRect(8,-8,5,6);c.strokeStyle=INK;c.lineWidth=2.4;c.beginPath();c.moveTo(13,-5);c.lineTo(20,-5);c.stroke();c.fillStyle='#8fdcf7';c.beginPath();c.arc(-9,-5,1.6,0,TAU);c.fill();}},
   watch:{n:'機械錶',e:0,d(c){c.fillStyle='#8a5a3a';c.fillRect(-5,-18,10,36);c.strokeRect(-5,-18,10,36);c.fillStyle='#e9d8a6';c.beginPath();c.arc(0,0,11,0,TAU);c.fill();c.stroke();c.fillStyle=PAPER;c.beginPath();c.arc(0,0,7.5,0,TAU);c.fill();c.strokeStyle=INK;c.lineWidth=1.8;c.beginPath();c.moveTo(0,0);c.lineTo(0,-5.5);c.moveTo(0,0);c.lineTo(4,2);c.stroke();}},
   key:{n:'鑰匙',e:0,d(c){c.fillStyle='#e0b24a';c.beginPath();c.moveTo(-2.5,-2);c.lineTo(-2.5,16);c.lineTo(0,18.5);c.lineTo(2.5,16);c.lineTo(2.5,12);c.lineTo(6,11);c.lineTo(2.5,9);c.lineTo(2.5,6);c.lineTo(5,5);c.lineTo(2.5,3.5);c.lineTo(2.5,-2);c.closePath();c.fill();c.stroke();c.beginPath();c.arc(0,-10,8.5,0,TAU);c.fill();c.stroke();c.fillStyle=PAPER;c.beginPath();c.arc(0,-11.5,3,0,TAU);c.fill();c.stroke();}},
   book:{n:'書',e:0,d(c){c.fillStyle='#b5503f';rrect(c,-13,-15,26,30,2.5);c.fill();c.stroke();c.fillStyle=PAPER;c.fillRect(-9,-15,2,30);c.fillRect(11,-12,2,25);c.fillStyle='#f3d9a4';c.fillRect(-4,-9,12,3);c.fillRect(-4,-3,8,2);}},
@@ -194,48 +198,74 @@ const IT={
   apple:{n:'蘋果',e:0,d(c){c.fillStyle='#e0533d';c.beginPath();c.moveTo(0,-7);c.bezierCurveTo(16,-17,18,10,6,15);c.quadraticCurveTo(0,17,-6,15);c.bezierCurveTo(-18,10,-16,-17,0,-7);c.fill();c.stroke();c.strokeStyle=INK;c.lineWidth=2.2;c.beginPath();c.moveTo(0,-7);c.quadraticCurveTo(1,-13,4,-16);c.stroke();c.fillStyle='#57b08a';c.beginPath();c.ellipse(7,-14,5,2.5,-.5,0,TAU);c.fill();c.stroke();}},
   pencil:{n:'鉛筆',e:0,d(c){c.save();c.rotate(.5);c.fillStyle='#ffd35c';c.fillRect(-4,-12,8,24);c.strokeRect(-4,-12,8,24);c.fillStyle='#f29aa8';rrect(c,-4,-18,8,6,2);c.fill();c.stroke();c.fillStyle='#e9d8a6';c.beginPath();c.moveTo(-4,12);c.lineTo(0,20);c.lineTo(4,12);c.closePath();c.fill();c.stroke();c.fillStyle=INK;c.beginPath();c.moveTo(-1.3,17.4);c.lineTo(0,20);c.lineTo(1.3,17.4);c.fill();c.restore();}},
   pfan:{n:'紙扇',e:0,d(c){c.fillStyle='#f6e9b8';c.beginPath();c.moveTo(0,14);c.lineTo(-17,-5);c.quadraticCurveTo(0,-22,17,-5);c.closePath();c.fill();c.stroke();c.strokeStyle='#b5503f';c.lineWidth=1.4;for(let i=-2;i<=2;i++){c.beginPath();c.moveTo(0,14);c.lineTo(i*7.5,-9-(2-Math.abs(i))*3.5);c.stroke();}c.fillStyle='#8a5a3a';c.beginPath();c.arc(0,14,2.6,0,TAU);c.fill();c.strokeStyle=INK;c.lineWidth=1.8;c.stroke();}},
+  pen:{n:'鋼筆',e:0,d(c){c.save();c.rotate(.5);c.fillStyle='#2f4a8a';rrect(c,-4.5,-16,9,22,3);c.fill();c.stroke();c.fillStyle='#e0b24a';c.fillRect(-4.5,-3,9,2.5);c.fillRect(2,-14,1.8,9);c.fillStyle='#c9ced6';c.beginPath();c.moveTo(-4.5,6);c.lineTo(0,19);c.lineTo(4.5,6);c.closePath();c.fill();c.stroke();c.strokeStyle=INK;c.lineWidth=1.2;c.beginPath();c.moveTo(0,9);c.lineTo(0,17);c.stroke();c.restore();}},
+  hammer:{n:'鐵鎚',e:0,d(c){c.save();c.rotate(.6);c.fillStyle='#b98a5c';rrect(c,-3,-6,6,25,2.5);c.fill();c.stroke();c.fillStyle='#9aa3ad';rrect(c,-13,-16,22,10,2);c.fill();c.stroke();c.beginPath();c.moveTo(9,-16);c.lineTo(15,-18);c.lineTo(15,-4);c.lineTo(9,-6);c.closePath();c.fill();c.stroke();c.restore();}},
+  violin:{n:'小提琴',e:0,d(c){c.save();c.rotate(.5);c.fillStyle='#b5653a';c.beginPath();c.moveTo(0,-2);c.bezierCurveTo(-11,-2,-9,6,-6,9);c.bezierCurveTo(-13,12,-11,21,0,21);c.bezierCurveTo(11,21,13,12,6,9);c.bezierCurveTo(9,6,11,-2,0,-2);c.fill();c.stroke();c.fillStyle='#3a2f2a';c.fillRect(-1.8,-18,3.6,24);c.strokeStyle=INK;c.lineWidth=1.6;c.strokeRect(-1.8,-18,3.6,24);c.fillStyle='#3a2f2a';c.beginPath();c.arc(0,-19,3,0,TAU);c.fill();c.stroke();c.restore();}},
+  steth:{n:'聽診器',e:0,d(c){c.strokeStyle=INK;c.lineWidth=5;c.beginPath();c.moveTo(-9,-16);c.quadraticCurveTo(-11,4,0,6);c.quadraticCurveTo(11,4,9,-16);c.stroke();c.strokeStyle='#5c7fb8';c.lineWidth=2.4;c.beginPath();c.moveTo(-9,-16);c.quadraticCurveTo(-11,4,0,6);c.quadraticCurveTo(11,4,9,-16);c.moveTo(0,6);c.lineTo(0,12);c.stroke();c.strokeStyle=INK;c.lineWidth=2;c.fillStyle='#c9ced6';c.beginPath();c.arc(0,14,5.5,0,TAU);c.fill();c.stroke();c.fillStyle=INK;c.beginPath();c.arc(-9,-17,2.2,0,TAU);c.arc(9,-17,2.2,0,TAU);c.fill();}},
+  binoc:{n:'望遠鏡',e:0,d(c){c.fillStyle='#3a2f2a';for(const sx of[-7.5,7.5]){rrect(c,sx-6,-13,12,25,3);c.fill();c.stroke();}c.fillRect(-3,-6,6,8);c.strokeRect(-3,-6,6,8);c.fillStyle='#bfd9e6';for(const sx of[-7.5,7.5]){c.beginPath();c.ellipse(sx,12,6,3,0,0,TAU);c.fill();c.stroke();}}},
+  news:{n:'報紙',e:0,d(c){c.fillStyle='#ece6d6';rrect(c,-14,-15,28,30,1.5);c.fill();c.stroke();c.fillStyle=INK;c.fillRect(-10,-11,20,4);c.fillStyle='#8a8f9c';for(let i=0;i<5;i++){c.fillRect(-10,-4+i*3.6,9,1.4);c.fillRect(1,-4+i*3.6,9,1.4);}}},
   letter:{n:'信',e:0,d(c){c.fillStyle=PAPER;rrect(c,-15,-10,30,21,2);c.fill();c.stroke();c.strokeStyle=INK;c.lineWidth=1.8;c.beginPath();c.moveTo(-15,-9);c.lineTo(0,3);c.lineTo(15,-9);c.stroke();c.fillStyle='#e0533d';c.fillRect(7,-7,5,6);}},
 };
 const E_IDS=Object.keys(IT).filter(k=>IT[k].e),H_IDS=Object.keys(IT).filter(k=>!IT[k].e);
-const LOOKALIKE={swatch:'watch',fob:'key',ereader:'notebook',torch:'candle',calc:'abacus',efan:'pfan',laptop:'book',phone:'wallet',battery:'pencil',pbank:'letter'};   // 長得像的一對：一個有電、一個沒電
+const LOOKALIKE={swatch:'watch',fob:'key',ereader:'notebook',torch:'candle',calc:'abacus',efan:'pfan',laptop:'book',phone:'wallet',battery:'pencil',pbank:'letter',recorder:'pen',drill:'hammer',camera:'binoc'};   // 長得像的一對：一個有電、一個沒電
 function rrect(c,x,y,w,h,r){c.beginPath();c.moveTo(x+r,y);c.arcTo(x+w,y,x+w,y+h,r);c.arcTo(x+w,y+h,x,y+h,r);c.arcTo(x,y+h,x,y,r);c.arcTo(x,y,x+w,y,r);c.closePath();}
 
 /* ───────── 客人 ───────── */
 const VW=360,VH=640,TOK_R=27;
 const SLOTS=[[66,232],[294,238],[54,322],[306,330],[70,410],[294,422],[158,512],[238,504]];   // 東西出現的位置：繞著客人一圈
 const BOX={x:300,y:556};                                                                    // 信箱口
-const KINDS=[
-  {id:'neighbor',hi:['我來借個醬油','我看你燈又沒開'],skin:'#f1c9a5',hair:'#5a4636',shirt:'#e58f8f',style:'bun'},
-  {id:'courier', hi:['外送～麻煩簽收','您的包裹'],        skin:'#e8b88f',hair:'#2b2a3a',shirt:'#f0a13c',style:'helmet'},
-  {id:'office',  hi:['我送文件過來','事務所要我來一趟'],  skin:'#f1c9a5',hair:'#3a3d52',shirt:'#5c7fb8',style:'tie'},
-  {id:'kid',     hi:['叔叔，我的球掉進你家了','可以借廁所嗎'],skin:'#f4d2b0',hair:'#6b4a2a',shirt:'#6fbf8e',style:'cap'},
-  {id:'repair',  hi:['查瓦斯表','聽說你家沒電，要修嗎'],  skin:'#d9a57c',hair:'#2b2a3a',shirt:'#8a8fa6',style:'hardhat'},
-  {id:'bro',     hi:['哥，我來看你啦','哥，我身上真的沒東西'],skin:'#f1c9a5',hair:'#8a5a3a',shirt:'#c95fa8',style:'slick',sly:1},
+const GND={x:322,y:158};                                                                    // 門框上的靜電釋放器
+/* 客人：沒有名字，靠造型認人。likes 是他一定會帶的東西；trait 決定他的習性 */
+const CAST=[
+  {id:'bro',  hi:['哥，我買了菜來','哥，我身上真的沒東西'],skin:'#f1c9a5',hair:'#7a4a2e',style:'slick',wear:'suit',top:'#d9a53a',tie:'#e86aa0',loud:1,legs:'#7a5a2a',face:'smirk',likes:['battery','news'],trait:'sly'},
+  {id:'lawyer',hi:['我有事想跟你談談','文件我放這裡就走'],skin:'#f4d2b0',hair:'#f2dc8e',style:'pony',wear:'suit',top:'#5f6f96',tie:null,legs:'#4a5676',face:'neutral',likes:['pen'],trait:'tidy'},
+  {id:'partner',hi:['事務所的事想跟你聊聊','我只待五分鐘'],skin:'#e0a878',hair:'#f0d27a',style:'swoop',wear:'suit',top:'#2f4a8a',tie:'#8fc4f0',stripes:1,legs:'#263c70',face:'grin',likes:['laptop','phone'],trait:'busy'},
+  {id:'helper',hi:['我幫你買東西來了','冰塊和報紙都在這'],skin:'#d9a57c',hair:'#2b2a3a',style:'short',wear:'polo',top:'#6fbf8e',legs:'#4a4f66',face:'smile',likes:['news','apple'],trait:''},
+  {id:'ex',   hi:['好久不見','你家怎麼這麼暗？'],skin:'#f4d2b0',hair:'#5a2f24',style:'long',wear:'dress',top:'#a84a5a',legs:'#3a3d52',face:'smile',likes:['violin','phone'],trait:'purse'},
+  {id:'fixer',hi:['修門的','門壞了是吧，我看看'],skin:'#e8c4a4',hair:'#9aa0a8',style:'bald',wear:'work',top:'#6f7f96',legs:'#4a5266',face:'stern',likes:['drill','camera','hammer'],trait:'toolbox'},
+  {id:'doctor',hi:['我來看看你的狀況','放輕鬆，只是例行檢查'],skin:'#e8b88f',hair:'#2b2a3a',style:'bun',wear:'coat',top:'#fff8ea',legs:'#5c7fb8',face:'neutral',likes:['steth','torch'],trait:'sneak'},
+  {id:'pi',   hi:['我是你請來的','報告我帶來了'],skin:'#f1c9a5',hair:'#3a3d52',style:'fedora',wear:'trench',top:'#c9a878',legs:'#4a4038',face:'stern',shades:1,likes:['camera','recorder','binoc'],trait:''},
+];
+const EXTRAS=[
+  {id:'neighbor',hi:['我來借個醬油','我看你燈又沒開'],skin:'#f1c9a5',hair:'#5a4636',style:'bun',wear:'plain',top:'#e58f8f',legs:'#4a4f66',face:'smile',likes:[],trait:''},
+  {id:'courier', hi:['外送～麻煩簽收','您的包裹'],        skin:'#e8b88f',hair:'#2b2a3a',style:'helmet',wear:'box',top:'#f0a13c',legs:'#4a4f66',face:'neutral',likes:['phone'],trait:''},
+  {id:'kid',     hi:['叔叔，我的球掉進你家了','可以借廁所嗎'],skin:'#f4d2b0',hair:'#6b4a2a',style:'cap',wear:'plain',top:'#6fb8d8',legs:'#4a4f66',face:'smile',likes:[],trait:''},
 ];
 let nth=0,pain=0,streak=0,best=parseInt(store.get('ds.best')||'0',10)||0,mode='title',vis=null,time=0,shake=0,flash=0,lastMiss=[];
 const PAIN_MAX=3,HEAL_EVERY=6;
 const sparks=[],bolts=[],pops=[];
 
 function makeVisitor(k){
-  const kind=k===1?KINDS[0]:(k>=4&&Math.random()<.22?KINDS[5]:pick(KINDS.slice(0,5)));
-  const n=k===1?2:Math.min(8,3+Math.floor((k-1)/3));                       // 幾樣東西：越後面越多
+  // 前 8 位照順序登場，之後隨機（七成是那 8 位熟面孔）
+  const kind=k<=8?CAST[[3,1,2,0,4,5,6,7][k-1]]:(Math.random()<.7?pick(CAST):pick(EXTRAS)),tr=kind.trait;
+  let n=k===1?2:Math.min(8,3+Math.floor((k-1)/3));                          // 幾樣東西：越後面越多
+  const likeE=kind.likes.filter(i=>IT[i].e),likeH=kind.likes.filter(i=>!IT[i].e);
+  if(k>1)n=Math.min(8,Math.max(n,kind.likes.length+(tr==='tidy'?1:0)));
   let nE=k===1?1:k<=3?1+((Math.random()*2)|0):Math.max(0,Math.min(n,Math.round(rnd(.2,.75)*n)));
-  if(k>=5&&Math.random()<.1)nE=0;                                          // 偶爾來個身上完全沒電的：別亂點
-  if(kind.sly&&nE<2)nE=Math.min(n,2);
-  const es=shuffle(E_IDS.slice()).slice(0,nE),hs=[];
-  for(const e of es)if(hs.length<n-nE&&LOOKALIKE[e]&&Math.random()<.6&&k>2)hs.push(LOOKALIKE[e]);   // 故意放長得像的來混淆
+  if(tr==='tidy')nE=Math.random()<.5?0:1;                                   // 她很仔細：身上常常一樣帶電的都沒有
+  else if(k>=9&&Math.random()<.1)nE=0;                                      // 偶爾有人身上完全沒電：別亂點
+  if(k>1&&tr!=='tidy')nE=Math.max(nE,likeE.length);
+  if(tr==='sly'||tr==='busy')nE=Math.min(n,Math.max(nE,2+(tr==='busy'?1:0)));
+  nE=Math.min(nE,n-(k>1?Math.min(likeH.length,n-1):0));
+  const es=(k===1?['phone']:likeE.slice(0,nE));for(const e of shuffle(E_IDS.slice()))if(es.length<nE&&!es.includes(e))es.push(e);
+  const hs=(k===1?['apple']:likeH.slice(0,n-nE));
+  for(const e of es)if(hs.length<n-nE&&LOOKALIKE[e]&&!hs.includes(LOOKALIKE[e])&&Math.random()<.6&&k>2)hs.push(LOOKALIKE[e]);   // 故意放長得像的來混淆
   for(const h of shuffle(H_IDS.slice()))if(hs.length<n-nE&&!hs.includes(h))hs.push(h);
   const ids=shuffle(es.concat(hs)),slots=shuffle(SLOTS.slice(0,Math.max(4,Math.min(8,n+2))).map((s,i)=>i));
   const toks=ids.map((id,i)=>({id,e:IT[id].e,x:SLOTS[slots[i]][0],y:SLOTS[slots[i]][1],state:'in',t:-.12*i,hid:false,sh:0}));
-  // 包包：Day… 第 6 位之後有人會把東西藏在包包裡，要先點包包打開
-  let bag=null;
-  if(k>=6&&toks.length>=4&&(kind.sly||Math.random()<.45)){const inside=shuffle(toks.slice()).slice(0,kind.sly?2:1+((Math.random()*2)|0));
-    if(kind.sly){const el=toks.filter(t=>t.e);for(let i=0;i<inside.length&&i<el.length;i++)inside[i]=el[i];}      // 弟弟專門把有電的藏起來
-    const bx=inside[0].x,by=inside[0].y;inside.forEach(t=>{t.hid=true;});
-    bag={x:bx,y:by,state:'in',t:0,inside};
-    inside.forEach((t,i)=>{if(i>0){const free=SLOTS.find(s=>!toks.some(o=>!o.hid&&o.x===s[0]&&o.y===s[1])&&!(s[0]===bx&&s[1]===by)&&!inside.some((o,j)=>j<i&&o.x===s[0]&&o.y===s[1]));if(free){t.x=free[0];t.y=free[1];}}});}
-  const T=(k===1?10:Math.max(3.4,8-.17*k)+n*.15)+(bag?.7:0);
-  return{k,kind,hi:pick(kind.hi),toks,bag,T,t:0,phase:'enter',pt:0,wrong:0,say:'',sayT:0,mood:0,left:[]};
+  // 包包：有人會把東西藏在包包（工具箱、手提包、醫生包）裡，要先點開
+  let bag=null;const hider=tr==='sly'||tr==='purse'||tr==='toolbox'||tr==='sneak';
+  if(toks.length>=3&&k>=5&&(hider||(k>=9&&Math.random()<.4))){
+    const el=shuffle(toks.filter(t=>t.e)),want=tr==='sly'||tr==='toolbox'?2:tr==='sneak'||tr==='purse'?1:1+((Math.random()*2)|0);
+    let inside=hider?el.slice(0,want):[];                                   // 這幾位專門把帶電的藏起來
+    for(const t of shuffle(toks.slice()))if(inside.length<want&&!inside.includes(t))inside.push(t);
+    if(tr==='purse'){const ph=toks.find(t=>t.id==='phone');if(ph&&!inside.includes(ph))inside[0]=ph;}
+    const bx=inside[0].x,by=inside[0].y;inside.forEach(t=>{t.hid=true;});bag={x:bx,y:by,state:'in',t:0,inside};
+    inside.forEach((t,i)=>{if(i>0){const free=SLOTS.find(q=>!(q[0]===bx&&q[1]===by)&&!toks.some(o=>!o.hid&&o.x===q[0]&&o.y===q[1])&&!inside.some((o,j)=>j<i&&j>0&&o.x===q[0]&&o.y===q[1]));if(free){t.x=free[0];t.y=free[1];}}});}
+  // 靜電：有些客人身上帶靜電，進門前要摸門框上的釋放器
+  const stat=k===3?1:k>3&&Math.random()<.5?Math.min(3,1+(k>12&&Math.random()<.5?1:0)+(k>24?1:0)):0;
+  const T=((k===1?10:Math.max(3.4,8-.17*k)+n*.15)+(bag?.7:0)+stat*.5)*(tr==='busy'?.88:1);
+  return{k,kind,hi:pick(kind.hi),toks,bag,stat,stat0:stat,T,t:0,phase:'enter',pt:0,wrong:0,say:'',sayT:0,mood:0,left:[],leftStat:false,reach:0};
 }
 
 /* ───────── 聲音 ───────── */
@@ -284,6 +314,11 @@ function drawScene(c){
   c.strokeStyle='rgba(43,42,58,.3)';c.lineWidth=1.6;c.beginPath();for(let i=-9;i<=9;i++){c.moveTo(180+i*30,444);c.lineTo(180+i*86,B);}c.moveTo(L,444);c.lineTo(R,444);c.stroke();
   // 腳踏墊
   c.fillStyle='#b5503f';c.strokeStyle=INK;c.lineWidth=2.5;c.beginPath();c.moveTo(112,474);c.lineTo(248,474);c.lineTo(262,500);c.lineTo(98,500);c.closePath();c.fill();c.stroke();
+  // 門框上的靜電釋放器：一顆銅色的圓鈕，地線沿著門框接到地上
+  c.strokeStyle='#c98a3a';c.lineWidth=3;c.beginPath();c.moveTo(GND.x+14,GND.y+10);c.lineTo(343,GND.y+22);c.lineTo(343,444);c.stroke();
+  c.strokeStyle=INK;c.lineWidth=2.5;c.fillStyle='#3a3d52';rrect(c,GND.x-24,GND.y-30,48,62,8);c.fill();c.stroke();
+  c.fillStyle='#e9a85a';c.beginPath();c.arc(GND.x,GND.y-6,17,0,TAU);c.fill();c.stroke();c.fillStyle='rgba(255,255,255,.55)';c.beginPath();c.ellipse(GND.x-6,GND.y-12,5,3,-.6,0,TAU);c.fill();
+  c.fillStyle=PAPER;c.font='900 11px "Chiron GoRound TC","PingFang TC",sans-serif';c.textAlign='center';c.fillText('靜電',GND.x,GND.y+26);
   // 信箱
   c.fillStyle='#7a5a44';c.fillRect(BOX.x-5,BOX.y+26,10,B-BOX.y);c.strokeRect(BOX.x-5,BOX.y+26,10,B-BOX.y);
   c.fillStyle='#5f8fb8';c.beginPath();c.moveTo(BOX.x-34,BOX.y+30);c.lineTo(BOX.x-34,BOX.y-2);c.quadraticCurveTo(BOX.x-34,BOX.y-30,BOX.x,BOX.y-30);c.quadraticCurveTo(BOX.x+34,BOX.y-30,BOX.x+34,BOX.y-2);c.lineTo(BOX.x+34,BOX.y+30);c.closePath();c.fill();c.stroke();
@@ -295,43 +330,74 @@ function drawScene(c){
   c.fillStyle='rgba(0,0,0,.25)';c.fillRect(14,58,6,B-58);c.fillRect(340,58,6,B-58);c.fillRect(14,58,332,6);
 }
 
+const shade=(hex,f)=>{const n=parseInt(hex.slice(1),16),r=Math.round(((n>>16)&255)*f),g2=Math.round(((n>>8)&255)*f),b=Math.round((n&255)*f);return`rgb(${r},${g2},${b})`;};
 function drawPerson(c,v,x,y,sc,al){
-  const K=v.kind,mood=v.mood;c.save();c.translate(x,y);c.scale(sc,sc);c.globalAlpha=al;c.lineJoin='round';c.lineCap='round';c.strokeStyle=INK;c.lineWidth=3;
-  // 腿、身體、手
-  c.fillStyle='#4a4f66';rrect(c,-30,170,26,112,8);c.fill();c.stroke();rrect(c,4,170,26,112,8);c.fill();c.stroke();
-  c.fillStyle=K.shirt;c.beginPath();c.moveTo(-44,30);c.quadraticCurveTo(0,10,44,30);c.lineTo(50,180);c.lineTo(-50,180);c.closePath();c.fill();c.stroke();
-  for(const s of[-1,1]){c.fillStyle=K.shirt;c.beginPath();c.moveTo(s*40,34);c.quadraticCurveTo(s*72,60,s*66,138);c.lineTo(s*48,138);c.quadraticCurveTo(s*50,80,s*32,62);c.closePath();c.fill();c.stroke();c.fillStyle=K.skin;c.beginPath();c.arc(s*57,146,11,0,TAU);c.fill();c.stroke();}
-  if(K.style==='tie'){c.fillStyle=PAPER;c.beginPath();c.moveTo(-14,24);c.lineTo(0,46);c.lineTo(14,24);c.closePath();c.fill();c.stroke();c.fillStyle='#b5503f';c.beginPath();c.moveTo(-5,40);c.lineTo(5,40);c.lineTo(8,96);c.lineTo(0,108);c.lineTo(-8,96);c.closePath();c.fill();c.stroke();}
-  if(K.style==='helmet'){c.fillStyle=PAPER;c.fillRect(-26,86,52,40);c.strokeRect(-26,86,52,40);c.fillStyle=INK;c.font='900 15px "Chiron GoRound TC",sans-serif';c.textAlign='center';c.fillText('外送',0,112);}
-  if(K.style==='hardhat'){c.fillStyle='#f6e36a';c.fillRect(-46,96,92,10);c.strokeRect(-46,96,92,10);}
-  if(K.sly){c.fillStyle='#ffd35c';for(const [px,py] of[[-22,70],[18,92],[-8,128],[26,150],[-30,152]]){c.beginPath();c.arc(px,py,4,0,TAU);c.fill();}}   // 花襯衫
+  const K=v.kind,mood=v.mood,W=K.wear;c.save();c.translate(x,y);c.scale(sc,sc);c.globalAlpha=al;c.lineJoin='round';c.lineCap='round';c.strokeStyle=INK;c.lineWidth=3;
+  const torso=()=>{c.beginPath();c.moveTo(-44,30);c.quadraticCurveTo(0,10,44,30);c.lineTo(50,180);c.lineTo(-50,180);c.closePath();};
+  // 長髮先畫在頭後面
+  if(K.style==='long'){c.fillStyle=K.hair;c.beginPath();c.moveTo(-42,-30);c.quadraticCurveTo(-56,30,-40,58);c.lineTo(40,58);c.quadraticCurveTo(56,30,42,-30);c.quadraticCurveTo(0,-76,-42,-30);c.fill();c.stroke();}
+  if(K.style==='pony'){c.fillStyle=K.hair;c.beginPath();c.moveTo(28,-50);c.quadraticCurveTo(66,-56,62,-8);c.quadraticCurveTo(58,24,44,34);c.quadraticCurveTo(50,-4,34,-28);c.closePath();c.fill();c.stroke();}
+  // 腿
+  if(W==='dress'){c.fillStyle=K.skin;rrect(c,-24,200,18,82,7);c.fill();c.stroke();rrect(c,6,200,18,82,7);c.fill();c.stroke();}
+  else{c.fillStyle=K.legs;rrect(c,-30,170,26,112,8);c.fill();c.stroke();rrect(c,4,170,26,112,8);c.fill();c.stroke();}
+  // 身體
+  c.fillStyle=K.top;
+  if(W==='dress'){c.beginPath();c.moveTo(-44,30);c.quadraticCurveTo(0,10,44,30);c.lineTo(46,130);c.lineTo(64,226);c.lineTo(-64,226);c.lineTo(-46,130);c.closePath();c.fill();c.stroke();}
+  else if(W==='trench'||W==='coat'){c.beginPath();c.moveTo(-44,30);c.quadraticCurveTo(0,10,44,30);c.lineTo(56,236);c.lineTo(-56,236);c.closePath();c.fill();c.stroke();}
+  else{torso();c.fill();c.stroke();}
+  if(K.stripes){c.save();torso();c.clip();c.strokeStyle='rgba(255,255,255,.28)';c.lineWidth=1.4;c.beginPath();for(let q=-44;q<=44;q+=8){c.moveTo(q,20);c.lineTo(q*1.1,182);}c.stroke();c.restore();}
+  // 手臂
+  for(const sd of[-1,1]){const up=sd===1&&v.reach>0?v.reach:0;   // 右手伸去摸靜電釋放器
+    c.fillStyle=K.top;c.beginPath();c.moveTo(sd*40,34);c.quadraticCurveTo(sd*72,60-up*40,sd*(66+up*26),138-up*150);c.lineTo(sd*(48+up*30),138-up*158);c.quadraticCurveTo(sd*50,80-up*30,sd*32,62);c.closePath();c.fill();c.stroke();
+    c.fillStyle=K.skin;c.beginPath();c.arc(sd*(57+up*30),146-up*158,11,0,TAU);c.fill();c.stroke();}
+  // 衣服的細節
+  if(W==='suit'||W==='coat'||W==='trench'){
+    c.fillStyle=W==='trench'?shade(K.top,.82):PAPER;c.beginPath();c.moveTo(-15,24);c.lineTo(0,W==='trench'?92:74);c.lineTo(15,24);c.closePath();c.fill();c.stroke();
+    if(W==='suit'&&K.tie){c.fillStyle=K.tie;c.beginPath();c.moveTo(-5,38);c.lineTo(5,38);c.lineTo(8,92);c.lineTo(0,104);c.lineTo(-8,92);c.closePath();c.fill();c.stroke();
+      if(K.loud){c.fillStyle='#ffe36a';for(const q of[50,66,82]){c.beginPath();c.arc(q%4?-1.5:1.5,q,2.2,0,TAU);c.fill();}}}
+    c.fillStyle=shade(K.top,W==='coat'?.9:.8);for(const sd of[-1,1]){c.beginPath();c.moveTo(sd*15,24);c.lineTo(sd*34,30);c.lineTo(sd*9,W==='trench'?104:88);c.lineTo(0,W==='trench'?92:74);c.closePath();c.fill();c.stroke();}
+    if(W==='suit'){c.fillStyle=INK;c.beginPath();c.arc(0,112,2.4,0,TAU);c.arc(0,134,2.4,0,TAU);c.fill();}
+    if(W==='trench'){c.fillStyle=shade(K.top,.72);c.fillRect(-51,128,102,13);c.strokeRect(-51,128,102,13);c.fillStyle='#e0b24a';c.fillRect(-7,127,14,15);c.strokeRect(-7,127,14,15);c.fillStyle=INK;for(const q of[160,186]){c.beginPath();c.arc(-14,q,2.4,0,TAU);c.arc(14,q,2.4,0,TAU);c.fill();}}
+    if(W==='coat'){c.strokeStyle=INK;c.lineWidth=5.5;c.beginPath();c.moveTo(-17,28);c.quadraticCurveTo(-22,84,0,90);c.quadraticCurveTo(22,84,17,28);c.stroke();c.strokeStyle='#5c7fb8';c.lineWidth=2.6;c.beginPath();c.moveTo(-17,28);c.quadraticCurveTo(-22,84,0,90);c.quadraticCurveTo(22,84,17,28);c.stroke();
+      c.strokeStyle=INK;c.lineWidth=3;c.fillStyle='#c9ced6';c.beginPath();c.arc(0,98,8,0,TAU);c.fill();c.stroke();c.fillStyle=PAPER;c.fillRect(18,112,20,14);c.lineWidth=2;c.strokeRect(18,112,20,14);c.lineWidth=3;}}
+  else if(W==='polo'){c.fillStyle=shade(K.top,.82);for(const sd of[-1,1]){c.beginPath();c.moveTo(0,30);c.lineTo(sd*20,22);c.lineTo(sd*13,46);c.closePath();c.fill();c.stroke();}c.beginPath();c.moveTo(0,30);c.lineTo(0,70);c.stroke();c.fillStyle=INK;c.beginPath();c.arc(0,46,2,0,TAU);c.arc(0,60,2,0,TAU);c.fill();}
+  else if(W==='dress'){c.fillStyle=K.skin;c.beginPath();c.moveTo(-18,22);c.quadraticCurveTo(0,52,18,22);c.closePath();c.fill();c.stroke();c.fillStyle=PAPER;for(let q=-2;q<=2;q++){c.beginPath();c.arc(q*5,33+(2-Math.abs(q))*3.5,2.2,0,TAU);c.fill();}}
+  else if(W==='work'){c.fillStyle=PAPER;c.fillRect(12,62,26,16);c.lineWidth=2;c.strokeRect(12,62,26,16);c.lineWidth=3;c.beginPath();c.moveTo(0,22);c.lineTo(0,180);c.stroke();
+    c.fillStyle='#8a5a3a';c.fillRect(-52,140,104,14);c.strokeRect(-52,140,104,14);for(const q of[-40,-14,22]){rrect(c,q,150,20,26,3);c.fill();c.stroke();}c.fillStyle='#e0b24a';c.fillRect(-6,139,12,16);c.strokeRect(-6,139,12,16);}
+  else if(W==='box'){c.fillStyle=PAPER;c.fillRect(-26,86,52,40);c.strokeRect(-26,86,52,40);c.fillStyle=INK;c.font='900 15px "Chiron GoRound TC",sans-serif';c.textAlign='center';c.fillText('外送',0,112);}
   // 頭
-  c.fillStyle=K.skin;c.beginPath();c.arc(0,-18,40,0,TAU);c.fill();c.stroke();
-  c.fillStyle=K.hair;
-  if(K.style==='bun'){c.beginPath();c.arc(0,-62,15,0,TAU);c.fill();c.stroke();c.beginPath();c.arc(0,-24,41,Math.PI*1.08,Math.PI*1.92);c.quadraticCurveTo(0,-36,-39,-36);c.fill();c.stroke();}
-  else if(K.style==='helmet'){c.fillStyle='#f0a13c';c.beginPath();c.arc(0,-24,44,Math.PI,TAU);c.lineTo(48,-14);c.lineTo(-48,-14);c.closePath();c.fill();c.stroke();}
-  else if(K.style==='hardhat'){c.fillStyle='#f6e36a';c.beginPath();c.arc(0,-28,42,Math.PI,TAU);c.closePath();c.fill();c.stroke();c.fillRect(-52,-32,104,9);c.strokeRect(-52,-32,104,9);}
-  else if(K.style==='cap'){c.fillStyle='#e0533d';c.beginPath();c.arc(0,-26,41,Math.PI,TAU);c.closePath();c.fill();c.stroke();c.beginPath();c.moveTo(20,-28);c.lineTo(62,-22);c.lineTo(20,-16);c.closePath();c.fill();c.stroke();}
-  else{c.beginPath();c.arc(0,-24,41,Math.PI*1.05,Math.PI*1.95);c.quadraticCurveTo(10,-44,-39,-30);c.fill();c.stroke();}
-  // 臉：mood 0 普通、1 不爽、2 開心、3 嚇到
-  c.fillStyle=INK;
-  if(mood===3){c.fillStyle=PAPER;c.beginPath();c.arc(-14,-18,8,0,TAU);c.arc(14,-18,8,0,TAU);c.fill();c.lineWidth=2;c.stroke();c.fillStyle=INK;c.beginPath();c.arc(-14,-18,3,0,TAU);c.arc(14,-18,3,0,TAU);c.fill();c.beginPath();c.ellipse(0,6,7,9,0,0,TAU);c.fill();}
-  else{c.beginPath();c.arc(-14,-18,4,0,TAU);c.arc(14,-18,4,0,TAU);c.fill();c.lineWidth=3;
-    if(mood===1){c.beginPath();c.moveTo(-23,-30);c.lineTo(-8,-25);c.moveTo(23,-30);c.lineTo(8,-25);c.moveTo(-9,8);c.quadraticCurveTo(0,2,9,8);c.stroke();}
-    else if(mood===2||K.sly){c.beginPath();c.moveTo(-12,2);c.quadraticCurveTo(0,16,12,2);c.stroke();if(K.sly&&mood!==2){c.beginPath();c.moveTo(-22,-29);c.lineTo(-8,-31);c.stroke();}}
-    else{c.beginPath();c.moveTo(-8,5);c.quadraticCurveTo(0,10,8,5);c.stroke();}}
+  c.fillStyle=K.skin;if(K.style==='bald'){c.beginPath();c.ellipse(-41,-14,6,10,0,0,TAU);c.ellipse(41,-14,6,10,0,0,TAU);c.fill();c.stroke();}
+  c.beginPath();c.arc(0,-18,40,0,TAU);c.fill();c.stroke();
+  c.fillStyle=K.hair;const S=K.style;
+  if(S==='bun'){c.beginPath();c.arc(0,-62,15,0,TAU);c.fill();c.stroke();c.beginPath();c.arc(0,-24,41,Math.PI*1.08,Math.PI*1.92);c.quadraticCurveTo(0,-36,-39,-36);c.fill();c.stroke();}
+  else if(S==='helmet'){c.fillStyle='#f0a13c';c.beginPath();c.arc(0,-24,44,Math.PI,TAU);c.lineTo(48,-14);c.lineTo(-48,-14);c.closePath();c.fill();c.stroke();}
+  else if(S==='cap'){c.fillStyle='#e0533d';c.beginPath();c.arc(0,-26,41,Math.PI,TAU);c.closePath();c.fill();c.stroke();c.beginPath();c.moveTo(20,-28);c.lineTo(62,-22);c.lineTo(20,-16);c.closePath();c.fill();c.stroke();}
+  else if(S==='slick'){c.beginPath();c.moveTo(-40,-22);c.quadraticCurveTo(-46,-66,-6,-64);c.quadraticCurveTo(38,-68,41,-22);c.quadraticCurveTo(34,-44,8,-46);c.quadraticCurveTo(-24,-48,-40,-22);c.fill();c.stroke();c.strokeStyle='rgba(255,255,255,.35)';c.lineWidth=2;c.beginPath();c.moveTo(-22,-52);c.quadraticCurveTo(0,-60,26,-50);c.stroke();c.strokeStyle=INK;c.lineWidth=3;}
+  else if(S==='swoop'){c.beginPath();c.moveTo(-41,-20);c.quadraticCurveTo(-50,-62,-18,-70);c.quadraticCurveTo(20,-82,44,-52);c.quadraticCurveTo(46,-34,40,-20);c.quadraticCurveTo(36,-44,6,-42);c.quadraticCurveTo(-26,-40,-41,-20);c.fill();c.stroke();}
+  else if(S==='pony'){c.beginPath();c.moveTo(-41,-20);c.quadraticCurveTo(-46,-62,-4,-62);c.quadraticCurveTo(40,-62,41,-20);c.quadraticCurveTo(30,-46,-6,-44);c.quadraticCurveTo(-30,-42,-41,-20);c.fill();c.stroke();}
+  else if(S==='short'){c.beginPath();c.arc(0,-24,41,Math.PI*1.04,Math.PI*1.96);c.quadraticCurveTo(0,-50,-39,-30);c.fill();c.stroke();}
+  else if(S==='long'){c.beginPath();c.moveTo(-41,-14);c.quadraticCurveTo(-48,-64,0,-62);c.quadraticCurveTo(48,-64,41,-14);c.quadraticCurveTo(30,-40,8,-44);c.quadraticCurveTo(-4,-30,-41,-14);c.fill();c.stroke();}
+  else if(S==='bald'){c.fillStyle='rgba(120,124,134,.5)';c.beginPath();c.arc(0,-12,36,.25,Math.PI-.25);c.quadraticCurveTo(0,6,33.8,-3);c.fill();c.strokeStyle='#8e929c';c.lineWidth=5;c.beginPath();c.moveTo(-24,-34);c.lineTo(-8,-30);c.moveTo(24,-34);c.lineTo(8,-30);c.stroke();c.strokeStyle=INK;c.lineWidth=3;}
+  else if(S==='fedora'){c.fillStyle='#5a4a3a';c.beginPath();c.moveTo(-30,-44);c.quadraticCurveTo(-30,-84,0,-80);c.quadraticCurveTo(30,-84,30,-44);c.closePath();c.fill();c.stroke();c.fillStyle=INK;c.fillRect(-30,-52,60,8);c.fillStyle='#5a4a3a';c.beginPath();c.ellipse(0,-42,58,10,0,0,TAU);c.fill();c.stroke();}
+  // 臉：mood 0 平常（照各人的個性）、1 不爽、3 嚇到
+  c.fillStyle=INK;const f=K.face;
+  if(K.shades){c.fillStyle=INK;rrect(c,-27,-26,22,14,5);c.fill();rrect(c,5,-26,22,14,5);c.fill();c.lineWidth=3;c.beginPath();c.moveTo(-5,-20);c.lineTo(5,-20);c.stroke();}
+  if(mood===3){if(!K.shades){c.fillStyle=PAPER;c.beginPath();c.arc(-14,-18,8,0,TAU);c.arc(14,-18,8,0,TAU);c.fill();c.lineWidth=2;c.stroke();c.fillStyle=INK;c.beginPath();c.arc(-14,-18,3,0,TAU);c.arc(14,-18,3,0,TAU);c.fill();}c.fillStyle=INK;c.beginPath();c.ellipse(0,8,7,9,0,0,TAU);c.fill();}
+  else{if(!K.shades){c.beginPath();c.arc(-14,-18,4,0,TAU);c.arc(14,-18,4,0,TAU);c.fill();}c.lineWidth=3;
+    if(mood===1||f==='stern'){c.beginPath();if(!K.shades&&S!=='bald'){c.moveTo(-23,-30);c.lineTo(-8,-25);c.moveTo(23,-30);c.lineTo(8,-25);}c.moveTo(-9,9);c.quadraticCurveTo(0,mood===1?3:7,9,9);c.stroke();}
+    else if(f==='grin'){c.fillStyle=PAPER;c.beginPath();c.moveTo(-14,2);c.quadraticCurveTo(0,20,14,2);c.closePath();c.fill();c.lineWidth=2.4;c.stroke();}
+    else if(f==='smirk'){c.beginPath();c.moveTo(-10,6);c.quadraticCurveTo(2,12,13,0);c.moveTo(-22,-29);c.lineTo(-8,-32);c.stroke();}
+    else if(f==='smile'){c.beginPath();c.moveTo(-11,3);c.quadraticCurveTo(0,15,11,3);c.stroke();}
+    else{c.beginPath();c.moveTo(-8,6);c.quadraticCurveTo(0,10,8,6);c.stroke();}}
   c.restore();
 }
-// 夸克：灰髮、西裝領帶，全身裹著銀色太空毯，手上提著煤油燈，站在門邊。pain 越高越難受，被電到會整個炸毛
+// Chu克：灰髮、西裝領帶，全身裹著銀色太空毯，手上提著煤油燈，站在門邊。pain 越高越難受，被電到會整個炸毛
 const MAN={x:62};
 function drawMan(c){
-  const zap=mode==='play'&&vis&&vis.phase==='result'&&vis.left.length>0,jx=zap?(Math.random()-.5)*7:pain>=2?Math.sin(time*31)*1.2:0,by=wy1+6,bob=Math.sin(time*1.9)*1.2;
+  const zap=mode==='play'&&vis&&vis.phase==='result'&&(vis.left.length>0||vis.leftStat),jx=zap?(Math.random()-.5)*7:pain>=2?Math.sin(time*31)*1.2:0,by=wy1+6,bob=Math.sin(time*1.9)*1.2;
   c.save();c.translate(MAN.x+jx,by+bob);c.lineJoin='round';c.lineCap='round';c.strokeStyle=INK;c.lineWidth=3;
   // 燈光
   c.fillStyle='rgba(255,196,96,.26)';c.beginPath();c.arc(62,-96,54+Math.sin(time*7)*3,0,TAU);c.fill();
-  // 太空毯：先畫披在頭後面的那一圈
-  const foil=(pts,fill)=>{c.fillStyle=fill;c.beginPath();pts.forEach((q,i)=>i?c.lineTo(q[0],q[1]):c.moveTo(q[0],q[1]));c.closePath();c.fill();c.stroke();};
-  foil([[-50,-96],[-56,-136],[-44,-170],[-24,-190],[2,-196],[28,-188],[46,-166],[54,-134],[48,-96]],'#b9c2cd');
   // 臉
   c.fillStyle='#ecccae';c.beginPath();c.ellipse(-36,-134,6,9,0,0,TAU);c.ellipse(36,-134,6,9,0,0,TAU);c.fill();c.stroke();
   c.beginPath();c.moveTo(-31,-150);c.quadraticCurveTo(-34,-108,-16,-96);c.quadraticCurveTo(0,-88,16,-96);c.quadraticCurveTo(34,-108,31,-150);c.quadraticCurveTo(0,-172,-31,-150);c.fill();c.stroke();
@@ -350,17 +416,23 @@ function drawMan(c){
     c.lineWidth=2.4;c.beginPath();if(pain>=2){c.moveTo(-9,-103);c.quadraticCurveTo(-4,-108,0,-104);c.quadraticCurveTo(4,-100,9,-105);}else if(pain===1){c.moveTo(-8,-104);c.quadraticCurveTo(0,-108,8,-104);}else{c.moveTo(-8,-105);c.lineTo(8,-105);}c.stroke();
     if(pain>=1){c.fillStyle='#8fdcf7';c.beginPath();c.ellipse(27,-150+((time*26)%16),2.2,3.6,0,0,TAU);c.fill();}}
   c.lineWidth=2.2;c.strokeStyle=INK;c.beginPath();c.moveTo(1,-128);c.quadraticCurveTo(6,-117,0,-115);c.stroke();
-  // 襯衫領子、領帶、西裝
-  c.lineWidth=3;c.fillStyle='#3a3d52';foil([[-34,-86],[34,-86],[46,10],[-46,10]],'#3a3d52');
+  // 領口：只露出一小塊西裝、襯衫領子和領帶
+  c.lineWidth=3;c.strokeStyle=INK;c.fillStyle='#3a3d52';c.beginPath();c.moveTo(-30,-94);c.lineTo(30,-94);c.lineTo(36,-30);c.lineTo(-36,-30);c.closePath();c.fill();
   c.fillStyle=PAPER;c.beginPath();c.moveTo(-17,-94);c.lineTo(0,-70);c.lineTo(17,-94);c.lineTo(10,-98);c.lineTo(0,-88);c.lineTo(-10,-98);c.closePath();c.fill();c.stroke();
-  c.fillStyle='#8e3b3b';c.beginPath();c.moveTo(-5,-84);c.lineTo(5,-84);c.lineTo(8,-40);c.lineTo(0,-28);c.lineTo(-8,-40);c.closePath();c.fill();c.stroke();
-  // 太空毯：裹住肩膀和身體，前面留一道開口看得到西裝
-  const sh=zap?3:0;
-  foil([[-22,-96],[-58,-84],[-76,-40],[-80,14],[-16,14],[-12,-50]],'#cfd6de');
-  foil([[22,-96],[56,-86],[70,-52],[60,-24],[78,14],[18,14],[12,-50]],'#cfd6de');
-  c.fillStyle='#e9eef2';for(const t of[[[-54,-80],[-30,-60],[-62,-40]],[[-70,-20],[-40,-10],[-64,10]],[[30,-84],[54,-70],[34,-52]],[[40,-16],[66,4],[36,10]]]){c.beginPath();t.forEach((q,i)=>i?c.lineTo(q[0],q[1]):c.moveTo(q[0],q[1]));c.closePath();c.fill();}
-  c.fillStyle='#a9b3bf';for(const t of[[[-30,-60],[-14,-44],[-40,-10]],[[34,-52],[56,-40],[40,-16]],[[-62,-40],[-40,-10],[-70,-20]]]){c.beginPath();t.forEach((q,i)=>i?c.lineTo(q[0],q[1]):c.moveTo(q[0],q[1]));c.closePath();c.fill();}
-  c.strokeStyle='rgba(255,255,255,.85)';c.lineWidth=1.8;c.beginPath();for(const q of[[-66,-56,-52,-70],[-48,-24,-30,-36],[44,-74,58,-62],[30,-30,50,-22],[-34,-176,-18,-186],[30,-176,42,-160]]){c.moveTo(q[0]+sh,q[1]);c.lineTo(q[2]+sh,q[3]);}c.stroke();
+  c.fillStyle='#8e3b3b';c.beginPath();c.moveTo(-5,-84);c.lineTo(5,-84);c.lineTo(7,-50);c.lineTo(-7,-50);c.closePath();c.fill();c.stroke();
+  // 太空毯：一整件從頭頂披下來裹住全身，只在臉和領口開一個洞
+  const sh=zap?3:0,outer=[[-82,14],[-78,-44],[-62,-94],[-60,-140],[-46,-176],[-24,-196],[4,-200],[30,-192],[50,-170],[58,-138],[58,-96],[72,-54],[64,-22],[80,14]];
+  const hole=[[-34,-150],[-27,-170],[0,-177],[27,-170],[34,-150],[34,-114],[22,-96],[9,-80],[0,-56],[-9,-80],[-22,-96],[-34,-114]];
+  const trace=pts=>{pts.forEach((q,i)=>i?c.lineTo(q[0],q[1]):c.moveTo(q[0],q[1]));c.closePath();};
+  c.fillStyle='#cfd6de';c.beginPath();trace(outer);trace(hole);c.fill('evenodd');
+  c.save();c.beginPath();trace(outer);trace(hole);c.clip('evenodd');   // 鋁箔的皺摺：亮面、暗面、反光
+  c.fillStyle='#e9eef2';for(const t of[[[-56,-150],[-40,-120],[-60,-100]],[[-54,-80],[-28,-62],[-62,-40]],[[-70,-20],[-40,-10],[-64,10]],[[40,-180],[56,-150],[38,-140]],[[34,-84],[58,-70],[36,-50]],[[40,-16],[66,4],[36,10]],[[-20,-196],[6,-184],[-24,-178]]]){c.beginPath();trace(t);c.fill();}
+  c.fillStyle='#a9b3bf';for(const t of[[[-40,-120],[-36,-96],[-60,-100]],[[-28,-62],[-12,-44],[-40,-10]],[[-62,-40],[-40,-10],[-70,-20]],[[38,-140],[56,-110],[36,-98]],[[36,-50],[58,-40],[40,-16]],[[6,-184],[30,-178],[10,-170]],[[-10,-40],[14,-30],[-6,10]]]){c.beginPath();trace(t);c.fill();}
+  c.strokeStyle='rgba(255,255,255,.85)';c.lineWidth=1.8;c.beginPath();for(const q of[[-66,-56,-52,-70],[-48,-24,-30,-36],[44,-74,58,-62],[30,-30,50,-22],[-40,-178,-24,-190],[36,-182,48,-166],[-52,-128,-44,-146],[14,-20,30,-8]]){c.moveTo(q[0]+sh,q[1]);c.lineTo(q[2]+sh,q[3]);}c.stroke();
+  c.restore();
+  c.strokeStyle=INK;c.lineWidth=3;c.beginPath();trace(outer);c.stroke();c.beginPath();trace(hole);c.stroke();
+  c.lineWidth=2.4;c.beginPath();c.moveTo(0,-56);c.lineTo(-6,-20);c.lineTo(4,14);c.stroke();                          // 前面交疊的那一道邊
+  c.lineWidth=3;c.fillStyle='#ecccae';c.beginPath();c.arc(-2,-40,9,0,TAU);c.fill();c.stroke();                       // 從裡面抓著毯子的手
   // 提燈的手和煤油燈
   c.strokeStyle=INK;c.lineWidth=3;c.fillStyle='#ecccae';c.beginPath();c.arc(62,-52,9,0,TAU);c.fill();c.stroke();
   c.lineWidth=2.4;c.beginPath();c.arc(62,-72,9,Math.PI,TAU);c.moveTo(53,-72);c.lineTo(53,-62);c.moveTo(71,-72);c.lineTo(71,-62);c.stroke();
@@ -393,6 +465,12 @@ function render(){
     else if(v.phase==='go'){const e=clamp(v.pt/.5,0,1);sc=1+e*.35;al=1-e*e;}
     else if(v.phase==='result')al=0;
     if(al>0)drawPerson(g,v,px,236+Math.sin(time*2.2)*1.5,sc,al);
+    if(v.stat>0&&v.phase==='check'){   // 身上劈啪作響的靜電，和釋放器上的提示圈
+      g.lineCap='round';g.lineJoin='round';for(let i=0;i<4+v.stat*2;i++){const a=((time*3+i*1.7)%TAU),rx=58+((i*37)%22),cx=px+Math.cos(a+i)*rx,cy=300+Math.sin(a*1.3+i*2)*120,j=()=>(Math.random()-.5)*14;
+        g.strokeStyle=INK;g.lineWidth=4.5;g.beginPath();g.moveTo(cx,cy);const m1=[cx+j(),cy+j()],m2=[cx+j(),cy+j()];g.lineTo(m1[0],m1[1]);g.lineTo(m2[0],m2[1]);g.stroke();g.strokeStyle=VOLT;g.lineWidth=2;g.beginPath();g.moveTo(cx,cy);g.lineTo(m1[0],m1[1]);g.lineTo(m2[0],m2[1]);g.stroke();}
+      const pr=24+3*Math.sin(time*9);g.lineWidth=6.5;g.strokeStyle=INK;g.beginPath();g.arc(GND.x,GND.y-6,pr,0,TAU);g.stroke();g.lineWidth=3.2;g.strokeStyle=VOLT;g.beginPath();g.arc(GND.x,GND.y-6,pr,0,TAU);g.stroke();
+      if(v.stat>1){g.font='700 15px Fredoka,sans-serif';g.textAlign='center';g.lineWidth=4.5;g.strokeStyle=INK;g.fillStyle=VOLT;g.strokeText('×'+v.stat,GND.x-34,GND.y-22);g.fillText('×'+v.stat,GND.x-34,GND.y-22);g.textAlign='left';}}
+    if(v.phase==='result'&&v.leftStat){g.font='900 13px "Chiron GoRound TC","PingFang TC",sans-serif';g.textAlign='center';g.lineWidth=4.5;g.strokeStyle=INK;g.fillStyle=VOLT;g.strokeText('靜電',180,300);g.fillText('靜電',180,300);g.textAlign='left';}
     // 對白
     if(v.sayT>0&&v.say&&v.phase!=='result'){g.font='900 15px "Chiron GoRound TC","PingFang TC",sans-serif';const w=Math.min(250,g.measureText(v.say).width+22),bx=clamp(px-w/2,24,336-w),by=148;
       g.globalAlpha=clamp(v.sayT*3,0,1);g.fillStyle=PAPER;g.strokeStyle=INK;g.lineWidth=2.5;rrect(g,bx,by-24,w,32,12);g.fill();g.stroke();g.beginPath();g.moveTo(px-8,by+8);g.lineTo(px,by+19);g.lineTo(px+8,by+8);g.fill();g.stroke();g.fillStyle=PAPER;g.fillRect(px-7,by+5,14,5);
@@ -442,6 +520,10 @@ function start(){
 function next(){nth++;vis=makeVisitor(nth);el.num.textContent=nth;el.enter.disabled=false;lastFill=-1;Snd.blip(180,150,.06,'square',.07);Snd.blip(180,150,.06,'square',.07,.12);}   // 叩叩
 function tapAt(x,y){
   const v=vis;if(!v||v.phase!=='check')return;
+  if(Math.hypot(x-GND.x,y-(GND.y-4))<36){   // 靜電釋放器：讓客人摸一下
+    if(v.stat>0){v.stat--;v.reach=.34;shake=Math.max(shake,3);pop(GND.x-44,GND.y-44,'啪！',VOLT);Snd.blip(1800,300,.07,'square',.09);for(let i=0;i<8;i++)sparks.push({x:GND.x+rnd(-10,10),y:GND.y-6+rnd(-10,10),vx:rnd(-120,40),vy:rnd(-90,90),r:rnd(1.5,3),col:VOLT,life:rnd(.2,.45)});}
+    else pop(GND.x-46,GND.y-44,'沒有靜電',PAPER);
+    return;}
   const b=v.bag;if(b&&b.state==='in'&&Math.hypot(x-b.x,y-b.y)<TOK_R+10){b.state='open';b.t=0;b.inside.forEach((t,i)=>{t.hid=false;t.t=-.08*i;});Snd.blip(300,520,.1,'triangle',.08);pop(b.x,b.y-40,'打開包包','#fff8ea');return;}
   let hit=null,bd=TOK_R+10;for(const t of v.toks){if(t.hid||t.state!=='in'||t.t<0)continue;const d=Math.hypot(x-t.x,y-t.y);if(d<bd){bd=d;hit=t;}}
   if(!hit)return;
@@ -449,14 +531,14 @@ function tapAt(x,y){
   else{hit.sh=.4;v.wrong++;v.t+=1.3;v.mood=1;v.say=`欸，那是我的${IT[hit.id].n}！`;v.sayT=1.4;shake=Math.max(shake,4);pop(hit.x,hit.y-40,'沒有電！','#ee5b3a');Snd.blip(220,140,.16,'square',.07);}   // 點錯：客人不爽，時間少 1.3 秒
 }
 function admit(){const v=vis;if(!v||v.phase!=='check')return;v.phase='go';v.pt=0;el.enter.disabled=true;
-  v.left=v.toks.filter(t=>t.e&&t.state==='in');v.toks.forEach(t=>{if(t.hid){t.hid=false;t.t=1;}});if(v.bag&&v.bag.state==='in')v.bag.state='gone';
+  v.left=v.toks.filter(t=>t.e&&t.state==='in');v.leftStat=v.stat>0;v.toks.forEach(t=>{if(t.hid){t.hid=false;t.t=1;}});if(v.bag&&v.bag.state==='in')v.bag.state='gone';
   Snd.blip(300,200,.18,'sine',.06);}
 function resolve(){
   const v=vis;v.phase='result';v.pt=0;
-  if(v.left.length){   // 有電的東西進門了
-    const hurt=v.left.length>=3?2:1;pain=Math.min(PAIN_MAX,pain+hurt);streak=0;lastMiss=v.left.map(t=>IT[t.id].n);drawBolts();
+  if(v.left.length||v.leftStat){   // 有電的東西（或一身靜電）進門了
+    const cnt=v.left.length+(v.leftStat?1:0),hurt=cnt>=3?2:1;pain=Math.min(PAIN_MAX,pain+hurt);streak=0;lastMiss=v.left.map(t=>IT[t.id].n).concat(v.leftStat?['靜電']:[]);drawBolts();
     shake=16;flash=1;Snd.zap();pop(196,300,'啊啊啊——有電！',VOLT,true);
-    for(const t of v.left){const pts=[[t.x,t.y]];let x=t.x,y=t.y;const tx=MAN.x,ty=wy1-120;for(let i=1;i<=7;i++){x=lerp(t.x,tx,i/7)+(i<7?rnd(-20,20):0);y=lerp(t.y,ty,i/7)+(i<7?rnd(-14,14):0);pts.push([x,y]);}bolts.push({pts,life:.7});}
+    for(const t of v.left.concat(v.leftStat?[{x:180,y:300}]:[])){const pts=[[t.x,t.y]];let x=t.x,y=t.y;const tx=MAN.x,ty=wy1-120;for(let i=1;i<=7;i++){x=lerp(t.x,tx,i/7)+(i<7?rnd(-20,20):0);y=lerp(t.y,ty,i/7)+(i<7?rnd(-14,14):0);pts.push([x,y]);}bolts.push({pts,life:.7});}
   }else{
     streak++;const clean=v.wrong===0;pop(180,300,clean?'安全！':'安全（但客人不太高興）',clean?'#ffd35c':'#fff8ea',clean);Snd.blip(660,990,.12,'triangle',.09);Snd.blip(990,1320,.14,'triangle',.07,.1);
     for(let i=0;i<10;i++)sparks.push({x:180+rnd(-70,70),y:300+rnd(-40,40),vx:rnd(-60,60),vy:rnd(-120,-30),r:rnd(2,4),col:'#ffd35c',life:rnd(.4,.8)});
@@ -474,21 +556,22 @@ function tick(dt){
   for(let i=bolts.length-1;i>=0;i--)if((bolts[i].life-=dt)<=0)bolts.splice(i,1);
   for(let i=pops.length-1;i>=0;i--)if((pops[i].life-=dt)<=0)pops.splice(i,1);
   const v=vis;if(mode!=='play'||!v)return;
-  v.pt+=dt;if(v.sayT>0)v.sayT-=dt;if(v.bag){v.bag.t+=dt;if(v.bag.state==='open'&&v.bag.t>.2)v.bag.state='gone';}
+  v.pt+=dt;if(v.sayT>0)v.sayT-=dt;if(v.reach>0)v.reach=Math.max(0,v.reach-dt);if(v.bag){v.bag.t+=dt;if(v.bag.state==='open'&&v.bag.t>.2)v.bag.state='gone';}
   for(const t of v.toks){t.t+=dt;if(t.sh>0)t.sh-=dt;if(t.state==='fly'&&t.t>=.34){t.state='gone';Snd.blip(160,110,.07,'square',.08);for(let i=0;i<4;i++)sparks.push({x:BOX.x+rnd(-12,12),y:BOX.y-8,vx:rnd(-50,50),vy:rnd(-90,-30),r:2.5,col:VOLT,life:.4});}}
   if(v.phase==='enter'&&v.pt>=.45){v.phase='check';v.pt=0;v.say=v.hi;v.sayT=1.6;v.toks.forEach((t,i)=>{if(t.t>0)t.t=-.1*i;});}
   else if(v.phase==='check'){v.t+=dt;if(v.t>=v.T)admit();}
   else if(v.phase==='go'&&v.pt>=.5)resolve();
-  else if(v.phase==='result'&&v.pt>=(v.left.length?1.5:.8)){if(pain>=PAIN_MAX)gameOver();else next();}
+  else if(v.phase==='result'&&v.pt>=(v.left.length||v.leftStat?1.5:.8)){if(pain>=PAIN_MAX)gameOver();else next();}
 }
 function hud(){
   const v=vis;if(mode!=='play'||!v)return;
   const left=v.phase==='check'?clamp(1-v.t/v.T,0,1):v.phase==='enter'?1:0,f=Math.round(left*200);
   if(f!==lastFill){lastFill=f;el.fill.style.transform=`scaleX(${left.toFixed(3)})`;el.timer.classList.toggle('low',left<.3);}
-  if(v.phase==='result')setHint(v.left.length?'漏掉的東西標出來了，下次記得':'');
+  if(v.phase==='result')setHint(v.left.length||v.leftStat?(v.leftStat&&!v.left.length?'他身上的靜電沒放掉':'漏掉的東西標出來了，下次記得'):'');
+  else if(v.stat>0&&v.phase==='check')setHint(v.stat>1?`他身上有靜電！點門框上的釋放器 ${v.stat} 下`:'他身上有靜電！點門框上的釋放器');
   else if(v.k===1)setHint('帶電的點掉丟進信箱，檢查完按「請進」');
   else if(v.bag&&v.bag.state==='in'&&v.k<=9)setHint('包包裡可能藏東西，點開看看');
-  else if(v.k<=3)setHint('長得很像的要看清楚');
+  else if(v.k<=4)setHint('長得很像的要看清楚');
   else setHint('');
 }
 const H=1/60;let acc=0,last=0;
@@ -522,7 +605,7 @@ $('resume').addEventListener('click',()=>setPaused(false));
 el.mute.addEventListener('click',()=>{Snd.init();Snd.setOn(!Snd.on);muteIcon();});
 $('share').addEventListener('click',async()=>{
   const link=document.querySelector('link[rel=canonical]'),out=$('copied');
-  const text=`我在《絕命電師》幫夸克擋了 ${nth-1} 位客人身上的電，封號「${$('ovRank').textContent}」。你擋得住幾位？`+(link?' '+link.href:'');
+  const text=`我在《絕命電師》幫Chu克擋了 ${nth-1} 位客人身上的電，封號「${$('ovRank').textContent}」。你擋得住幾位？`+(link?' '+link.href:'');
   try{await navigator.clipboard.writeText(text);out.textContent='已複製，貼到脆上炫耀吧';}
   catch(e){out.textContent=text;const r=document.createRange();r.selectNodeContents(out);const s=getSelection();s.removeAllRanges();s.addRange(r);}
 });
@@ -530,9 +613,9 @@ window.addEventListener('resize',resize);
 if(window.ResizeObserver)new ResizeObserver(resize).observe(gameEl);
 
 // 標題畫面背景：放一位客人當示意
-vis=makeVisitor(7);vis.phase='check';vis.toks.forEach(t=>{t.t=1;});vis.sayT=0;
+vis=makeVisitor(3);vis.phase='check';vis.stat=0;vis.toks.forEach(t=>{t.t=1;});vis.sayT=0;
 muteIcon();showBest();drawBolts();resize();requestAnimationFrame(frame);
-window.__ds={IT,get vis(){return vis},get mode(){return mode},get nth(){return nth},get pain(){return pain},get paused(){return paused},start,admit,makeVisitor,
+window.__ds={IT,GND,get vis(){return vis},get mode(){return mode},get nth(){return nth},get pain(){return pain},get paused(){return paused},start,admit,makeVisitor,
   xy(wx,wy){const b=gameEl.getBoundingClientRect();return{x:b.left+ox+wx*scale,y:b.top+oy+wy*scale};}};
 })();
 </script>
