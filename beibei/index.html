@@ -89,7 +89,7 @@ body{background:var(--sky);color:var(--ink);font-family:var(--body);font-weight:
 .stam span{min-width:2.3em}
 .wetrow .track{height:12px}
 .wetrow .fill{background:var(--water);border-right:0}
-.wetrow .track::after{content:"";position:absolute;left:30%;top:0;bottom:0;width:2.5px;background:var(--ink);opacity:.55}
+.wetrow .track::after{content:"";position:absolute;left:20%;top:0;bottom:0;width:2.5px;background:var(--ink);opacity:.55}
 .stam{display:flex;align-items:center;gap:8px;font-weight:900;font-size:14px;color:var(--quilt);text-shadow:var(--sticker)}
 .track{position:relative;flex:1;height:18px;border:2.5px solid var(--ink);border-radius:999px;background:var(--quilt);overflow:hidden}
 .fill{height:100%;width:100%;background:var(--sun);border-right:2.5px solid var(--ink);transform-origin:left center}
@@ -239,7 +239,7 @@ const PIGEON_LOAD=[0,.18,.19,.2],PIGEON_HP=[0,1,3,5];   // 鴿子等級 1～3：
 const SPIT_FALL=.55,STICKY=.8;          // 樓上阿伯的痰：落下秒數；黏住時每一下只剩幾成的距離
 const SEASON=30,PLUM=[13,17],COLD=[25,29];   // 每 30 天一輪：第 13～17 天梅雨季，第 25～29 天寒流
 const AC_X=192,AC_Y=270,AC_LAND=318,AC_FORM=.55,AC_FALL=.5,AC_WET=.24;   // 樓上冷氣的排水管口、水滴落點、積水與落下秒數、每滴弄濕多少
-const PEE_COST=.3,PEE_SCARE=3;        // 尿小屁孩要花掉多少濕度；被尿過之後他幾天不敢來
+const PEE_COST=.2,PEE_SCARE=3;        // 尿小屁孩要花掉多少濕度；被尿過之後他幾天不敢來
 const KID={x:292,y:590},TRASH_PUSH=14;   // 一樓小屁孩站的位置；被垃圾砸到一次往外彈多遠
 const POOP_AT=1.8,DIRT_MAX=4,DIRT_COST=12;
 const ST_MAX=100,ST_REGEN=15,ST_TAP=7;
@@ -303,7 +303,7 @@ class Sim{
     }
   }
   slipping(){const h=this.h,on=1-h,pg=this.pigeon;
-    const drive=G*(h*(1+.35*this.wet)+(pg&&pg.phase==='on'?PIGEON_LOAD[pg.lv]:0)+on*SIN_)+this.wind*(.6+1.2*h)*(1-.35*this.wet);
+    const drive=G*(h*(1+.25*this.wet)+(pg&&pg.phase==='on'?PIGEON_LOAD[pg.lv]:0)+on*SIN_)+this.wind*(.6+1.2*h)*(1-.35*this.wet);
     return this.v>15||drive-lerp(MU_FREE,MU_RAIN,this.slick)*G*UX*on>40;}
   gustSpec(){
     const d=this.day,D=d/30,m=.76+.59*D+.3*Math.pow(Math.max(0,D-1),1.5),q=1+.25*Math.min(D,3)+.2*Math.max(0,D-1);   // Day 30 之後風加速變強、變密
@@ -342,7 +342,7 @@ class Sim{
     const ph=(this.t%DAY_LEN)/DAY_LEN,light=1-(smooth(.66,.78,ph)-smooth(.94,1,ph));
     this.sun=raining?0:light*(this.weather==='cold'?.35:this.weather==='breezy'?.7:1);                 // 太陽有多曬
     this.slick=clamp(this.slick+(raining?2:-.5)*dt,0,1);                      // 鐵皮濕滑：雨停很快就乾
-    const dry=.012+.11*this.sun+.03*Math.min(Math.abs(this.wind)/300,1),w0=this.wet;
+    const dry=.008+.06*this.sun+.02*Math.min(Math.abs(this.wind)/300,1),w0=this.wet;
     this.wet=clamp(this.wet+(raining?(ty?.3:.22):-dry)*dt,0,1);               // 棉被吸水：要靠太陽慢慢曬乾
     if(!this.soaked&&this.wet>=.6){this.soaked=true;this.events.push({type:'soaked'});}
     if(raining&&this.dirt>0){this.dirt=Math.max(0,this.dirt-(ty?.3:.2)*dt);if(this.dirt===0)this.events.push({type:'clean'});}   // 只有雨水洗得掉
@@ -430,11 +430,11 @@ class Sim{
       else{this.st-=ST_TAP;this.tapCd=.09;this.regenWait=.3;this.effort=.25;
         const f=clamp(1-(this.wind-100)/600,.2,1);   // 頂著風爬，每一下爬得比較少
         const br=clamp(1-(this.wind-250)/450,.15,1);   // 一般的風點一下就煞得住；風超過「強風」之後，一下只煞得住一部分
-        this.v=Math.max((this.v>0?this.v*(1-br):this.v)-112*f*(1-.25*this.wet)*(this.spit>0?STICKY:1),-230);this.events.push({type:'crawl',f});}}   // 風越大，一下煞不住的越多
+        this.v=Math.max((this.v>0?this.v*(1-br):this.v)-112*f*(1-.18*this.wet)*(this.spit>0?STICKY:1),-230);this.events.push({type:'crawl',f});}}   // 風越大，一下煞不住的越多
 
     // 力學：垂在外面的越多，越會被自己拖下去
     const h=clamp((this.s+BL-A_EFF)/BL,0,1),on=1-h;this.h=h;
-    const drive=G*(h*(1+.35*this.wet)+(sitting?PIGEON_LOAD[pg.lv]:0)+on*SIN_)+this.wind*(.6+1.2*h)*(1-.35*this.wet);
+    const drive=G*(h*(1+.25*this.wet)+(sitting?PIGEON_LOAD[pg.lv]:0)+on*SIN_)+this.wind*(.6+1.2*h)*(1-.35*this.wet);
     const fmax=lerp(MU_FREE,MU_RAIN,this.slick)*(this.v>1?KIN:1)*G*UX*on;
     if(Math.abs(this.v)<1e-3){this.v=Math.abs(drive)<=fmax?0:(drive-Math.sign(drive)*fmax)*dt;}
     else{const nv=this.v+(drive-Math.sign(this.v)*fmax)*dt;this.v=(nv*this.v<0&&Math.abs(drive)<=fmax)?0:nv;}
