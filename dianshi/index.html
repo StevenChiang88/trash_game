@@ -58,7 +58,7 @@ body{background:var(--dusk);color:var(--ink);font-family:var(--body);font-weight
 .count small{font-family:var(--body);font-weight:900;font-size:15px}
 .count b{font-size:44px;font-weight:700;font-variant-numeric:tabular-nums}
 .pill{display:flex;align-items:center;gap:6px;padding:3px 11px 3px 8px;border:2.5px solid var(--ink);border-radius:999px;background:var(--paper);font-weight:900;font-size:15px;font-variant-numeric:tabular-nums}
-.pill svg{width:22px;height:14px;display:block}
+.pill svg{width:22px;height:18px;display:block}
 .side{display:flex;align-items:center;gap:8px}
 .bolts{display:flex;gap:2px;padding:5px 9px;border:2.5px solid var(--ink);border-radius:999px;background:var(--paper)}
 .bolts svg{width:20px;height:24px;display:block;fill:var(--paper);stroke:var(--ink);stroke-width:2.2;stroke-linejoin:round}
@@ -107,7 +107,7 @@ body{background:var(--dusk);color:var(--ink);font-family:var(--body);font-weight
     <div class="top">
       <div class="left">
         <div class="count"><b id="num">0</b><small>公尺</small></div>
-        <div class="pill" aria-label="撿到的報紙"><svg viewBox="0 0 22 14" aria-hidden="true"><rect x="1.2" y="2.2" width="19.6" height="9.6" rx="4" fill="#fff8ea" stroke="#2b2a3a" stroke-width="2"/><rect x="9" y="2.2" width="4" height="9.6" fill="#ee5b3a"/></svg><span id="papers">0</span></div>
+        <div class="pill" aria-label="撿到的報紙"><svg viewBox="0 0 22 18" aria-hidden="true"><rect x="1.2" y="1.2" width="19.6" height="15.6" fill="#f4efe2" stroke="#2b2a3a" stroke-width="2"/><rect x="4" y="4" width="14" height="3.4" fill="#2b2a3a"/><rect x="4" y="9.4" width="6.5" height="1.4" fill="#2b2a3a"/><rect x="4" y="12.2" width="6.5" height="1.4" fill="#2b2a3a"/><rect x="12" y="9.2" width="6" height="4.6" fill="#8a8f9c"/></svg><span id="papers">0</span></div>
       </div>
       <div class="side">
         <div class="bolts" id="bolts" aria-label="Chu克還撐得住幾次"></div>
@@ -484,8 +484,10 @@ function drawOb(c,o,dead,al){
 }
 function drawItem(c,it){
   c.lineJoin='round';c.lineCap='round';c.strokeStyle=INK;c.lineWidth=3;const bob=Math.sin(time*4+it.ph)*4;c.translate(0,bob);
-  if(it.t==='paper'){c.rotate(-.38+Math.sin(time*3+it.ph)*.08);c.fillStyle=PAPER;rrect(c,-25,-10,50,20,8);c.fill();c.stroke();c.fillStyle='#ee5b3a';c.fillRect(-5,-10,10,20);c.strokeRect(-5,-10,10,20);
-    c.lineWidth=1.6;c.strokeStyle='rgba(43,42,58,.45)';c.beginPath();c.moveTo(-19,-3);c.lineTo(-9,-3);c.moveTo(-19,3);c.lineTo(-9,3);c.moveTo(9,-3);c.lineTo(19,-3);c.moveTo(9,3);c.lineTo(19,3);c.stroke();}
+  if(it.t==='paper'){   // 對摺的報紙：報頭「日報」、一條粗線、幾行字和一張照片
+    c.scale(.85,.85);c.rotate(-.1+Math.sin(time*3+it.ph)*.07);c.fillStyle='#cfc7b2';c.fillRect(-23,-16,54,42);c.strokeRect(-23,-16,54,42);c.fillStyle='#f4efe2';c.fillRect(-28,-21,54,42);c.strokeRect(-28,-21,54,42);
+    c.fillStyle=INK;c.font='900 15px '+FONT;c.textAlign='center';c.textBaseline='middle';c.fillText('日報',-1,-11.5);c.textBaseline='alphabetic';c.textAlign='left';c.fillRect(-24,-3.5,46,2.6);
+    c.fillStyle='#8a8f9c';c.fillRect(2,2.5,20,14);c.fillStyle='rgba(43,42,58,.55)';for(let i=0;i<4;i++)c.fillRect(-24,3+i*4,22,1.8);}
   else{const dark=it.t==='dark';c.fillStyle=dark?INK:LAMP;c.beginPath();c.arc(0,0,30,0,TAU);c.fill();c.stroke();c.strokeStyle=dark?VOLT:PAPER;c.lineWidth=2.4;c.setLineDash([7,6]);c.lineDashOffset=-time*18;c.beginPath();c.arc(0,0,37,0,TAU);c.stroke();c.setLineDash([]);c.strokeStyle=INK;c.lineWidth=3;
     if(dark){c.fillStyle='#55596e';c.beginPath();c.moveTo(5,-19);c.lineTo(-11,3);c.lineTo(-1,3);c.lineTo(-5,19);c.lineTo(12,-5);c.lineTo(2,-5);c.closePath();c.fill();c.strokeStyle='#ee5b3a';c.lineWidth=5.5;c.beginPath();c.moveTo(-17,-17);c.lineTo(17,17);c.stroke();}   // 熄掉的閃電：停電
     else{c.fillStyle=FOIL;c.beginPath();c.moveTo(-17,-12);c.lineTo(12,-18);c.lineTo(18,10);c.lineTo(-11,17);c.closePath();c.fill();c.stroke();c.fillStyle=FOIL_L;c.beginPath();c.moveTo(-17,-12);c.lineTo(12,-18);c.lineTo(-2,0);c.closePath();c.fill();c.fillStyle=FOIL_D;c.beginPath();c.moveTo(18,10);c.lineTo(-11,17);c.lineTo(-2,0);c.closePath();c.fill();}}   // 摺好的太空毯
