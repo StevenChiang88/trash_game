@@ -147,12 +147,11 @@ body{background:var(--road);color:var(--ink);font-family:var(--body);font-weight
     <h1 class="logo">我的豆花<span>30塊</span></h1>
     <p class="tag">提著一碗豆花走回家。<br>車要閃，豆花不能晃過頭，後面還有狗。</p>
     <ul class="how">
-      <li><b>點一下</b> 往前走</li>
-      <li><b>按著左右拖</b> 橫著閃</li>
-      <li><b>往下滑</b> 退一步</li>
-      <li><b>走太急</b> 豆花會晃</li>
+      <li><b>她自己會走</b> 不用點</li>
+      <li><b>按住</b> 停下來</li>
+      <li><b>按住左右拖</b> 橫著閃</li>
+      <li><b>停太急</b> 豆花會晃</li>
       <li><b>走到家</b> 過一天</li>
-      <li><b>每撿滿 30 塊</b> 朋友多買一碗</li>
     </ul>
     <div class="gap"></div>
     <button class="btn" id="start" type="button">買好了，過馬路</button>
@@ -167,7 +166,7 @@ body{background:var(--road);color:var(--ink);font-family:var(--body);font-weight
       <p class="verdict" id="ovTitle">我的豆花，<span class="n">30 塊</span>！</p>
       <dl class="stats">
         <div><dt>今天</dt><dd id="ovN"></dd></div>
-        <div><dt>最遠</dt><dd id="ovBest"></dd></div>
+        <div><dt id="ovBestL">最遠</dt><dd id="ovBest"></dd></div>
         <div><dt>今天存進去</dt><dd id="ovGain"></dd></div>
         <div><dt id="ovMissL">怎麼掉的</dt><dd id="ovMiss"></dd></div>
       </dl>
@@ -203,14 +202,17 @@ const FONT='"Chiron GoRound TC","PingFang TC","Microsoft JhengHei",sans-serif';
 function rrect(c,x,y,w,h,r){c.beginPath();c.moveTo(x+r,y);c.arcTo(x+w,y,x+w,y+h,r);c.arcTo(x+w,y+h,x,y+h,r);c.arcTo(x,y+h,x,y,r);c.arcTo(x,y,x+w,y,r);c.closePath();}
 
 /* ───────── 規則 ─────────
-   馬路從上往下看：一條車道是一列（row），她站在斑馬線上，點一下往上走一列。
-   手上那袋豆花像鐘擺：每走一步推它一下，連走太急就越晃越大；被喇叭嚇到、踩到水窪也會晃。晃過頭就掉。
-   斑馬線夠寬，可以左右橫著移動（手指按著拖），也可以退一步。朋友貼在旁邊一起走。朋友一開始也買了一碗：自己的掉了就換她那碗繼續走，
-   她手上也沒有才真的結束。路上有零錢，湊滿 30 塊，過完那條馬路她會在路邊那攤再買一碗 */
+   馬路從上往下看：一條車道是一列（row）。她自己會一直往前走（畫面往上），玩家只管兩件事：
+   按住畫面＝停下來；按住的時候左右拖＝橫著移動。放開她就繼續走。
+   手上那袋豆花像鐘擺：煞車、起步、橫移都會甩到它，被叭、踩水窪、被風吹也會。晃過頭就掉。
+   朋友貼在旁邊一起走，出門時也買了一碗：自己的掉了就換她那碗繼續走，她手上也沒有才算失敗。
+   路上有零錢，滿 30 塊，過完那條馬路她會在路邊那攤再買一碗；不煞車連過好幾線有額外的零錢 */
 const VW=360,VH=640,CX=180,RH=58,FEET=470;
 const W0=6.6,ZETA=.15,STEP_J=3.7,HONK_J=2.3,PUD_J=3.2,LIMIT=1.05,STEP_T=.15,PRICE=30,COLW=58,NEAR_T=.34,NEAR_V=5;
 // 橫著移動：能站的範圍、最快多快、每移動 1px 推袋子多少；朋友最多幫忙提幾碗
 const XMIN=CX-92,XMAX=CX+92,LAT_V=640,LAT_J=.02;
+// 往前走：WALK_ACC 起步和煞車有多快（列/秒²），ACC_J 速度每改變 1 列/秒推袋子多少，GRACE 開始和換碗之後先站多久
+const WALK_ACC=20,ACC_J=1.15,GRACE=1.6;
 const PX=c=>CX+c*COLW;
 // 豆花掉的時候要放的錄音檔（放在同一個資料夾）。留空就用裝置內建的語音唸。VOICE_GAIN 是音量
 const VOICE_FILE='voice.mp3',VOICE_GAIN=.9;
@@ -219,7 +221,7 @@ const VOICE_FILE='voice.mp3',VOICE_GAIN=.9;
    每天要過完 goalN 條馬路走到家。過關就進下一天，每天多一種狀況；第 8 天起每天混兩種。
    路上撿的零錢，結束時（不管有沒有到家）都存起來，可以在結算畫面買升級，升級一直留著 */
 const MODN={dog:'野狗',rain:'下雨',rush:'下班尖峰',night:'天黑',trash:'垃圾車',wind:'颱風'};
-const MODHINT={dog:'野狗就在你後面。站著不動牠會靠過來，往前走才甩得開',rain:'下雨天到處是水窪，繞開，或等袋子靜下來再踩',rush:'下班時間，車特別多',night:'天黑了，只看得到車燈照到的地方',trash:'垃圾車很長。聽到音樂就是它來了',wind:'颱風天。看到「風來了」先站穩'};
+const MODHINT={dog:'野狗就在你後面。停下來牠就靠過來，往前走才甩得開',rain:'下雨天到處是水窪，繞開，或等袋子靜下來再踩',rush:'下班時間，車特別多',night:'天黑了，只看得到車燈照到的地方',trash:'垃圾車很長。聽到音樂就是它來了',wind:'颱風天。看到「風來了」先站穩'};
 function modsFor(d){
   if(d<=1)return[];const fixed={2:[],3:['rain'],4:['rush'],5:['night'],6:['trash'],7:['wind']}[d];if(fixed)return['dog'].concat(fixed);
   const pool=['rain','rush','night','trash','wind'],a=Math.floor(hash(d,3)*5);let b=Math.floor(hash(d,7)*4);if(b>=a)b++;
@@ -236,6 +238,9 @@ const UPG=[
 let day=clamp(parseInt(store.get('dh.day')||'1',10)||1,1,999),bank=Math.max(0,parseInt(store.get('dh.bank')||'0',10)||0),ups={};
 try{const u=JSON.parse(store.get('dh.up')||'{}');if(u&&typeof u==='object')for(const q of UPG)ups[q.id]=clamp(u[q.id]|0,0,q.max);}catch(e){}
 const U=id=>ups[id]||0,maxSpare=()=>2+U('pal');
+// 每天拿過幾顆星（一碗都沒掉 3 顆、掉一碗 2 顆、其他 1 顆）
+let starMap={};try{const m=JSON.parse(store.get('dh.stars')||'{}');if(m&&typeof m==='object')for(const k in m)if(+k>0)starMap[+k]=clamp(m[k]|0,0,3);}catch(e){}
+const starSum=()=>Object.values(starMap).reduce((a,c)=>a+c,0),starStr=n=>'★'.repeat(n)+'☆'.repeat(3-n);
 // 車：len 車長、w 車寬、n 被撞到時怎麼稱呼
 const KIND={scoot:{len:34,w:20,n:'機車'},car:{len:62,w:32,n:'汽車'},taxi:{len:62,w:32,n:'計程車'},truck:{len:84,w:34,n:'小貨車'},bus:{len:132,w:38,n:'公車'},trash:{len:104,w:36,n:'垃圾車'}};
 const CAR_COL=['#e4572e','#5c7fb8','#fff8ea','#3a3d52','#3a9a94','#c9ced6'],SCOOT_COL=['#e4572e','#ffc94a','#5c7fb8','#fff8ea','#3a9a94','#f08fb0'];
@@ -288,22 +293,22 @@ Voice.load();
 if(Voice.ok){Voice.pick();try{speechSynthesis.addEventListener('voiceschanged',()=>Voice.pick());}catch(e){}}
 
 /* ───────── 狀態 ───────── */
-let mode='title',time=0,rows=[],gen=0,pr=1,from=1,px=CX,tx=CX,inPud=false,minR=1,camR=1,stepT=0,buf=null,th=0,om=0,foot=1,streets=0,money=0,earned=0,spare=0,rescue=false,idle=0,lim=LIMIT,goalN=5,mods=[],windT=6,windWarn=false,windFx=0,winT=0,winBonus=0,eliseT=1,lastWon=false,voiced=false,best=parseInt(store.get('dh.best')||'0',10)||0;
+let mode='title',time=0,rows=[],gen=0,pr=1,from=1,py=1,vy=0,braking=false,grace=0,flow=0,dropsToday=0,stars=0,shockAt=-9,px=CX,tx=CX,inPud=false,minR=1,camR=1,stepT=0,buf=null,th=0,om=0,foot=1,streets=0,money=0,earned=0,spare=0,rescue=false,idle=0,lim=LIMIT,goalN=5,mods=[],windT=6,windWarn=false,windFx=0,winT=0,winBonus=0,eliseT=1,lastWon=false,voiced=false,best=parseInt(store.get('dh.best')||'0',10)||0;
 let cause='',lastShock='step',dropT=0,dropX=CX,dropY=0,shake=0,flash=0,fx=CX-30,fr=1;
 const pops=[],splash=[],nm={r:0,x:0,t:0},dog={on:false,r:-5,x:CX,bark:0,eat:0};
-const has=m=>mods.includes(m),DOG_GAP=2.7,dogSpeed=()=>Math.min(1.05,.56+.035*Math.min(day,12)+.008*streets)*(1-.12*U('jerky'));
+const has=m=>mods.includes(m),walkSpeed=()=>Math.min(3.2,1.9+.06*Math.min(day,14)+.02*streets),DOG_GAP=3,dogSpeed=()=>Math.min(.9,.44+.025*Math.min(day,14)+.006*streets)*(1-.12*U('jerky'));
 
 // 排一條馬路：一段一段的車道，段跟段之間有分隔島可以站。難度 lv 看「第幾天」和「今天第幾條」：越高段越多、車越快越密，更高才有連三線
 // （手機上只看得到車子開到前一秒多，連三線又不能連踩，所以前面最多連兩線）。今天的最後一條，對面就是家
 function genStreet(){
-  const k=++gen,lv=k*.7+(day-1),D=Math.min(1,(lv-1)/16),flipG=Math.random()<.5,busy=has('rush')?.78:1;
+  const k=++gen,lv=k*.6+(day-1)*.8,D=clamp((lv-1)/18,0,1),flipG=Math.random()<.5,busy=has('rush')?.78:day===1?1.3:1;
   const G=lv<=2?[2]:lv<=5?(flipG?[1,2]:[2,1]):lv<=9?[2,2]:lv<=14?(flipG?[2,3]:[3,2]):[3,3],n=G.reduce((a,c)=>a+c,0);let lastPud=false,i=0;
   G.forEach((m,g)=>{
     if(g)rows.push({t:'median',street:k,veh:[]});
     for(let j=0;j<m;j++,i++){
       const dir=G.length>1?(g?-1:1):(j?-1:1),edge=i===0||i===n-1,sp=(edge?96:80)+rnd(0,24)+Math.min(lv,22)*4.2+(edge?10:0);
       const pud=has('rain')?Math.random()<.6:(k>=2&&!lastPud&&Math.random()<.17);lastPud=pud;
-      const row={t:'lane',street:k,dir,sp,edge,t0:lerp(1.3,.86,D)*busy,t1:lerp(2.8,1.75,D)*busy,pud,pudC:(Math.random()*3|0)-1,coins:[],veh:[],gap:0,first:j===0,flip:G.length===1&&j===1};
+      const row={t:'lane',street:k,dir,sp,edge,t0:lerp(1.7,.9,D)*busy,t1:lerp(3.3,1.9,D)*busy,pud,pudC:(Math.random()*3|0)-1,coins:[],veh:[],gap:0,first:j===0,flip:G.length===1&&j===1};
       if(Math.random()<.62){let c=pick([-1,-1,0,1,1]);if(pud&&c===row.pudC)c=c?-c:1;row.coins.push({c,v:lv>=3&&Math.random()<.08?50:Math.random()<.3?10:5,got:false});}
       for(let x=-170;x<540;){const v=mkVeh(row);x+=v.len/2;v.x=dir>0?x:360-x;row.veh.push(v);x+=v.len/2+row.sp*rnd(row.t0,row.t1);}
       row.veh=row.veh.filter(v=>Math.abs(v.x-CX)>130||k>1);row.gap=row.sp*rnd(.2,row.t1);rows.push(row);}});
@@ -481,7 +486,7 @@ function render(){
   const L=wx0-12,R=wx1+12,r0=Math.floor(camR-(wy1-FEET)/RH-2),r1=Math.ceil(camR+(FEET-wy0)/RH+2),WALK={t:'walk',veh:[]};need(r1);
   for(let r=r1;r>=r0;r--)drawRowBg(g,r,rows[r]||WALK,rowY(r),L,R);
   if(r0<=0)drawStall(g,CX+98,rowY(-1)+4,1);   // 剛剛買豆花的那一攤
-  const sp=stepT>0?1-stepT/STEP_T:0,pRow=stepT>0?from+(pr-from)*ease(sp):pr,drop=mode==='drop'||mode==='over',walk=sp||(Math.abs(tx-px)>1.5?(time*6)%1:0);
+  const pRow=py,drop=mode==='drop'||mode==='over',walk=vy>.1?(py*1.7)%1:(Math.abs(tx-px)>1.5?(time*6)%1:0),ft=Math.floor(py*1.7)%2?1:-1;
   for(let r=r1;r>=r0;r--){const row=rows[r]||WALK,y=rowY(r);
     if(row.t==='lane')for(const v of row.veh){if(v.x<L-90||v.x>R+90)continue;g.save();g.translate(0,y+2);drawVeh(g,v,row.dir);g.restore();}
     if(Math.round(pRow)===r){
@@ -489,10 +494,10 @@ function render(){
         g.fillStyle='rgba(201,119,46,.7)';g.beginPath();g.ellipse(dropX,dropY+4,30*e,11*e,0,0,TAU);g.fill();g.fillStyle=PAPER;g.strokeStyle=INK;g.lineWidth=2;
         for(const[qx,qy,qr]of[[-12,2,7],[4,-2,9],[15,5,6],[-2,7,6],[22,-2,4]]){g.beginPath();g.ellipse(dropX+qx*e,dropY+qy,qr*e,qr*.6*e,0,0,TAU);g.fill();g.stroke();}
         g.save();g.translate(dropX-20,dropY+2);g.rotate(1.2);g.fillStyle='rgba(255,255,255,.6)';rrect(g,-9,-7,18,22,5);g.fill();g.stroke();g.restore();}
-      drawGirl(g,px,rowY(pRow)+14,{back:!drop,hair:'pony',hairCol:'#2b2a3a',pack:'#5c7fb8',step:walk,foot,bag:drop?null:th});}
+      drawGirl(g,px,rowY(pRow)+14,{back:!drop,hair:'pony',hairCol:'#2b2a3a',pack:'#5c7fb8',step:walk,foot:ft,bag:drop?null:th});}
     if(dog.on&&Math.round(dog.r)===r)drawDog(g,dog.x,rowY(dog.r)+16);
     // 朋友：貼在左後方一起走，手上提著備用的那幾碗
-    if(Math.round(fr)===r)drawGirl(g,fx,rowY(fr)+22,{back:!drop,hair:'bob',hairCol:'#4a362c',pack:'#e4572e',step:walk,foot:-foot,bag:spare?Math.sin(time*2.2)*.07:null,laugh:drop&&dropT>.5});
+    if(Math.round(fr)===r)drawGirl(g,fx,rowY(fr)+22,{back:!drop,hair:'bob',hairCol:'#4a362c',pack:'#e4572e',step:walk,foot:-ft,bag:spare?Math.sin(time*2.2)*.07:null,laugh:drop&&dropT>.5});
   }
   for(const s of splash){g.globalAlpha=clamp(s.life*2.5,0,1);g.fillStyle=s.col;g.beginPath();g.arc(s.x,s.y,s.r,0,TAU);g.fill();}
   weather(W,H,k,(ox+sx)*dpr,(oy+sy)*dpr,pRow,r0,r1);
@@ -514,48 +519,45 @@ function muteIcon(){el.mute.innerHTML=Snd.on
   :'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9.5v5h3.5L12 18.5v-13L7.5 9.5z" fill="currentColor"/><path d="M16 9.5l5 5M21 9.5l-5 5"/></svg>';
   el.mute.setAttribute('aria-pressed',String(!Snd.on));}
 // 標題畫面：今天第幾天、今天的狀況、存款
-function showBest(){$('dayTag').textContent=`第 ${day} 天　${dayLabel(day)}`;el.best.textContent=`存款 $${bank}`+(best>0?`　最遠通過 ${best} 天`:'');$('restart').hidden=day<=1;}
+function showBest(){$('dayTag').textContent=`第 ${day} 天　${dayLabel(day)}`;el.best.textContent=`存款 $${bank}`+(best>0?`　通過 ${best} 天　★ ${starSum()}`:'');$('restart').hidden=day<=1;}
 function pop(x,y,text,col,big,o){pops.push(Object.assign({x,y,text,col,life:big?1:.7,dur:big?1:.7,big},o));}
-function reset(){mods=modsFor(day);goalN=needOf(day);lim=LIMIT*(1+.09*U('lid'));windT=rnd(4,7);windWarn=false;windFx=0;winT=0;eliseT=1;rows=[];gen=0;rows.push({t:'walk',veh:[]},{t:'walk',veh:[]});need(2);pr=from=1;px=tx=CX;inPud=false;minR=1;camR=1;stepT=0;buf=null;th=om=0;streets=0;money=earned=0;spare=1+U('pal');rescue=false;idle=0;nm.t=0;fx=CX-30;fr=1;cause='';lastShock='step';pops.length=splash.length=0;shake=flash=0;dog.on=has('dog');dog.r=pr-DOG_GAP;dog.x=CX;dog.bark=0;dog.eat=1.5;}
-function start(){Snd.init();Voice.unlock();Snd.blip(520,780,.14,'triangle',.1);paused=false;$('pause').hidden=true;reset();mode='play';lastNum=lastFill=lastMoney=lastSpare=lastDog=-1;el.title.hidden=true;el.over.hidden=true;el.hud.hidden=false;
+function reset(){mods=modsFor(day);goalN=needOf(day);lim=LIMIT*(1+.09*U('lid'));windT=rnd(4,7);windWarn=false;windFx=0;winT=0;eliseT=1;rows=[];gen=0;rows.push({t:'walk',veh:[]},{t:'walk',veh:[]});need(2);pr=from=1;py=1;vy=0;grace=GRACE;flow=0;dropsToday=0;shockAt=-9;px=tx=CX;inPud=false;minR=1;camR=1;stepT=0;buf=null;th=om=0;streets=0;money=earned=0;spare=1+U('pal');rescue=false;idle=0;nm.t=0;fx=CX-30;fr=1;cause='';lastShock='step';pops.length=splash.length=0;shake=flash=0;dog.on=has('dog');dog.r=pr-DOG_GAP;dog.x=CX;dog.bark=0;dog.eat=1.5;}
+function start(){Snd.init();Voice.unlock();ids.clear();braking=false;Snd.blip(520,780,.14,'triangle',.1);paused=false;$('pause').hidden=true;reset();mode='play';lastNum=lastFill=lastMoney=lastSpare=lastDog=-1;el.title.hidden=true;el.over.hidden=true;el.hud.hidden=false;
   $('dayN').textContent=day;$('goal').textContent=goalN;$('dogm').hidden=!dog.on;
   pop(CX,228,`第 ${day} 天`,SUN,true,{huge:true,life:1.7,dur:1.7});pop(CX,272,mods.length?'今天：'+mods.map(m=>MODN[m]).join('、'):'放學，提豆花回家',PAPER,true,{life:1.7,dur:1.7});}
-function shock(j,why){om+=(Math.random()<.5?-1:1)*j;lastShock=why;}
+function shock(j,why){om+=(Math.random()<.5?-1:1)*j;lastShock=why;shockAt=time;}
 const plX=()=>px;
 function gain(v,x,y,text){money+=v;earned+=v;pop(x,y,text||`+${v}`,SUN);Snd.blip(880,1320,.07,'triangle',.08);Snd.blip(1320,1760,.09,'triangle',.06,.06);}
 function friendSay(t){pop(fx,rowY(fr)-70,t,PAPER);}
-// 往前（dr=1）或往後（dr=-1）走一步。還在走的時候再下指令，會記住、落地後接著走
-function move(dr){
-  if(mode!=='play'||paused)return;if(stepT>0){buf=dr;return;}
-  const nr=pr+dr;if(nr<minR){Snd.blip(170,130,.06,'square',.035);return;}
-  if(rows[pr].t==='lane'){nm.r=pr;nm.x=px;nm.t=NEAR_T;}
-  from=pr;pr=nr;stepT=STEP_T;foot=-foot;om+=dr*STEP_J;lastShock='step';idle=0;inPud=false;need(pr);Snd.blip(260,330,.05,'sine',.07);
-}
-const step=()=>move(1);
+// 按住＝停下來，放開＝繼續走。正在走的時候踩煞車，「連過幾線」就斷掉
+function setBrake(b){if(b===braking)return;braking=b;if(b&&mode==='play'&&vy>.3)flow=0;}
 // 橫著移動：把「想站的位置」往左右挪 dx，她會很快滑過去
 function slide(dx){if(mode!=='play'||paused)return;tx=clamp(tx+dx,XMIN,XMAX);idle=0;}
-function land(){
-  const row=rows[pr];
-  if(row.goal){
-    if(!row.done){row.done=true;streets++;minR=pr;if(row.home)return win();pop(CX,rowY(pr)-92,`${streets} / ${goalN} 條`,SUN,true);Snd.blip(660,990,.12,'triangle',.09);Snd.blip(990,1320,.14,'triangle',.07,.1);}
-    // 路邊那攤：零錢每滿 30 塊，朋友就多買一碗提著
-    const n=Math.min(Math.floor(money/PRICE),maxSpare()-spare);
-    if(n>0){money-=n*PRICE;spare+=n;pop(CX,rowY(pr)-52,(n>1?`朋友又買了 ${n} 碗`:'朋友又買了一碗')+`　−$${n*PRICE}`,PAPER,false,{life:1.4,dur:1.4});Snd.blip(520,780,.1,'triangle',.08,.18);Snd.blip(780,1040,.12,'triangle',.07,.28);}}
-  if(buf){const b=buf;buf=null;move(b);}
+// 走出一列。走出的是車道：記下位置（馬上有車開過就是「好險」），沒煞車連過兩線以上有額外的零錢
+function leaveRow(r){
+  const row=rows[r];if(!row||row.t!=='lane')return;nm.r=r;nm.x=px;nm.t=NEAR_T;
+  if(++flow>=2){const n=Math.min(flow,5);gain(n,px,rowY(r)-58,`連過 ${flow} 線 +${n}`);}
+}
+// 走進一列。走到馬路對面：算過了一條；最後一條的對面就是家。路邊那攤：零錢每滿 30 塊，朋友就多買一碗提著
+function enterRow(r){
+  const row=rows[r];inPud=false;idle=0;if(!row.goal)return;
+  if(!row.done){row.done=true;streets++;minR=r;if(row.home)return win();pop(CX,rowY(r)-92,`${streets} / ${goalN} 條`,SUN,true);Snd.blip(660,990,.12,'triangle',.09);Snd.blip(990,1320,.14,'triangle',.07,.1);}
+  const n=Math.min(Math.floor(money/PRICE),maxSpare()-spare);
+  if(n>0){money-=n*PRICE;spare+=n;pop(CX,rowY(r)-52,(n>1?`朋友又買了 ${n} 碗`:'朋友又買了一碗')+`　−$${n*PRICE}`,PAPER,false,{life:1.4,dur:1.4});Snd.blip(520,780,.1,'triangle',.08,.18);Snd.blip(780,1040,.12,'triangle',.07,.28);}
 }
 // 她的豆花掉了，但朋友手上還有：兩個人退回最近的人行道／分隔島，接過一碗繼續走
 function revive(){
   let r=pr;while(r>minR&&rows[r].t==='lane')r--;
-  spare--;rescue=false;mode='play';th=om=0;stepT=0;buf=null;pr=from=r;tx=px;inPud=false;lastShock='step';nm.t=0;idle=0;dog.r=pr-DOG_GAP;dog.eat=2.4;windT=Math.max(windT,2.5);windWarn=false;
+  spare--;rescue=false;mode='play';th=om=0;stepT=0;buf=null;pr=from=r;py=r;vy=0;grace=1.2;flow=0;tx=px;inPud=false;lastShock='step';nm.t=0;idle=0;dog.r=pr-DOG_GAP;dog.eat=2.4;windT=Math.max(windT,2.5);windWarn=false;
   pop(CX,rowY(pr)-122,'拿去啦，你欠我 30！',SUN,true,{life:1.3,dur:1.3});Snd.blip(520,780,.14,'triangle',.1);
 }
 function drop(why){
-  if(mode!=='play')return;mode='drop';dropT=0;cause=why;rescue=spare>0;dropX=plX()+26+clamp(th,-1,1)*18;dropY=rowY(stepT>0?from+(1-stepT/STEP_T):pr)+12;shake=14;flash=.7;Snd.splat();voiced=!!Voice.buf;if(voiced)Voice.say('');else Snd.scream();
+  if(mode!=='play')return;mode='drop';dropT=0;cause=why;rescue=spare>0;dropX=plX()+26+clamp(th,-1,1)*18;dropY=rowY(py)+12;dropsToday++;shake=14;flash=.7;Snd.splat();voiced=!!Voice.buf;if(voiced)Voice.say('');else Snd.scream();
   pop(CX,220,'啊————',PAPER,true,{huge:true,life:1.1,dur:1.1});
 }
 // 到家：今天過關。身上的零錢加上到家的獎金存起來，明天再來
 function win(){
-  mode='win';winT=0;buf=null;winBonus=15+5*day;bank+=money+winBonus;if(day>best){best=day;store.set('dh.best',String(best));}
+  mode='win';winT=0;buf=null;stars=dropsToday===0?3:dropsToday===1?2:1;if(stars>(starMap[day]||0)){starMap[day]=stars;store.set('dh.stars',JSON.stringify(starMap));}winBonus=15+5*day+(stars-1)*10;bank+=money+winBonus;if(day>best){best=day;store.set('dh.best',String(best));}
   day++;store.set('dh.day',String(day));store.set('dh.bank',String(bank));
   pop(CX,224,'到家了！',SUN,true,{huge:true,life:1.7,dur:1.7});pop(fx,rowY(fr)-70,'開吃！',PAPER);
   Snd.blip(523,523,.12,'triangle',.1);Snd.blip(659,659,.12,'triangle',.1,.12);Snd.blip(784,784,.12,'triangle',.1,.24);Snd.blip(1047,1047,.32,'triangle',.1,.36);
@@ -566,7 +568,7 @@ function showCard(won){
   mode='over';paused=false;$('pause').hidden=true;lastWon=won;
   $('ovTitle').innerHTML=won?`第 ${day-1} 天，<span class="n">到家了</span>！`:'我的豆花，<span class="n">30 塊</span>！';
   $('ovN').textContent=won?`過了 ${goalN} 條馬路`:`第 ${day} 天　${streets} / ${goalN} 條`;
-  $('ovBest').textContent=best>0?`通過 ${best} 天`:'還沒到過家';
+  $('ovBestL').textContent=won?'今天的表現':'最遠';$('ovBest').textContent=won?starStr(stars)+(stars===3?'　一碗都沒掉':stars===2?'　掉了一碗':''):best>0?`通過 ${best} 天`:'還沒到過家';
   $('ovGain').textContent=won?`零錢 $${money}＋到家 $${winBonus}`:`零錢 $${money}`;
   $('ovMissL').textContent=won?'明天':'怎麼掉的';$('ovMiss').textContent=won?dayLabel(day):cause;
   $('again').textContent=won?`第 ${day} 天，出發`:'再買一碗';$('copied').textContent='';el.hud.hidden=true;el.over.hidden=false;renderShop();showBest();
@@ -586,44 +588,49 @@ function tick(dt){
   for(let r=lo;r<=hi;r++){const row=rows[r];if(row.t!=='lane'||(mode==='drop'&&(r===pr||r===from)))continue;const d=row.dir*row.sp*dt;
     for(let i=row.veh.length-1;i>=0;i--){const v=row.veh[i];v.x+=d;if((v.x-CX)*row.dir>400)row.veh.splice(i,1);}   // 開出畫面夠遠才拿掉（只看開走的那一邊，剛從另一邊進來的不算）
     if((row.gap-=row.sp*dt)<=0){const v=mkVeh(row);v.x=row.dir>0?-200-v.len/2:560+v.len/2;row.veh.push(v);row.gap=v.len+row.sp*rnd(row.t0,row.t1);}}
-  camR+=((stepT>0?from+(1-stepT/STEP_T):pr)-camR)*Math.min(1,dt*10);
+  camR+=(py-camR)*Math.min(1,dt*10);
   // 朋友貼在左後方，慢半拍跟上
-  {const k=Math.min(1,dt*13),tr=stepT>0?from+(pr-from)*(1-stepT/STEP_T):pr;fx+=(px-30-fx)*k;fr+=(tr-fr)*k;}
+  {const k=Math.min(1,dt*13);fx+=(px-30-fx)*k;fr+=(py-fr)*k;}
   if(mode==='drop'){dropT+=dt;if(dropT>.55&&dropT-dt<=.55){pop(CX,270,'我的豆花！30塊！',SUN,true,{huge:true,life:1.4,dur:1.4,rot:-.05});if(!voiced)Voice.say('我的豆花！三十塊！');}
     if(rescue&&dropT>1.75){revive();return;}if(dropT>2.1)gameOver();return;}
   if(mode==='win'){winT+=dt;if(winT>1.8)showCard(true);return;}
   if(mode!=='play')return;
-  if(stepT>0&&(stepT-=dt)<=0){stepT=0;land();}
+  // 她自己往前走，按住就停。速度一變，袋子就被帶著甩：煞車往前甩，起步往後甩
+  if(grace>0)grace-=dt;
+  {const want=braking||grace>0?0:walkSpeed(),dv=clamp(want-vy,-WALK_ACC*dt,WALK_ACC*dt);if(dv){vy+=dv;om-=dv*ACC_J;}
+    if(vy>0){py+=vy*dt;need(Math.ceil(py)+1);}}
+  {const c=Math.round(py);if(c!==pr){leaveRow(pr);pr=from=c;enterRow(c);if(mode!=='play')return;}}
   // 颱風天：隔幾秒一陣風，先預告再吹
   if(has('wind')){windT-=dt;if(windT<.9&&!windWarn){windWarn=true;pop(CX,205,'風來了！',PAPER,true);Snd.wind();}
     if(windT<=0){shock(2.7*(1-.25*U('bag')),'wind');windT=rnd(4.5,8);windWarn=false;windFx=.7;}}
   if(windFx>0)windFx-=dt;
   // 垃圾車：畫面上有垃圾車的時候放音樂
   if(has('trash')&&(eliseT-=dt)<=0){eliseT=3.4;let near=false;for(let r=Math.max(0,pr-3);r<=pr+7&&r<rows.length;r++)for(const v of rows[r].veh)if(v.k==='trash'&&Math.abs(v.x-CX)<230)near=true;if(near)Snd.elise();}
-  // 野狗：永遠貼在後面兩三步。站著不動牠就靠過來，往前走才拉得開；越後面的天數牠越快。剛吃到掉在地上的豆花時會停一下
-  if(dog.on){const tr=stepT>0?from+(pr-from)*(1-stepT/STEP_T):pr;if(tr-dog.r>DOG_GAP)dog.r=tr-DOG_GAP;
-    if(dog.eat>0)dog.eat-=dt;else dog.r+=dogSpeed()*dt;dog.x+=(px-dog.x)*Math.min(1,dt*3);const gap=tr-dog.r;
+  // 野狗：永遠貼在後面兩三步。她停下來牠就靠過來，往前走才拉得開；越後面的天數牠越快。剛吃到掉在地上的豆花時會停一下
+  if(dog.on){if(py-dog.r>DOG_GAP)dog.r=py-DOG_GAP;
+    if(dog.eat>0)dog.eat-=dt;else dog.r+=dogSpeed()*dt;dog.x+=(px-dog.x)*Math.min(1,dt*3);const gap=py-dog.r;
     if(gap<1.9&&(dog.bark-=dt)<=0){dog.bark=.28+gap*.3;pop(dog.x,rowY(dog.r)-40,gap<1?'汪！汪！':'汪！',ALERT);Snd.bark();}
-    if(gap<.3){dog.r=tr-1;return drop('被野狗撲上來，豆花飛了');}}
+    if(gap<.3){dog.r=py-1;return drop('被野狗撲上來，豆花飛了');}}
   // 橫著移動：往想站的位置滑過去，滑多少就推袋子多少
   {const d=clamp(tx-px,-LAT_V*dt,LAT_V*dt);if(d){px+=d;om+=d*LAT_J;}}
   // 豆花的擺動
   om+=(-W0*W0*th-2*ZETA*W0*om)*dt;th+=om*dt;
-  if(Math.abs(th)>lim)return drop(lastShock==='wind'?'被颱風吹到，整袋甩出去':lastShock==='honk'?'被喇叭嚇到，手一抖就掉了':lastShock==='puddle'?'踩到水窪滑了一下':'走太急，晃到掉出來');
-  // 被撞、被叭：只看她現在站的那一列
-  const cur=stepT>STEP_T*.55?from:pr,row=rows[cur],x=px;
-  // 站定的時候：碰到零錢就撿，踩進水窪就滑一下
-  if(stepT<=0){for(const c of row.coins||[])if(!c.got&&Math.abs(x-PX(c.c))<22){c.got=true;gain(c.v,PX(c.c),rowY(cur)-64);}
+  if(Math.abs(th)>lim){const why=time-shockAt<1.3?lastShock:'step';return drop(why==='wind'?'被颱風吹到，整袋甩出去':why==='honk'?'被喇叭嚇到，手一抖就掉了':why==='puddle'?'踩到水窪滑了一下':'煞車、起步太急，晃到掉出來');}
+  // 她現在踩在哪一列上（兩列的交界不算在任何一列裡）
+  const cur=pr,row=rows[cur],x=px,inRow=Math.abs(py-cur)<.44;
+  // 碰到零錢就撿，踩進水窪就滑一下
+  if(inRow){for(const c of row.coins||[])if(!c.got&&Math.abs(x-PX(c.c))<22){c.got=true;gain(c.v,PX(c.c),rowY(cur)-64);}
     const on=!!row.pud&&Math.abs(x-PX(row.pudC))<24;
     if(on&&!inPud){shock(PUD_J*(1-.35*U('shoe')),'puddle');pop(x,rowY(cur)-70,'滑！',PAPER);Snd.splat();for(let i=0;i<8;i++)splash.push({x:x+rnd(-16,16),y:rowY(cur)+6,vx:rnd(-90,90),vy:rnd(-140,-50),r:rnd(2,4),col:'#8fdcf7',life:rnd(.3,.55)});}
     inPud=on;}
-  // 好險：剛離開的位置馬上有車開過去，賺一點
-  if(nm.t>0){nm.t-=dt;const nr=rows[nm.r];if(nr&&(nm.r!==cur||Math.abs(nm.x-x)>COLW*.6))for(const v of nr.veh)if(Math.abs(v.x-nm.x)<v.len/2+6){nm.t=0;gain(NEAR_V,nm.x,rowY(nm.r)-40,`好險！+${NEAR_V}`);break;}}
-  // 站在安全的地方發呆太久，朋友會催
-  if(row.t!=='lane'&&(idle+=dt)>4.5){idle=-4;friendSay(pick(['快啦','走啊','豆花要涼了啦','你在等綠燈喔','我腳好痠']));}
-  if(row.t==='lane')for(const v of row.veh){const dx=(x-v.x)*row.dir,half=v.len/2;   // dx>0：車還沒到她這裡
+  // 好險：剛走出的那一線馬上有車開過她走過的位置，賺一點
+  if(nm.t>0){nm.t-=dt;const nr=rows[nm.r];if(nr&&nm.r!==cur)for(const v of nr.veh)if(Math.abs(v.x-nm.x)<v.len/2+6){nm.t=0;gain(NEAR_V,nm.x,rowY(nm.r)-40,`好險！+${NEAR_V}`);break;}}
+  // 停在安全的地方太久，朋友會催
+  if(row.t!=='lane'&&vy<.1&&(idle+=dt)>4.5){idle=-4;friendSay(pick(['快啦','走啊','豆花要涼了啦','你在等綠燈喔','我腳好痠']));}
+  // 被撞；停在車道上、車快開到的時候會被叭
+  if(row.t==='lane'&&inRow)for(const v of row.veh){const dx=(x-v.x)*row.dir,half=v.len/2;
     if(Math.abs(v.x-x)<half+10)return drop(`被${KIND[v.k].n}撞到`);
-    if(!v.honk&&dx>half&&dx<half+96){v.honk=true;shock(HONK_J*(1-.25*U('bag')),'honk');Snd.honk();pop(v.x+row.dir*half,rowY(cur)-30,'叭！',ALERT);}}
+    if(!v.honk&&vy<.15&&dx>half&&dx<half+96){v.honk=true;shock(HONK_J*(1-.25*U('bag')),'honk');Snd.honk();pop(v.x+row.dir*half,rowY(cur)-30,'叭！',ALERT);}}
 }
 function hud(){
   if(mode!=='play'&&mode!=='drop')return;
@@ -631,11 +638,11 @@ function hud(){
   if(money!==lastMoney){lastMoney=money;$('money').textContent='$'+money;$('wallet').classList.toggle('full',money>=PRICE);}
   if(spare!==lastSpare){lastSpare=spare;$('spare').hidden=!spare;$('spare').textContent='朋友手上 ×'+spare;}
   const a=clamp(Math.abs(th)/lim,0,1),f=Math.round(a*100);if(f!==lastFill){lastFill=f;el.fill.style.transform=`scaleX(${a.toFixed(2)})`;el.timer.classList.toggle('low',a>.72);}
-  if(dog.on){const gp=clamp((pr-dog.r)/DOG_GAP,0,1),f2=Math.round((1-gp)*50);if(f2!==lastDog){lastDog=f2;$('dogFill').style.transform=`scaleX(${(1-gp).toFixed(2)})`;$('dogT').classList.toggle('low',gp<.5);}}
-  setHint(mode!=='play'?'':day===1?(streets===0&&pr<=1?'點一下往前走。手指按著左右拖，可以橫著移動':streets===0?'連走太急豆花會越晃越大，站在車道上會被叭':streets===1?'往下滑可以退一步。零錢滿 30 塊，朋友會多買一碗':streets===2?'你的掉了，朋友手上的會給你。走到家就過關':''):streets===0&&mods.length?MODHINT[mods[mods.length-1]]:'');
+  if(dog.on){const gp=clamp((py-dog.r)/DOG_GAP,0,1),f2=Math.round((1-gp)*50);if(f2!==lastDog){lastDog=f2;$('dogFill').style.transform=`scaleX(${(1-gp).toFixed(2)})`;$('dogT').classList.toggle('low',gp<.5);}}
+  setHint(mode!=='play'?'':day===1?(streets===0?'她會自己往前走。按住畫面＝停下來，放開＝繼續走':streets===1?'按住的時候左右拖，可以橫著移動、撿零錢':streets===2?'煞車、起步太急，豆花會晃。沒煞車連過兩線有額外零錢':streets===3?'你的掉了，朋友手上的會給你。走到家就過關':''):streets===0&&mods.length?MODHINT[mods[mods.length-1]]:'');
 }
 const H=1/120;let acc=0,last=0,hold=false;
-function setPaused(p){if(p&&(paused||mode!=='play'))return;if(!p&&!paused)return;paused=p;$('pause').hidden=!p;last=0;acc=0;if(Snd.ctx){try{p?Snd.ctx.suspend():Snd.ctx.resume();}catch(e){}}if(p)$('resume').focus({preventScroll:true});}
+function setPaused(p){if(p&&(paused||mode!=='play'))return;if(!p&&!paused)return;paused=p;$('pause').hidden=!p;if(!p)grace=Math.max(grace,.8);ids.clear();braking=false;last=0;acc=0;if(Snd.ctx){try{p?Snd.ctx.suspend():Snd.ctx.resume();}catch(e){}}if(p)$('resume').focus({preventScroll:true});}
 function frame(now){
   const dt=Math.min(.05,(now-(last||now))/1000);last=now;
   if(!paused&&!hold){acc+=dt;let n=0;while(acc>=H&&n++<10){tick(H);acc-=H;}if(n>=10)acc=0;hud();}
@@ -643,19 +650,12 @@ function frame(now){
 }
 
 /* ───────── 輸入 ─────────
-   點一下：往前走一步。手指按著左右拖：她跟著橫向移動（拖多少動多少）。往上滑：往前；往下滑：退一步。
-   一隻手指按著拖的時候，另一隻手指點一下也是往前走 */
-let tp=null;const SLOP=8,VSWIPE=26,LAT_GAIN=1.15;
-gameEl.addEventListener('pointerdown',e=>{if(e.target.closest('button,a'))return;e.preventDefault();Snd.init();
-  if(tp&&e.pointerId!==tp.id){move(1);return;}
-  tp={id:e.pointerId,ox:e.clientX,oy:e.clientY,lx:e.clientX,moved:false};});
-gameEl.addEventListener('pointermove',e=>{if(!tp||e.pointerId!==tp.id)return;const dx=e.clientX-tp.ox,dy=e.clientY-tp.oy;
-  if(!tp.moved){if(Math.hypot(dx,dy)<SLOP)return;tp.moved=true;}
-  if(!tp.v&&Math.abs(dy)>VSWIPE&&Math.abs(dy)>Math.abs(dx)*1.4){tp.v=true;move(dy<0?1:-1);tp.lx=e.clientX;return;}   // 明確的上下滑：一次觸控只算一步，滑再長也不會連走
-  slide((e.clientX-tp.lx)/scale*LAT_GAIN);tp.lx=e.clientX;
-  if(Math.abs(dx)>30){tp.ox=e.clientX;tp.oy=e.clientY;}});                                                              // 一直橫著拖的時候，上下滑從最新的位置算起
-const tpEnd=e=>{if(!tp||e.pointerId!==tp.id)return;if(!tp.moved&&e.type==='pointerup')move(1);tp=null;};
-gameEl.addEventListener('pointerup',tpEnd);gameEl.addEventListener('pointercancel',tpEnd);
+   手指按在畫面上＝停下來；按著左右拖＝橫著移動（拖多少動多少）；全部手指都放開＝繼續走 */
+const ids=new Set(),LAT_GAIN=1.15;let tp=null;
+gameEl.addEventListener('pointerdown',e=>{if(e.target.closest('button,a,.card'))return;e.preventDefault();Snd.init();ids.add(e.pointerId);if(!tp)tp={id:e.pointerId,lx:e.clientX};setBrake(true);});
+gameEl.addEventListener('pointermove',e=>{if(!tp||e.pointerId!==tp.id)return;slide((e.clientX-tp.lx)/scale*LAT_GAIN);tp.lx=e.clientX;});
+const tpEnd=e=>{ids.delete(e.pointerId);if(tp&&e.pointerId===tp.id)tp=null;if(!ids.size)setBrake(false);};
+window.addEventListener('pointerup',tpEnd);window.addEventListener('pointercancel',tpEnd);
 // App 內建瀏覽器（脆、IG、LINE）會把滑動當成「關掉這一頁」或「上一頁」，所以遊戲畫面上的觸控一律不交給瀏覽器
 for(const t of['touchstart','touchmove'])gameEl.addEventListener(t,e=>{if(e.cancelable&&!(e.target.closest&&e.target.closest('button,a,.card')))e.preventDefault();},{passive:false});
 gameEl.addEventListener('contextmenu',e=>e.preventDefault());
@@ -668,9 +668,10 @@ document.addEventListener('visibilitychange',()=>{last=0;if(document.hidden)setP
 window.addEventListener('blur',()=>setPaused(true));
 window.addEventListener('pagehide',()=>setPaused(true));
 window.addEventListener('keydown',e=>{if(e.code==='Escape'||e.code==='KeyP'){if(!e.repeat)setPaused(!paused);return;}
-  const K={Space:1,Enter:1,ArrowUp:1,KeyW:1,ArrowDown:-1,KeyS:-1}[e.code],X={ArrowLeft:-1,KeyA:-1,ArrowRight:1,KeyD:1}[e.code];
-  if(paused||(!K&&!X)||(K&&e.repeat))return;if(e.target.closest&&e.target.closest('button,a'))return;e.preventDefault();Snd.init();
-  if(mode==='play'){if(K)move(K);else slide(X*(e.repeat?30:46));}else if((mode==='title'||mode==='over')&&K===1)start();});
+  const B=e.code==='Space'||e.code==='ArrowDown'||e.code==='KeyS',X={ArrowLeft:-1,KeyA:-1,ArrowRight:1,KeyD:1}[e.code],go=e.code==='Enter'||e.code==='Space';
+  if(paused||(!B&&!X&&!go))return;if(e.target.closest&&e.target.closest('button,a'))return;e.preventDefault();Snd.init();
+  if(mode==='play'){if(B)setBrake(true);else if(X)slide(X*(e.repeat?30:46));}else if((mode==='title'||mode==='over')&&go&&!e.repeat)start();});
+window.addEventListener('keyup',e=>{if(e.code==='Space'||e.code==='ArrowDown'||e.code==='KeyS'){if(!ids.size)setBrake(false);}});
 $('start').addEventListener('click',start);
 $('again').addEventListener('click',start);
 $('pauseBtn').addEventListener('click',()=>setPaused(true));
@@ -689,9 +690,9 @@ window.addEventListener('resize',resize);
 if(window.ResizeObserver)new ResizeObserver(resize).observe(gameEl);
 
 reset();muteIcon();showBest();resize();requestAnimationFrame(frame);
-window.__dh={KIND,get LIMIT(){return lim},get day(){return day},set day(v){day=v;},get goalN(){return goalN},get bank(){return bank},set bank(v){bank=v;},get ups(){return ups},get mods(){return mods},get dogGap(){return pr-dog.r},get dogOn(){return dog.on},set dogOn(v){dog.on=v;},dayLabel,needOf,W0,ZETA,STEP_J,STEP_T,CX,get rows(){return rows},get mode(){return mode},get pr(){return pr},get th(){return th},get om(){return om},set th(v){th=v;},set om(v){om=v;},get stepT(){return stepT},get streets(){return streets},get cause(){return cause},get paused(){return paused},
+window.__dh={KIND,get LIMIT(){return lim},get day(){return day},set day(v){day=v;},get goalN(){return goalN},get bank(){return bank},set bank(v){bank=v;},get ups(){return ups},get mods(){return mods},get dogGap(){return py-dog.r},get dogOn(){return dog.on},set dogOn(v){dog.on=v;},dayLabel,needOf,W0,ZETA,STEP_J,STEP_T,CX,get rows(){return rows},get mode(){return mode},get pr(){return pr},get th(){return th},get om(){return om},set th(v){th=v;},set om(v){om=v;},get stepT(){return stepT},get streets(){return streets},get cause(){return cause},get paused(){return paused},
   get voiceReady(){return !!Voice.buf},get voiceLoaded(){return !!(Voice.buf||Voice.raw)},get px(){return px},get tx(){return tx},get col(){return Math.round((px-CX)/COLW)},slide,get money(){return money},set money(v){money=v;},get spare(){return spare},set spare(v){spare=v;},get palX(){return fx},get palRow(){return fr},PX,
-  step,move,start,tick,set hold(v){hold=v;},set pr(v){pr=from=v;camR=v;need(v);}};
+  get py(){return py},get vy(){return vy},get speed(){return walkSpeed()},get grace(){return grace},get braking(){return braking},get flow(){return flow},get stars(){return stars},brake:setBrake,start,tick,set hold(v){hold=v;}};
 })();
 </script>
 <!--/PAGE-->
