@@ -131,10 +131,10 @@ body{background:var(--road);color:var(--ink);font-family:var(--body);font-weight
     <p class="tag">提著一碗豆花過馬路。<br>車要閃，豆花也不能晃過頭。</p>
     <ul class="how">
       <li><b>點一下</b> 往前走</li>
-      <li><b>左右滑</b> 橫著閃</li>
+      <li><b>按著左右拖</b> 橫著閃</li>
       <li><b>往下滑</b> 退一步</li>
       <li><b>走太急</b> 豆花會晃</li>
-      <li><b>撿滿 30 塊</b> 朋友再買一碗</li>
+      <li><b>每撿滿 30 塊</b> 朋友多買一碗</li>
     </ul>
     <div class="gap"></div>
     <button class="btn" id="start" type="button">買好了，過馬路</button>
@@ -184,13 +184,15 @@ function rrect(c,x,y,w,h,r){c.beginPath();c.moveTo(x+r,y);c.arcTo(x+w,y,x+w,y+h,
 /* ───────── 規則 ─────────
    馬路從上往下看：一條車道是一列（row），她站在斑馬線上，點一下往上走一列。
    手上那袋豆花像鐘擺：每走一步推它一下，連走太急就越晃越大；被喇叭嚇到、踩到水窪也會晃。晃過頭就掉。
-   斑馬線有三個直排（col -1/0/1），可以橫著走、也可以退一步。朋友一開始也買了一碗：自己的掉了就換她那碗繼續走，
+   斑馬線夠寬，可以左右橫著移動（手指按著拖），也可以退一步。朋友貼在旁邊一起走。朋友一開始也買了一碗：自己的掉了就換她那碗繼續走，
    她手上也沒有才真的結束。路上有零錢，湊滿 30 塊，過完那條馬路她會在路邊那攤再買一碗 */
 const VW=360,VH=640,CX=180,RH=58,FEET=470;
 const W0=6.6,ZETA=.15,STEP_J=3.7,HONK_J=2.3,PUD_J=3.2,LIMIT=1.05,STEP_T=.15,PRICE=30,COLW=58,NEAR_T=.34,NEAR_V=5;
+// 橫著移動：能站的範圍、最快多快、每移動 1px 推袋子多少；朋友最多幫忙提幾碗
+const XMIN=CX-92,XMAX=CX+92,LAT_V=640,LAT_J=.02,MAX_SPARE=9;
 const PX=c=>CX+c*COLW;
-// 豆花掉的時候要放的錄音檔（放在同一個資料夾，例如 'voice.mp3'）。留空就用裝置內建的語音唸
-const VOICE_FILE='';
+// 豆花掉的時候要放的錄音檔（放在同一個資料夾）。留空就用裝置內建的語音唸。VOICE_GAIN 是音量
+const VOICE_FILE='voice.mp3',VOICE_GAIN=.9;
 // 車：len 車長、w 車寬、n 被撞到時怎麼稱呼
 const KIND={scoot:{len:34,w:20,n:'機車'},car:{len:62,w:32,n:'汽車'},taxi:{len:62,w:32,n:'計程車'},truck:{len:84,w:34,n:'小貨車'},bus:{len:132,w:38,n:'公車'}};
 const CAR_COL=['#e4572e','#5c7fb8','#fff8ea','#3a3d52','#3a9a94','#c9ced6'],SCOOT_COL=['#e4572e','#ffc94a','#5c7fb8','#fff8ea','#3a9a94','#f08fb0'];
@@ -216,22 +218,26 @@ const Snd={ctx:null,on:store.get('dh.mute')!=='1',
 };
 
 // 那句話用裝置內建的中文語音喊出來，調高、調快一點。沒有中文語音的裝置（例如部分 App 內建瀏覽器）就只有尖叫聲
-const Voice={ok:'speechSynthesis' in window&&'SpeechSynthesisUtterance' in window,v:null,warm:false,clip:null,
-  load(){if(!VOICE_FILE)return;try{const a=new Audio();a.preload='auto';a.addEventListener('canplaythrough',()=>{this.clip=a;},{once:true});a.src=VOICE_FILE;}catch(e){}},
+const Voice={ok:'speechSynthesis' in window&&'SpeechSynthesisUtterance' in window,v:null,warm:false,raw:null,buf:null,busy:false,src:null,
+  // 錄音檔：先把檔案抓下來，等玩家第一次點畫面、聲音系統開起來之後再解碼。跟其他音效走同一條路，所以靜音、暫停都管得到，iOS 也不用另外解鎖
+  load(){if(!VOICE_FILE||!window.fetch)return;fetch(VOICE_FILE).then(r=>r.ok?r.arrayBuffer():Promise.reject()).then(b=>{this.raw=b;this.decode();}).catch(()=>{});},
+  decode(){if(!this.raw||this.buf||this.busy||!Snd.ctx)return;this.busy=true;const done=b=>{this.buf=b;this.raw=null;},fail=()=>{this.raw=null;};
+    try{const p=Snd.ctx.decodeAudioData(this.raw.slice(0),done,fail);if(p&&p.catch)p.catch(()=>{});}catch(e){fail();}},
   pick(){if(!this.ok)return;let vs=[];try{vs=speechSynthesis.getVoices()||[];}catch(e){}const L=v=>(v.lang||'').replace('_','-').toLowerCase();
     this.v=vs.find(v=>L(v)==='zh-tw')||vs.find(v=>L(v).startsWith('zh-tw'))||vs.find(v=>/^(zh-cn|zh-hans|zh-hant|cmn|zh$)/.test(L(v)))||null;},
-  // iOS 要先在點擊的當下講過一次（這裡講一句聽不到的），之後才能在別的時間點出聲
-  unlock(){const a=this.clip;if(a){try{a.pause();a.currentTime=0;if(!this.clipWarm){this.clipWarm=true;a.muted=true;const p=a.play();if(p&&p.then)p.then(()=>{a.pause();a.currentTime=0;a.muted=false;}).catch(()=>{a.muted=false;});}}catch(e){}}
-    if(!this.ok)return;try{speechSynthesis.cancel();if(this.warm)return;this.warm=true;this.pick();const u=new SpeechSynthesisUtterance(' ');u.volume=0;speechSynthesis.speak(u);}catch(e){}},
-  say(text){if(!Snd.on)return;if(this.clip){try{this.clip.currentTime=0;this.clip.muted=false;const p=this.clip.play();if(p&&p.catch)p.catch(()=>{});}catch(e){}return;}
+  // iOS 的內建語音要先在點擊的當下講過一次（這裡講一句聽不到的），之後才能在別的時間點出聲
+  unlock(){this.stop();this.decode();if(!this.ok||this.warm)return;this.warm=true;try{this.pick();const u=new SpeechSynthesisUtterance(' ');u.volume=0;speechSynthesis.speak(u);}catch(e){}},
+  // 有錄音檔就放錄音檔，沒有（或還沒載好）就用內建語音唸
+  say(text){if(!Snd.on)return;
+    if(this.buf&&Snd.ctx){try{const c=Snd.ctx,n=c.createBufferSource(),g=c.createGain();n.buffer=this.buf;g.gain.value=VOICE_GAIN;n.connect(g);g.connect(Snd.master);n.start();this.src=n;}catch(e){}return;}
     if(!this.ok)return;try{if(!this.v)this.pick();if(!this.v)return;speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(text);u.voice=this.v;u.lang=this.v.lang;u.pitch=1.8;u.rate=1.15;u.volume=1;speechSynthesis.speak(u);}catch(e){}},
-  stop(){if(this.clip)try{this.clip.pause();}catch(e){}if(this.ok)try{speechSynthesis.cancel();}catch(e){}}};
+  stop(){if(this.src){try{this.src.stop();}catch(e){}this.src=null;}if(this.ok)try{speechSynthesis.cancel();}catch(e){}}};
 Voice.load();
 if(Voice.ok){Voice.pick();try{speechSynthesis.addEventListener('voiceschanged',()=>Voice.pick());}catch(e){}}
 
 /* ───────── 狀態 ───────── */
-let mode='title',time=0,rows=[],gen=0,pr=1,from=1,col=0,fromCol=0,minR=1,camR=1,stepT=0,buf=null,th=0,om=0,foot=1,streets=0,money=0,earned=0,spare=0,rescue=false,idle=0,best=parseInt(store.get('dh.best')||'0',10)||0;
-let cause='',lastShock='step',dropT=0,dropX=CX,dropY=0,shake=0,flash=0,friendR=0,friendFrom=0,friendT=0,friendD=.15;
+let mode='title',time=0,rows=[],gen=0,pr=1,from=1,px=CX,tx=CX,inPud=false,minR=1,camR=1,stepT=0,buf=null,th=0,om=0,foot=1,streets=0,money=0,earned=0,spare=0,rescue=false,idle=0,best=parseInt(store.get('dh.best')||'0',10)||0;
+let cause='',lastShock='step',dropT=0,dropX=CX,dropY=0,shake=0,flash=0,fx=CX-30,fr=1;
 const pops=[],splash=[],nm={r:0,x:0,t:0};
 
 // 排一條馬路：一段一段的車道，段跟段之間有分隔島可以站。越後面段越多、車越快越密，更後面才有連三線
@@ -336,19 +342,19 @@ function drawRowBg(c,r,row,y,L,R){
   const top=y-RH/2,t=row.t;
   if(t==='walk'){c.fillStyle='#ddd0b8';c.fillRect(L,top,R-L,RH);c.strokeStyle='rgba(43,42,58,.12)';c.lineWidth=1.5;c.beginPath();for(let x=Math.floor(L/40)*40+(r%2?20:0);x<R;x+=40){c.moveTo(x,top);c.lineTo(x,top+RH);}c.moveTo(L,top);c.lineTo(R,top);c.stroke();
     // 路邊的東西：行道樹、停著的機車、變電箱
-    for(let i=-3;i<8;i++){const x=i*74+hash(r,i)*30,k=hash(r*3+i,5);if(Math.abs(x-CX)<104||(row.goal&&x>CX+70))continue;c.strokeStyle=INK;c.lineWidth=2.4;
+    for(let i=-3;i<8;i++){const x=i*74+hash(r,i)*30,k=hash(r*3+i,5);if(Math.abs(x-CX)<122||(row.goal&&x>CX+84))continue;c.strokeStyle=INK;c.lineWidth=2.4;
       if(k<.3){c.fillStyle='#8a6a48';c.fillRect(x-3,y-4,6,14);c.fillStyle='#4f9a6e';c.beginPath();c.arc(x,y-10,15,0,TAU);c.fill();c.stroke();c.fillStyle='#6bb886';c.beginPath();c.arc(x-4,y-14,6,0,TAU);c.fill();}
       else if(k<.5)drawParked(c,x,y+2,SCOOT_COL[(r+i+60)%6]);
       else if(k<.58){c.fillStyle='#5aa67e';rrect(c,x-11,y-14,22,26,3);c.fill();c.stroke();}}
-    if(row.goal)drawStall(c,CX+134,y+7,.6);}
+    if(row.goal)drawStall(c,CX+148,y+6,.52);}
   else if(t==='median'){c.fillStyle=ROAD;c.fillRect(L,top,R-L,RH);c.fillStyle='#c9ced6';c.fillRect(L,top+9,R-L,RH-18);c.fillStyle='#6bb886';c.fillRect(L,top+14,R-L,RH-28);
-    c.fillStyle='#4f9a6e';for(let x=Math.floor(L/34)*34;x<R;x+=34){if(Math.abs(x-CX)<100)continue;c.beginPath();c.arc(x+hash(r,x)*8,y,10,0,TAU);c.fill();}
-    c.fillStyle='#c9ced6';c.fillRect(CX-92,top+9,184,RH-18);}   // 行人穿越的缺口
+    c.fillStyle='#4f9a6e';for(let x=Math.floor(L/34)*34;x<R;x+=34){if(Math.abs(x-CX)<122)continue;c.beginPath();c.arc(x+hash(r,x)*8,y,10,0,TAU);c.fill();}
+    c.fillStyle='#c9ced6';c.fillRect(CX-108,top+9,216,RH-18);}   // 行人穿越的缺口
   else{c.fillStyle=ROAD;c.fillRect(L,top,R-L,RH);
     // 車道線：同方向的是白虛線，對向之間是雙黃線
     if(row.flip){c.fillStyle='#ffc94a';c.fillRect(L,top+RH-4,R-L,2.4);c.fillRect(L,top+RH+1,R-L,2.4);}
     else if(!row.first){c.fillStyle='rgba(255,248,234,.8)';for(let x=Math.floor(L/44)*44;x<R;x+=44)c.fillRect(x,top+RH-1.5,24,3);}
-    c.fillStyle='rgba(255,248,234,.9)';for(const q of[-18,0,18])c.fillRect(CX-88,y+q-5,176,10);   // 斑馬線（三個直排寬）
+    c.fillStyle='rgba(255,248,234,.9)';for(const q of[-18,0,18])c.fillRect(CX-106,y+q-5,212,10);   // 斑馬線（能橫著走的範圍）
     if(row.pud){const px=PX(row.pudC);c.fillStyle='rgba(143,220,247,.8)';c.beginPath();c.ellipse(px,y+4,24,11,0,0,TAU);c.fill();c.strokeStyle='rgba(255,255,255,.8)';c.lineWidth=1.6;c.beginPath();c.ellipse(px-4,y+2,12,4,0,.3,2.6);c.stroke();}
     for(const q of row.coins)if(!q.got)drawCoin(c,PX(q.c),y+3+Math.sin(time*4+r)*1.5,q.v);}
 }
@@ -385,17 +391,17 @@ function render(){
   const L=wx0-12,R=wx1+12,r0=Math.floor(camR-(wy1-FEET)/RH-2),r1=Math.ceil(camR+(FEET-wy0)/RH+2),WALK={t:'walk',veh:[]};need(r1);
   for(let r=r1;r>=r0;r--)drawRowBg(g,r,rows[r]||WALK,rowY(r),L,R);
   if(r0<=0)drawStall(g,CX+98,rowY(-1)+4,1);   // 剛剛買豆花的那一攤
-  const sp=stepT>0?1-stepT/STEP_T:0,pRow=stepT>0?from+ease(sp):pr,fsp=friendT>0?1-friendT/friendD:0,fRow=friendT>0?friendFrom+ease(fsp):friendR,drop=mode==='drop'||mode==='over',pX=plX();
+  const sp=stepT>0?1-stepT/STEP_T:0,pRow=stepT>0?from+(pr-from)*ease(sp):pr,drop=mode==='drop'||mode==='over',walk=sp||(Math.abs(tx-px)>1.5?(time*6)%1:0);
   for(let r=r1;r>=r0;r--){const row=rows[r]||WALK,y=rowY(r);
     if(row.t==='lane')for(const v of row.veh){if(v.x<L-90||v.x>R+90)continue;g.save();g.translate(0,y+2);drawVeh(g,v,row.dir);g.restore();}
-    // 朋友：跟在左後方，慢半拍
-    if(Math.round(fRow)===r)drawGirl(g,CX-27,rowY(fRow)+14,{back:!drop,hair:'bob',hairCol:'#4a362c',pack:'#e4572e',step:fsp,foot:1,bag:spare?Math.sin(time*2.2)*.07:null,laugh:drop&&dropT>.5});
     if(Math.round(pRow)===r){
       if(drop){const e=clamp(dropT/.28,0,1);   // 豆花掉在地上：一攤白的和糖水
         g.fillStyle='rgba(201,119,46,.7)';g.beginPath();g.ellipse(dropX,dropY+4,30*e,11*e,0,0,TAU);g.fill();g.fillStyle=PAPER;g.strokeStyle=INK;g.lineWidth=2;
         for(const[qx,qy,qr]of[[-12,2,7],[4,-2,9],[15,5,6],[-2,7,6],[22,-2,4]]){g.beginPath();g.ellipse(dropX+qx*e,dropY+qy,qr*e,qr*.6*e,0,0,TAU);g.fill();g.stroke();}
         g.save();g.translate(dropX-20,dropY+2);g.rotate(1.2);g.fillStyle='rgba(255,255,255,.6)';rrect(g,-9,-7,18,22,5);g.fill();g.stroke();g.restore();}
-      drawGirl(g,pX,rowY(pRow)+14,{back:!drop,hair:'pony',hairCol:'#2b2a3a',pack:'#5c7fb8',step:sp,foot,bag:drop?null:th});}
+      drawGirl(g,px,rowY(pRow)+14,{back:!drop,hair:'pony',hairCol:'#2b2a3a',pack:'#5c7fb8',step:walk,foot,bag:drop?null:th});}
+    // 朋友：貼在左後方一起走，手上提著備用的那幾碗
+    if(Math.round(fr)===r)drawGirl(g,fx,rowY(fr)+22,{back:!drop,hair:'bob',hairCol:'#4a362c',pack:'#e4572e',step:walk,foot:-foot,bag:spare?Math.sin(time*2.2)*.07:null,laugh:drop&&dropT>.5});
   }
   for(const s of splash){g.globalAlpha=clamp(s.life*2.5,0,1);g.fillStyle=s.col;g.beginPath();g.arc(s.x,s.y,s.r,0,TAU);g.fill();}
   g.globalAlpha=1;g.textAlign='center';g.textBaseline='middle';g.lineJoin='round';
@@ -416,35 +422,35 @@ function muteIcon(){el.mute.innerHTML=Snd.on
   el.mute.setAttribute('aria-pressed',String(!Snd.on));}
 function showBest(){el.best.textContent=best>0?`最佳紀錄　過了 ${best} 條馬路`:'';}
 function pop(x,y,text,col,big,o){pops.push(Object.assign({x,y,text,col,life:big?1:.7,dur:big?1:.7,big},o));}
-function reset(){rows=[];gen=0;rows.push({t:'walk',veh:[]},{t:'walk',veh:[]});need(2);pr=from=1;col=fromCol=0;minR=1;camR=1;stepT=0;buf=null;th=om=0;streets=0;money=earned=0;spare=1;rescue=false;idle=0;nm.t=0;friendR=friendFrom=0;friendT=0;cause='';lastShock='step';pops.length=splash.length=0;shake=flash=0;}
+function reset(){rows=[];gen=0;rows.push({t:'walk',veh:[]},{t:'walk',veh:[]});need(2);pr=from=1;px=tx=CX;inPud=false;minR=1;camR=1;stepT=0;buf=null;th=om=0;streets=0;money=earned=0;spare=1;rescue=false;idle=0;nm.t=0;fx=CX-30;fr=1;cause='';lastShock='step';pops.length=splash.length=0;shake=flash=0;}
 function start(){Snd.init();Voice.unlock();Snd.blip(520,780,.14,'triangle',.1);paused=false;$('pause').hidden=true;reset();mode='play';lastNum=lastFill=lastMoney=lastSpare=-1;el.title.hidden=true;el.over.hidden=true;el.hud.hidden=false;}
 function shock(j,why){om+=(Math.random()<.5?-1:1)*j;lastShock=why;}
-// 她現在在畫面上的 x（橫著走到一半時在兩個直排之間）
-const plX=()=>stepT>0?lerp(PX(fromCol),PX(col),ease(1-stepT/STEP_T)):PX(col);
+const plX=()=>px;
 function gain(v,x,y,text){money+=v;earned+=v;pop(x,y,text||`+${v}`,SUN);Snd.blip(880,1320,.07,'triangle',.08);Snd.blip(1320,1760,.09,'triangle',.06,.06);}
-function friendSay(t){pop(CX-27,rowY(friendR)-76,t,PAPER);}
-// 走一步：dr 前（1）後（-1）、dc 左（-1）右（1）。還在走的時候再下指令，會記住、落地後接著走
-function move(dr,dc){
-  if(mode!=='play'||paused)return;if(stepT>0){buf=[dr,dc];return;}
-  const nr=pr+dr,nc=col+dc;if(nr<minR||nc<-1||nc>1){Snd.blip(170,130,.06,'square',.035);return;}
-  if(rows[pr].t==='lane'){nm.r=pr;nm.x=PX(col);nm.t=NEAR_T;}
-  from=pr;fromCol=col;pr=nr;col=nc;stepT=STEP_T;foot=-foot;om+=dr?dr*STEP_J:dc*STEP_J*.8;lastShock='step';idle=0;need(pr);Snd.blip(260,330,.05,'sine',.07);
+function friendSay(t){pop(fx,rowY(fr)-70,t,PAPER);}
+// 往前（dr=1）或往後（dr=-1）走一步。還在走的時候再下指令，會記住、落地後接著走
+function move(dr){
+  if(mode!=='play'||paused)return;if(stepT>0){buf=dr;return;}
+  const nr=pr+dr;if(nr<minR){Snd.blip(170,130,.06,'square',.035);return;}
+  if(rows[pr].t==='lane'){nm.r=pr;nm.x=px;nm.t=NEAR_T;}
+  from=pr;pr=nr;stepT=STEP_T;foot=-foot;om+=dr*STEP_J;lastShock='step';idle=0;inPud=false;need(pr);Snd.blip(260,330,.05,'sine',.07);
 }
-const step=()=>move(1,0);
+const step=()=>move(1);
+// 橫著移動：把「想站的位置」往左右挪 dx，她會很快滑過去
+function slide(dx){if(mode!=='play'||paused)return;tx=clamp(tx+dx,XMIN,XMAX);idle=0;}
 function land(){
-  const row=rows[pr],x=PX(col);let fr=pr-1;while(fr>0&&rows[fr].t==='lane')fr--;
-  if(fr>friendR){friendFrom=friendR;friendR=fr;friendD=friendT=Math.min(.34,.13+.07*(fr-friendFrom));}
-  for(const c of row.coins||[])if(!c.got&&c.c===col){c.got=true;gain(c.v,x,rowY(pr)-64);}
-  if(row.pud&&row.pudC===col){shock(PUD_J,'puddle');pop(x,rowY(pr)-70,'滑！',PAPER);Snd.splat();for(let i=0;i<8;i++)splash.push({x:x+rnd(-16,16),y:rowY(pr)+6,vx:rnd(-90,90),vy:rnd(-140,-50),r:rnd(2,4),col:'#8fdcf7',life:rnd(.3,.55)});}
+  const row=rows[pr];
   if(row.goal){
     if(!row.done){row.done=true;streets++;minR=pr;pop(CX,rowY(pr)-92,`第 ${streets} 條，過！`,SUN,true);Snd.blip(660,990,.12,'triangle',.09);Snd.blip(990,1320,.14,'triangle',.07,.1);}
-    // 路邊那攤：零錢湊滿 30 塊，朋友就多買一碗帶著
-    if(!spare&&money>=PRICE){money-=PRICE;spare=1;pop(CX,rowY(pr)-52,`朋友也買了一碗　−$${PRICE}`,PAPER,false,{life:1.4,dur:1.4});Snd.blip(520,780,.1,'triangle',.08,.18);Snd.blip(780,1040,.12,'triangle',.07,.28);}}
-  if(buf){const b=buf;buf=null;move(b[0],b[1]);}
+    // 路邊那攤：零錢每滿 30 塊，朋友就多買一碗提著
+    const n=Math.min(Math.floor(money/PRICE),MAX_SPARE-spare);
+    if(n>0){money-=n*PRICE;spare+=n;pop(CX,rowY(pr)-52,(n>1?`朋友又買了 ${n} 碗`:'朋友又買了一碗')+`　−$${n*PRICE}`,PAPER,false,{life:1.4,dur:1.4});Snd.blip(520,780,.1,'triangle',.08,.18);Snd.blip(780,1040,.12,'triangle',.07,.28);}}
+  if(buf){const b=buf;buf=null;move(b);}
 }
-// 她的豆花掉了，但朋友手上還有一碗：退回朋友站的地方，接過來繼續走
+// 她的豆花掉了，但朋友手上還有：兩個人退回最近的人行道／分隔島，接過一碗繼續走
 function revive(){
-  spare=0;rescue=false;mode='play';th=om=0;stepT=0;buf=null;pr=from=friendR;col=fromCol=0;lastShock='step';nm.t=0;idle=0;
+  let r=pr;while(r>minR&&rows[r].t==='lane')r--;
+  spare--;rescue=false;mode='play';th=om=0;stepT=0;buf=null;pr=from=r;tx=px;inPud=false;lastShock='step';nm.t=0;idle=0;
   pop(CX,rowY(pr)-122,'拿去啦，你欠我 30！',SUN,true,{life:1.3,dur:1.3});Snd.blip(520,780,.14,'triangle',.1);
 }
 function drop(why){
@@ -467,16 +473,24 @@ function tick(dt){
     for(let i=row.veh.length-1;i>=0;i--){const v=row.veh[i];v.x+=d;if((v.x-CX)*row.dir>400)row.veh.splice(i,1);}   // 開出畫面夠遠才拿掉（只看開走的那一邊，剛從另一邊進來的不算）
     if((row.gap-=row.sp*dt)<=0){const v=mkVeh(row);v.x=row.dir>0?-200-v.len/2:560+v.len/2;row.veh.push(v);row.gap=v.len+row.sp*rnd(row.t0,row.t1);}}
   camR+=((stepT>0?from+(1-stepT/STEP_T):pr)-camR)*Math.min(1,dt*10);
-  if(friendT>0)friendT=Math.max(0,friendT-dt);
+  // 朋友貼在左後方，慢半拍跟上
+  {const k=Math.min(1,dt*13),tr=stepT>0?from+(pr-from)*(1-stepT/STEP_T):pr;fx+=(px-30-fx)*k;fr+=(tr-fr)*k;}
   if(mode==='drop'){dropT+=dt;if(dropT>.55&&dropT-dt<=.55){pop(CX,270,'我的豆花！30塊！',SUN,true,{huge:true,life:1.4,dur:1.4,rot:-.05});Voice.say('我的豆花！三十塊！');}
     if(rescue&&dropT>1.75){revive();return;}if(dropT>2.1)gameOver();return;}
   if(mode!=='play')return;
   if(stepT>0&&(stepT-=dt)<=0){stepT=0;land();}
+  // 橫著移動：往想站的位置滑過去，滑多少就推袋子多少
+  {const d=clamp(tx-px,-LAT_V*dt,LAT_V*dt);if(d){px+=d;om+=d*LAT_J;}}
   // 豆花的擺動
   om+=(-W0*W0*th-2*ZETA*W0*om)*dt;th+=om*dt;
   if(Math.abs(th)>LIMIT)return drop(lastShock==='honk'?'被喇叭嚇到，手一抖就掉了':lastShock==='puddle'?'踩到水窪滑了一下':'走太急，晃到掉出來');
   // 被撞、被叭：只看她現在站的那一列
-  const cur=stepT>STEP_T*.55?from:pr,row=rows[cur],x=plX();
+  const cur=stepT>STEP_T*.55?from:pr,row=rows[cur],x=px;
+  // 站定的時候：碰到零錢就撿，踩進水窪就滑一下
+  if(stepT<=0){for(const c of row.coins||[])if(!c.got&&Math.abs(x-PX(c.c))<22){c.got=true;gain(c.v,PX(c.c),rowY(cur)-64);}
+    const on=!!row.pud&&Math.abs(x-PX(row.pudC))<24;
+    if(on&&!inPud){shock(PUD_J,'puddle');pop(x,rowY(cur)-70,'滑！',PAPER);Snd.splat();for(let i=0;i<8;i++)splash.push({x:x+rnd(-16,16),y:rowY(cur)+6,vx:rnd(-90,90),vy:rnd(-140,-50),r:rnd(2,4),col:'#8fdcf7',life:rnd(.3,.55)});}
+    inPud=on;}
   // 好險：剛離開的位置馬上有車開過去，賺一點
   if(nm.t>0){nm.t-=dt;const nr=rows[nm.r];if(nr&&(nm.r!==cur||Math.abs(nm.x-x)>COLW*.6))for(const v of nr.veh)if(Math.abs(v.x-nm.x)<v.len/2+6){nm.t=0;gain(NEAR_V,nm.x,rowY(nm.r)-40,`好險！+${NEAR_V}`);break;}}
   // 站在安全的地方發呆太久，朋友會催
@@ -489,9 +503,9 @@ function hud(){
   if(mode!=='play'&&mode!=='drop')return;
   if(streets!==lastNum){lastNum=streets;el.num.textContent=streets;}
   if(money!==lastMoney){lastMoney=money;$('money').textContent='$'+money;$('wallet').classList.toggle('full',money>=PRICE);}
-  if(spare!==lastSpare){lastSpare=spare;$('spare').hidden=!spare;}
+  if(spare!==lastSpare){lastSpare=spare;$('spare').hidden=!spare;$('spare').textContent='朋友手上 ×'+spare;}
   const a=clamp(Math.abs(th)/LIMIT,0,1),f=Math.round(a*100);if(f!==lastFill){lastFill=f;el.fill.style.transform=`scaleX(${a.toFixed(2)})`;el.timer.classList.toggle('low',a>.72);}
-  setHint(mode!=='play'?'':streets===0&&pr<=1?'點一下往前走。左右滑橫著走，往下滑退一步':streets===0?'連走太急豆花會越晃越大，站在車道上會被叭':!spare&&money<PRICE&&streets<8?'撿零錢，湊滿 30 塊朋友會再買一碗':!spare&&streets<8?'夠 30 塊了，過完這條朋友就去買':streets===1?'朋友手上也有一碗。你的掉了，她那碗給你':'');
+  setHint(mode!=='play'?'':streets===0&&pr<=1?'點一下往前走。手指按著左右拖，可以橫著移動':streets===0?'連走太急豆花會越晃越大，站在車道上會被叭':streets===1?'往下滑可以退一步。零錢每滿 30 塊，朋友就多買一碗':streets===2&&spare?'你的掉了，朋友手上的會給你':'');
 }
 const H=1/120;let acc=0,last=0,hold=false;
 function setPaused(p){if(p&&(paused||mode!=='play'))return;if(!p&&!paused)return;paused=p;$('pause').hidden=!p;last=0;acc=0;if(Snd.ctx){try{p?Snd.ctx.suspend():Snd.ctx.resume();}catch(e){}}if(p)$('resume').focus({preventScroll:true});}
@@ -501,12 +515,19 @@ function frame(now){
   render();requestAnimationFrame(frame);
 }
 
-/* ───────── 輸入：點一下往前走一步；滑動就往那個方向走（上＝前、下＝退、左右＝橫著走） ───────── */
-let tp=null;const SWIPE=18;
-gameEl.addEventListener('pointerdown',e=>{if(e.target.closest('button,a'))return;e.preventDefault();Snd.init();tp={id:e.pointerId,x:e.clientX,y:e.clientY,done:false};});
-gameEl.addEventListener('pointermove',e=>{if(!tp||tp.done||e.pointerId!==tp.id)return;const dx=e.clientX-tp.x,dy=e.clientY-tp.y;if(Math.hypot(dx,dy)<SWIPE)return;
-  tp.done=true;if(Math.abs(dx)>Math.abs(dy))move(0,dx>0?1:-1);else move(dy<0?1:-1,0);});
-const tpEnd=e=>{if(!tp||e.pointerId!==tp.id)return;if(!tp.done&&e.type==='pointerup')move(1,0);tp=null;};
+/* ───────── 輸入 ─────────
+   點一下：往前走一步。手指按著左右拖：她跟著橫向移動（拖多少動多少）。往上滑：往前；往下滑：退一步。
+   一隻手指按著拖的時候，另一隻手指點一下也是往前走 */
+let tp=null;const SLOP=8,VSWIPE=26,LAT_GAIN=1.15;
+gameEl.addEventListener('pointerdown',e=>{if(e.target.closest('button,a'))return;e.preventDefault();Snd.init();
+  if(tp&&e.pointerId!==tp.id){move(1);return;}
+  tp={id:e.pointerId,ox:e.clientX,oy:e.clientY,lx:e.clientX,moved:false};});
+gameEl.addEventListener('pointermove',e=>{if(!tp||e.pointerId!==tp.id)return;const dx=e.clientX-tp.ox,dy=e.clientY-tp.oy;
+  if(!tp.moved){if(Math.hypot(dx,dy)<SLOP)return;tp.moved=true;}
+  if(!tp.v&&Math.abs(dy)>VSWIPE&&Math.abs(dy)>Math.abs(dx)*1.4){tp.v=true;move(dy<0?1:-1);tp.lx=e.clientX;return;}   // 明確的上下滑：一次觸控只算一步，滑再長也不會連走
+  slide((e.clientX-tp.lx)/scale*LAT_GAIN);tp.lx=e.clientX;
+  if(Math.abs(dx)>30){tp.ox=e.clientX;tp.oy=e.clientY;}});                                                              // 一直橫著拖的時候，上下滑從最新的位置算起
+const tpEnd=e=>{if(!tp||e.pointerId!==tp.id)return;if(!tp.moved&&e.type==='pointerup')move(1);tp=null;};
 gameEl.addEventListener('pointerup',tpEnd);gameEl.addEventListener('pointercancel',tpEnd);
 // App 內建瀏覽器（脆、IG、LINE）會把滑動當成「關掉這一頁」或「上一頁」，所以遊戲畫面上的觸控一律不交給瀏覽器
 for(const t of['touchstart','touchmove'])gameEl.addEventListener(t,e=>{if(e.cancelable&&!(e.target.closest&&e.target.closest('button,a')))e.preventDefault();},{passive:false});
@@ -520,9 +541,9 @@ document.addEventListener('visibilitychange',()=>{last=0;if(document.hidden)setP
 window.addEventListener('blur',()=>setPaused(true));
 window.addEventListener('pagehide',()=>setPaused(true));
 window.addEventListener('keydown',e=>{if(e.code==='Escape'||e.code==='KeyP'){if(!e.repeat)setPaused(!paused);return;}
-  const K={Space:[1,0],Enter:[1,0],ArrowUp:[1,0],KeyW:[1,0],ArrowDown:[-1,0],KeyS:[-1,0],ArrowLeft:[0,-1],KeyA:[0,-1],ArrowRight:[0,1],KeyD:[0,1]}[e.code];
-  if(paused||e.repeat||!K)return;if(e.target.closest&&e.target.closest('button,a'))return;e.preventDefault();Snd.init();
-  if(mode==='play')move(K[0],K[1]);else if((mode==='title'||mode==='over')&&K[0]===1)start();});
+  const K={Space:1,Enter:1,ArrowUp:1,KeyW:1,ArrowDown:-1,KeyS:-1}[e.code],X={ArrowLeft:-1,KeyA:-1,ArrowRight:1,KeyD:1}[e.code];
+  if(paused||(!K&&!X)||(K&&e.repeat))return;if(e.target.closest&&e.target.closest('button,a'))return;e.preventDefault();Snd.init();
+  if(mode==='play'){if(K)move(K);else slide(X*(e.repeat?30:46));}else if((mode==='title'||mode==='over')&&K===1)start();});
 $('start').addEventListener('click',start);
 $('again').addEventListener('click',start);
 $('pauseBtn').addEventListener('click',()=>setPaused(true));
@@ -539,7 +560,7 @@ if(window.ResizeObserver)new ResizeObserver(resize).observe(gameEl);
 
 reset();muteIcon();showBest();resize();requestAnimationFrame(frame);
 window.__dh={KIND,LIMIT,W0,ZETA,STEP_J,STEP_T,CX,get rows(){return rows},get mode(){return mode},get pr(){return pr},get th(){return th},get om(){return om},set th(v){th=v;},set om(v){om=v;},get stepT(){return stepT},get streets(){return streets},get cause(){return cause},get paused(){return paused},
-  get col(){return col},get money(){return money},set money(v){money=v;},get spare(){return spare},set spare(v){spare=v;},get friendR(){return friendR},PX,
+  get voiceReady(){return !!Voice.buf},get px(){return px},get tx(){return tx},get col(){return Math.round((px-CX)/COLW)},slide,get money(){return money},set money(v){money=v;},get spare(){return spare},set spare(v){spare=v;},get palX(){return fx},get palRow(){return fr},PX,
   step,move,start,tick,set hold(v){hold=v;},set pr(v){pr=from=v;camR=v;need(v);}};
 })();
 </script>
