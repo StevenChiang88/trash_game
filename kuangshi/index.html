@@ -142,6 +142,11 @@ body{background:var(--bench);color:var(--ink);font-family:var(--body);font-weigh
 .pips i{width:15px;height:15px;border-radius:50%;border:2.5px solid var(--ink);background:var(--paper)}
 .pips i.g{background:var(--up)}.pips i.y{background:#f2d680}.pips i.r{background:var(--down)}
 .verdictline{font-weight:900;font-size:15px}
+/* 事件裡牽涉到的礦石、和結果的金額，都明白列出來 */
+.card .item{padding:7px 10px;border-width:2px}
+.card .item .pic{width:44px;height:44px}
+.delta{font-family:var(--display);font-weight:700;font-size:30px;font-variant-numeric:tabular-nums;line-height:1}
+.delta.up{color:var(--up)}.delta.down{color:var(--down)}
 .verdictline.up{color:var(--up)}.verdictline.down{color:var(--down)}
 .rock svg{display:block;width:100%;height:100%}
 .rock.hit svg{animation:hit .16s}
@@ -374,7 +379,7 @@ function nextDay(){
   else if(Math.random()<.34){const m=pick(M.filter(q=>q.r<4));if(Math.random()<.55){G.mult[m.id]=clamp(G.mult[m.id]*1.6,.4,2.6);news=`<b>${m.n}</b> 在脆上爆紅，行情大漲。`;}else{G.mult[m.id]=clamp(G.mult[m.id]*.6,.35,2.4);news=`有人爆料 <b>${m.n}</b> 很多是染色的，行情大跌。`;}}
   G.news=news||pick(['今天行情平平。','礦石社團很安靜。','沒什麼大消息。']);makeBoard();say(pick(IDLE));
   if(G.loan&&G.day>=G.loan.due){G.cash-=G.loan.amt;G.news=`律師來收錢了：<b>−${$$(G.loan.amt)}</b>。`+(G.cash<0?'現金變負的了，快賣礦石。':'');G.loan=null;}
-  if(G.inv.blue&&Math.random()<.14){const n=G.inv.blue;delete G.inv.blue;G.cash-=150;modal={t:'event',who:'partner',text:`「老兄，你桌上那 ${n} 顆藍色的是什麼？……你是緝毒的欸。」東西被收走，還被念了一頓，罰 ${$$(150)}。`,opts:[{l:'…是礦物啦',fn(){say('那個…真的是礦物。','sad');}}]};}
+  if(G.inv.blue&&Math.random()<.14){const n=G.inv.blue;delete G.inv.blue;G.cash-=150;modal={t:'event',who:'partner',show:[{id:'blue',n}],text:`「老兄，你桌上那 ${n} 顆藍色的是什麼？……你是緝毒的欸。」${n} 顆藍色晶體全部被收走，還罰了 ${$$(150)}。`,opts:[{l:'…是礦物啦',fn(){say('那個…真的是礦物。','sad');}}]};}
   else if(G.day>=2&&Math.random()<.5)event();
   bump();checkOver();
 }
@@ -387,15 +392,16 @@ function checkOver(){
 }
 
 /* ───────── 彩蛋：劇裡的熟面孔來訪（都不具名） ───────── */
+// show：這件事牽涉到哪些礦石（畫在卡片上）。選項的 fn 回傳結果 {t 標題, x 說明, items 礦石, cash 現金增減}；沒回傳就不跳結果卡
 const EVENTS=[
-  {id:'wife',can:()=>true,make(){const m=pick(M.filter(q=>q.r===(Math.random()<.3?2:1)));return{who:'wife',text:`「我今天逛街，『順手』幫你拿了一顆${m.n}。」`,opts:[{l:'收下（別問哪來的）',fn(){add(m.id);say('…這哪來的？算了，別告訴我。','wow');Snd.found(m.r);}}]};}},
-  {id:'teacher',can:()=>G.cash>=200&&!G.inv.blue,make(){return{who:'teacher',text:'「這批藍色的晶體，純度 99.1%。賣你一顆 $200，別問哪來的。」行情很亂，可能大賺；但放在家裡可能被同事看到。',opts:[{l:'買一顆 −$200',fn(){G.cash-=200;add('blue');say('好漂亮的藍色…這是什麼礦？','wow');Snd.coin();}},{l:'不要',fn(){say('我總覺得他怪怪的。');}}]};}},
-  {id:'lawyer',can:()=>!G.loan,make(){const a=Math.max(300,Math.round(expense(G.day)*4/50)*50),b=Math.round(a*1.5/10)*10;return{who:'lawyer',text:`「缺錢？最好打給我。」現在借你 ${$$(a)}，三天後還 ${$$(b)}。`,opts:[{l:`簽了 +${$$(a)}`,fn(){G.cash+=a;G.loan={due:G.day+3,amt:b};say('有錢了。再開幾顆。','happy');Snd.coin();}},{l:'不要',fn(){say('我不跟這種人打交道。');}}]};}},
-  {id:'chicken',can:()=>invCount()>=2,make(){const id=Object.keys(G.inv).filter(k=>k!=='blue').sort((a,b)=>G.inv[b]*price(b)-G.inv[a]*price(a))[0];if(!id)return null;const n=G.inv[id],tot=Math.round(price(id)*1.5)*n;return{who:'chicken',text:`「我是個生意人。」他想用行情的 1.5 倍，把你的 ${BY[id].n} 全部買走（${n} 顆，共 ${$$(tot)}）。`,opts:[{l:`全賣 +${$$(tot)}`,fn(){take(id,n);G.cash+=tot;say('他人不錯嘛，很有禮貌。','happy');Snd.coin();}},{l:'不賣',fn(){say('我的收藏是非賣品。');}}]};}},
-  {id:'uncle',can:()=>invCount()>=1,make(){const id=Object.keys(G.inv).filter(k=>k!=='blue').sort((a,b)=>price(b)-price(a))[0];if(!id)return null;const p=price(id)*2;return{who:'uncle',text:`阿伯盯著你的 ${BY[id].n}，按了一下鈴。旁邊的姪子說：「他出兩倍，${$$(p)}。」`,opts:[{l:`叮（賣）+${$$(p)}`,fn(){take(id,1);G.cash+=p;say('他到底是看上它哪一點？','ok');Snd.coin();}},{l:'不賣',fn(){say('叮叮叮叮叮——好啦，不賣就是不賣。');}}]};}},
-  {id:'fixer',can:()=>true,make(){const m=pick(M.filter(q=>q.r>=1&&q.r<=2));return{who:'fixer',text:`「明天 ${m.n} 會漲。要買就買，不要半吊子。」說完就走了。`,opts:[{l:'知道了',fn(){G.tip=m.id;say(`${m.n}…明天會漲？`,'wow');}}]};}},
-  {id:'kid',can:()=>G.cash>=80,make(){return{who:'kid',text:'「Yo！這顆會發光，是科學！」他想用 $80 賣你一顆來路不明的石頭。',opts:[{l:'買 −$80',fn(){G.cash-=80;if(Math.random()<.5){const m=pick(M.filter(q=>q.r===2));add(m.id);say(`居然是${m.n}！這小子…`,'wow');Snd.found(2);}else{say('這是塗了螢光漆的石頭。石頭！','sad');}}},{l:'不要',fn(){say('現在的年輕人。');}}]};}},
-  {id:'beer',can:()=>G.cash>=40,make(){const c=Math.min(G.cash,Math.round(expense(G.day)*.8/10)*10);return{who:'beer',text:`車庫傳來一聲巨響——你自己釀的啤酒爆了。清理費 ${$$(c)}。`,opts:[{l:'唉',fn(){G.cash-=c;say('瓶子灌太滿了…','sad');}}]};}},
+  {id:'wife',can:()=>true,make(){const m=pick(M.filter(q=>q.r===(Math.random()<.3?2:1)));return{who:'wife',show:[{id:m.id,n:1}],text:`「我今天逛街，『順手』幫你拿了一顆${m.n}。」`,opts:[{l:'收下（別問哪來的）',fn(){add(m.id);say('…這哪來的？算了，別告訴我。','wow');Snd.found(m.r);return{t:'收進展示櫃了',x:'不用錢。別問哪來的。',items:[{id:m.id,n:1}]};}}]};}},
+  {id:'teacher',can:()=>G.cash>=200&&!G.inv.blue,make(){return{who:'teacher',show:[{id:'blue',n:1}],text:'「這批藍色的晶體，純度 99.1%。賣你一顆 $200，別問哪來的。」行情很亂，可能大賺；但放在家裡，每天都有機會被同事看到沒收。',opts:[{l:'買一顆 −$200',fn(){G.cash-=200;add('blue');say('好漂亮的藍色…這是什麼礦？','wow');Snd.coin();return{t:'買了一顆藍色晶體',x:'在展示櫃裡。行情好就趕快賣，放越久越危險。',items:[{id:'blue',n:1}],cash:-200};}},{l:'不要',fn(){say('我總覺得他怪怪的。');}}]};}},
+  {id:'lawyer',can:()=>!G.loan,make(){const a=Math.max(300,Math.round(bill()*4/50)*50),b=Math.round(a*1.5/10)*10;return{who:'lawyer',text:`「缺錢？最好打給我。」現在借你 ${$$(a)}，三天後還 ${$$(b)}。`,opts:[{l:`簽了 +${$$(a)}`,fn(){G.cash+=a;G.loan={due:G.day+3,amt:b};say('有錢了。再開幾顆。','happy');Snd.coin();return{t:'借到錢了',x:`第 ${G.day+3} 天會自動扣 ${$$(b)}，到時候現金不夠會變負的。`,cash:a};}},{l:'不要',fn(){say('我不跟這種人打交道。');}}]};}},
+  {id:'chicken',can:()=>invCount()>=2,make(){const id=Object.keys(G.inv).filter(k=>k!=='blue').sort((a,b)=>G.inv[b]*price(b)-G.inv[a]*price(a))[0];if(!id)return null;const n=G.inv[id],tot=Math.round(price(id)*1.5)*n;return{who:'chicken',show:[{id,n}],text:`「我是個生意人。」他想用行情的 1.5 倍，把你的${BY[id].n}全部買走：${n} 顆，共 ${$$(tot)}。`,opts:[{l:`全賣 +${$$(tot)}`,fn(){take(id,n);G.cash+=tot;say('他人不錯嘛，很有禮貌。','happy');Snd.coin();return{t:'賣給炸雞店老闆了',x:'比今天行情多賣了五成。',items:[{id,n}],cash:tot,sold:true};}},{l:'不賣',fn(){say('我的收藏是非賣品。');}}]};}},
+  {id:'uncle',can:()=>invCount()>=1,make(){const id=Object.keys(G.inv).filter(k=>k!=='blue').sort((a,b)=>price(b)-price(a))[0];if(!id)return null;const p=price(id)*2;return{who:'uncle',show:[{id,n:1}],text:`阿伯盯著你的${BY[id].n}，按了一下鈴。旁邊的姪子說：「他出兩倍，${$$(p)}。」`,opts:[{l:`叮（賣）+${$$(p)}`,fn(){take(id,1);G.cash+=p;say('他到底是看上它哪一點？','ok');Snd.coin();return{t:'賣給阿伯了',x:'今天行情的兩倍。',items:[{id,n:1}],cash:p,sold:true};}},{l:'不賣',fn(){say('叮叮叮叮叮——好啦，不賣就是不賣。');}}]};}},
+  {id:'fixer',can:()=>true,make(){const m=pick(M.filter(q=>q.r>=1&&q.r<=2));return{who:'fixer',show:[{id:m.id,n:0}],text:`「明天${m.n}會漲。要買就買，不要半吊子。」說完就走了。`,opts:[{l:'知道了',fn(){G.tip=m.id;say(`${m.n}…明天會漲？`,'wow');}}]};}},
+  {id:'kid',can:()=>G.cash>=80,make(){return{who:'kid',text:'「Yo！這顆會發光，是科學！」他想用 $80 賣你一顆來路不明的石頭。一半機率是稀有礦石，一半是假貨。',opts:[{l:'買 −$80',fn(){G.cash-=80;if(Math.random()<.5){const m=pick(M.filter(q=>q.r===2));add(m.id);say(`居然是${m.n}！這小子…`,'wow');Snd.found(2);return{t:`賭對了，是${m.n}`,x:'收進展示櫃了。',items:[{id:m.id,n:1}],cash:-80};}say('這是塗了螢光漆的石頭。石頭！','sad');return{t:'被騙了',x:'只是塗了螢光漆的石頭，一毛都不值，丟了。',cash:-80};}},{l:'不要',fn(){say('現在的年輕人。');}}]};}},
+  {id:'beer',can:()=>G.cash>=40,make(){const c=Math.min(G.cash,Math.round(bill()*.8/10)*10);return{who:'beer',text:`車庫傳來一聲巨響——你自己釀的啤酒爆了。清理費 ${$$(c)}。`,opts:[{l:'唉',fn(){G.cash-=c;say('瓶子灌太滿了…','sad');}}]};}},
   {id:'show',can:()=>true,make(){return{who:'show',text:'市區有礦石展，今天所有原石打八折。',opts:[{l:'太好了',fn(){G.sale=true;say('打折！這不買說不過去。','happy');}}]};}},
 ];
 function event(){const pool=EVENTS.filter(e=>e.id!==G.lastEv&&e.can());for(let i=0;i<4&&pool.length;i++){const e=pick(pool),m=e.make();if(m){G.lastEv=e.id;modal=Object.assign({t:'event'},m);Snd.blip(180,150,.06,'square',.07);Snd.blip(180,150,.06,'square',.07,.12);return;}}}
@@ -423,6 +429,8 @@ function render(){
   const e=bill(),short=G.cash<e;el.next.disabled=short;el.next.innerHTML=short?`現金不夠交家用<small>要 ${$$(e)}，先賣點礦石</small>`:`過一天<small>交家用 −${$$(e)}</small>`;
   renderModal();
 }
+// 事件卡、結果卡上的礦石清單：圖、名字、稀有度、幾顆、今天行情
+const rows=list=>(list||[]).map(q=>{const m=BY[q.id];return`<div class="item"><div class="pic">${gem(m)}</div><div class="txt"><div class="nm">${m.n}${q.n>1?' × '+q.n:''}<span class="tagr r${m.r}">${RAR[m.r]}</span></div><div class="sub">今天行情 ${$$(price(q.id))}${q.n>1?'　共 '+$$(price(q.id)*q.n):''}　${level(q.id)}</div></div></div>`;}).join('');
 function renderModal(){
   el.modal.hidden=!modal;if(!modal)return;let h='';const c=el.mcard;c.className='card';
   if(modal.t==='crack'){c.classList.add('center');const cr=modal.cr;
@@ -437,7 +445,9 @@ function renderModal(){
         ${modal.note==='up'?'<div class="verdictline up">敲得漂亮，升了一級！</div>':modal.note==='down'?'<div class="verdictline down">敲太大力裂了，降了一級</div>':''}
         <p>今天行情 <span class="big">${$$(p)}</span>　${level(m.id)}${want?'<br><b>有人下訂這種，先留著</b>':''}</p>
         <div class="acts"><button class="btn" data-act="keep" type="button">收進展示櫃</button><button class="btn ghost" data-act="sellnow" type="button">直接賣掉</button></div>`;}}
-  else{const w=WHO[modal.who];h=`<div class="who">${w.f?`<div class="ava">${face(w.f)}</div>`:''}<div><b>${modal.kicker||(w.f?'有人來訪':'今天的事')}</b><h2>${modal.title||w.l}</h2></div></div><p>${modal.text}</p><div class="acts">${modal.opts.map((o,i)=>`<button class="btn${i?' ghost':''}" data-act="opt" data-i="${i}" type="button">${o.l}</button>`).join('')}</div>`;}
+  else if(modal.t==='result'){const d=modal.cash||0;c.classList.add('center');
+    h=`<h2>${modal.title}</h2>${(modal.items||[]).length?`<p><b>${modal.sold?'你賣掉了':'你拿到了'}</b></p>`:''}${rows(modal.items)}${d?`<div class="delta ${d>0?'up':'down'}">${d>0?'+':'−'}${$$(Math.abs(d))}</div>`:''}<p>${modal.text||''}</p><div class="acts"><button class="btn" data-act="ok" type="button">好</button></div>`;}
+  else{const w=WHO[modal.who];h=`<div class="who">${w.f?`<div class="ava">${face(w.f)}</div>`:''}<div><b>${modal.kicker||(w.f?'有人來訪':'今天的事')}</b><h2>${modal.title||w.l}</h2></div></div><p>${modal.text}</p>${rows(modal.show)}<div class="acts">${modal.opts.map((o,i)=>`<button class="btn${i?' ghost':''}" data-act="opt" data-i="${i}" type="button">${o.l}</button>`).join('')}</div>`;}
   c.innerHTML=h;const f=c.querySelector('#rockBtn,.btn');if(f)f.focus({preventScroll:true});
   if(modal.t==='crack'&&!modal.res)runMeter();
 }
@@ -470,7 +480,8 @@ function closeCrack(sell){const m=modal.res;modal=null;if(m.dust){}else if(sell)
 function sellHigh(){let got=0;for(const id of Object.keys(G.inv)){if(G.mult[id]>=1.25){got+=price(id)*G.inv[id];delete G.inv[id];}}if(!got)return;G.cash+=got;Snd.coin();say(`行情高的全出掉，+${$$(got)}。`,'happy');bump();checkOver();render();}
 function sell(id,n){n=Math.min(n,G.inv[id]||0);if(!n)return;const got=price(id)*n;take(id,n);G.cash+=got;Snd.coin();say(G.mult[id]>=1.25?`賣在高點，+${$$(got)}。`:G.mult[id]<=.8?'行情這麼低你也賣…':`+${$$(got)}。它會去更好的地方。`,G.mult[id]>=1.25?'happy':'ok');bump();checkOver();render();}
 function buyBoard(i){const b=G.board[i];if(!b||b.sold||G.cash<b.p)return;G.cash-=b.p;b.sold=true;add(b.id);Snd.coin();say(b.p<price(b.id)?'撿到便宜了。':'貴了點，但我想要。',b.p<price(b.id)?'happy':'ok');render();}
-function choose(i){const o=modal.opts[i];modal=null;o.fn();bump();checkOver();render();}
+function choose(i){const o=modal.opts[i];modal=null;const res=o.fn();if(res)modal={t:'result',title:res.t,text:res.x,items:res.items,cash:res.cash,sold:res.sold};bump();checkOver();render();}
+function closeResult(){modal=null;bump();checkOver();render();}
 function start(){Snd.init();Snd.blip(420,640,.14,'triangle',.1);newGame();tab='open';modal=null;el.title.hidden=true;el.over.hidden=true;el.app.hidden=false;render();}
 function gameOver(){
   const n=G.day;if(n>best){best=n;store.set('ks.best',String(n));}
@@ -485,7 +496,7 @@ $('game').addEventListener('click',e=>{
   if(b.dataset.tab){tab=b.dataset.tab;el.panel.scrollTop=0;return render();}
   const a=b.dataset.act;if(!a)return;
   if(a==='crate')buyCrate(b.dataset.id);else if(a==='sell')sell(b.dataset.id,+b.dataset.n);else if(a==='buy')buyBoard(+b.dataset.i);
-  else if(a==='keep'||a==='dust')closeCrack(false);else if(a==='sellnow')closeCrack(true);else if(a==='fulfil')fulfil(+b.dataset.i);else if(a==='sellhigh')sellHigh();else if(a==='opt')choose(+b.dataset.i);
+  else if(a==='keep'||a==='dust')closeCrack(false);else if(a==='sellnow')closeCrack(true);else if(a==='fulfil')fulfil(+b.dataset.i);else if(a==='sellhigh')sellHigh();else if(a==='opt')choose(+b.dataset.i);else if(a==='ok')closeResult();
 });
 el.next.addEventListener('click',()=>{if(modal)return;Snd.blip(660,880,.1,'triangle',.07);nextDay();render();});
 $('start').addEventListener('click',start);
@@ -505,7 +516,7 @@ document.addEventListener('dblclick',e=>e.preventDefault());
 
 $('hero').innerHTML=face(Object.assign({},HANK,{mood:'happy'}));
 muteIcon();showBest();
-window.__ks={M,BY,CRATES,GOALS,expense,bill:()=>bill(),price:id=>price(id),get G(){return G},get modal(){return modal},start,buyCrate,strike,fulfil,sellHigh,closeCrack,sell,buyBoard,choose,cratePrice,invValue:()=>invValue(),invCount:()=>invCount(),
+window.__ks={M,BY,CRATES,GOALS,expense,bill:()=>bill(),price:id=>price(id),get G(){return G},get modal(){return modal},start,buyCrate,strike,fulfil,sellHigh,closeCrack,closeResult,sell,buyBoard,choose,cratePrice,invValue:()=>invValue(),invCount:()=>invCount(),
   next(){nextDay();render();},get over(){return!el.over.hidden},render,event(id){const e=EVENTS.find(q=>q.id===id);modal=Object.assign({t:'event'},e.make());render();}};
 })();
 </script>
