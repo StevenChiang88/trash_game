@@ -89,6 +89,7 @@ body{background:var(--sky);color:var(--ink);font-family:var(--body);font-weight:
 .stam span{min-width:2.3em}
 .wetrow .track{height:12px}
 .wetrow .fill{background:var(--water);border-right:0}
+.wetrow .track::after{content:"";position:absolute;left:30%;top:0;bottom:0;width:2.5px;background:var(--ink);opacity:.55}
 .stam{display:flex;align-items:center;gap:8px;font-weight:900;font-size:14px;color:var(--quilt);text-shadow:var(--sticker)}
 .track{position:relative;flex:1;height:18px;border:2.5px solid var(--ink);border-radius:999px;background:var(--quilt);overflow:hidden}
 .fill{height:100%;width:100%;background:var(--sun);border-right:2.5px solid var(--ink);transform-origin:left center}
@@ -238,6 +239,7 @@ const PIGEON_LOAD=[0,.18,.19,.2],PIGEON_HP=[0,1,3,5];   // 鴿子等級 1～3：
 const SPIT_FALL=.55,STICKY=.8;          // 樓上阿伯的痰：落下秒數；黏住時每一下只剩幾成的距離
 const SEASON=30,PLUM=[13,17],COLD=[25,29];   // 每 30 天一輪：第 13～17 天梅雨季，第 25～29 天寒流
 const AC_X=192,AC_Y=270,AC_LAND=318,AC_FORM=.55,AC_FALL=.5,AC_WET=.24;   // 樓上冷氣的排水管口、水滴落點、積水與落下秒數、每滴弄濕多少
+const PEE_COST=.3,PEE_SCARE=3;        // 尿小屁孩要花掉多少濕度；被尿過之後他幾天不敢來
 const KID={x:292,y:590},TRASH_PUSH=14;   // 一樓小屁孩站的位置；被垃圾砸到一次往外彈多遠
 const POOP_AT=1.8,DIRT_MAX=4,DIRT_COST=12;
 const ST_MAX=100,ST_REGEN=15,ST_TAP=7;
@@ -247,7 +249,7 @@ class Sim{
     this.st=ST_MAX;this.regenWait=0;this.tapCd=0;this.effort=0;
     this.wet=0;this.slick=0;this.sun=0;this.soaked=false;this.wind=0;this.gust=null;this.gustWait=1.6;this.phi=this.rng()*TAU;
     this.quake=0;this.quakeAt=-1;this.quakeWarned=false;this.hadQuake=false;this.qte=null;this.shove=0;this.shoveT=0;this.shoveCause='fall';this.brace=0;
-    this.pigeon=null;this.pigeonAt=-1;this.dirt=0;this.uncle=null;this.uncleAt=-1;this.spit=0;this.ac=null;this.acAt=-1;this.kid=null;this.kidAt=-1;this.kidSeen=false;this.season=null;this.seasonNews=null;
+    this.pigeon=null;this.pigeonAt=-1;this.dirt=0;this.uncle=null;this.uncleAt=-1;this.spit=0;this.ac=null;this.acAt=-1;this.kid=null;this.kidAt=-1;this.kidSeen=false;this.kidScared=0;this.season=null;this.seasonNews=null;
     this.tyStart=9;this.tyLen=2;this.tyN=1;this.doomDone=false;
     this.tor=null;this.torAt=-1;this.hadTor=false;this.cause='fall';
     this.fallen=false;this.events=[];this.weather='sunny';this.setupDay();}
@@ -296,7 +298,7 @@ class Sim{
       if(w!=='typhoon'&&this.quakeAt<0&&(d===6||(d>10&&r()<Math.min(.3,.12+.005*late))))this.torAt=t0+this.u(1.8,2.6);
       if(this.quakeAt<0&&this.torAt<0&&(d===3||(d>7&&r()<Math.min(.55,.22+.008*late))))this.uncleAt=t0+this.u(.8,3.2);   // 阿伯不挑天氣，但不跟圈圈事件同一天
       if(w!=='typhoon'&&this.torAt<0&&(d===5||(d>6&&r()<Math.min(.65,.24+.01*late)*(w==='cold'?.4:1))))this.pigeonAt=t0+this.u(.4,2.6);   // 天冷鴿子比較少出門
-      if((w==='sunny'||w==='breezy')&&((d>=8&&!this.kidSeen)||(d>12&&r()<Math.min(.5,.2+.006*late)))){this.kidSeen=true;this.kidAt=t0+this.u(.6,2.6);}   // 天氣好小屁孩才會出來玩
+      if((w==='sunny'||w==='breezy')&&d>this.kidScared&&((d>=8&&!this.kidSeen)||(d>12&&r()<Math.min(.5,.2+.006*late)))){this.kidSeen=true;this.kidAt=t0+this.u(.6,2.6);}   // 天氣好小屁孩才會出來玩
       if((w==='sunny'||w==='breezy')&&(d===11||(d>17&&r()<Math.min(.5,(w==='sunny'?.3:.18)+.006*late))))this.acAt=t0+this.u(.5,2.4);   // 沒下雨、不冷的日子樓上才會開冷氣
     }
   }
@@ -386,7 +388,11 @@ class Sim{
       for(let i=0,tt=0;i<n;i++){times.push(tt);tt+=(i+1)%burst===0?rest:.17;}
       this.kid={t:-.7,n,next:0,times,fly:Math.max(.78,1.1-.005*this.day),items:[]};this.events.push({type:'kid'});}
     const kd=this.kid;
-    if(kd&&!this.qte){kd.t+=dt;
+    if(kd&&!this.qte&&kd.fled!==undefined){if((kd.fled+=dt)>=1.2)this.kid=null;}   // 被尿到了，哭著跑走
+    else if(kd&&!this.qte&&inp.pee){   // 點小屁孩：被被夠濕就拿身上的水尿他
+      if(this.wet>=PEE_COST){this.wet-=PEE_COST;kd.fled=0;kd.next=kd.n;for(const it of kd.items)it.done=true;this.kidScared=this.day+PEE_SCARE;this.events.push({type:'pee'});}
+      else this.events.push({type:'peeDry'});}
+    if(kd&&!this.qte&&kd.fled===undefined){kd.t+=dt;
       if(kd.next<kd.n&&kd.t>=kd.times[kd.next]){kd.items.push({i:kd.next,t:0,kind:Math.floor(this.rng()*5),bend:this.u(-1,1),off:this.u(-38,38),done:false});kd.next++;this.events.push({type:'throw'});}   // 每個瞄的地方不太一樣，才不會疊在一起
       for(const it of kd.items){if(it.done)continue;it.t+=dt;
         if(inp.trash&&inp.trash.includes(it.i)){it.done=true;this.events.push({type:'trashPop',i:it.i});}
@@ -595,10 +601,10 @@ function skyAt(p,storm){let i=0;while(i<SKY.length-2&&p>SKY[i+1][0])i++;const a=
 
 /* 狀態 */
 let sim=new Sim(1),cloth=new Cloth(),mode='title',time=0,windVis=0,stormVis=0,rainVis=0,shake=0,flash=0,fallT=0,runDay=1,torX=500,torA=0,coldVis=0;
-const inp={tap:false,shoo:false,uncle:false,drip:false,hits:[],trash:[]},ripples=[];
+const inp={tap:false,shoo:false,uncle:false,drip:false,pee:false,hits:[],trash:[]},ripples=[];
 let best=parseInt(store.get('bb.best')||'0',10)||0,crawls=0;
 let tiredT=0,peckT=0;const PIGEON_SC=[1,1,1.3,1.6];
-const clouds=[],streaks=[],drops=[],leaves=[],feathers=[],drips=[],steam=[],sparks=[],stains=[],judges=[],bursts=[];let poopedToday=false,spatToday=false;const UNCLE={x:134,y:150};
+const clouds=[],streaks=[],drops=[],leaves=[],feathers=[],drips=[],steam=[],sparks=[],stains=[],judges=[],bursts=[];let poopedToday=false,spatToday=false,peedToday=false,peeFx=0;const UNCLE={x:134,y:150};
 {const r=rng32(5);for(let i=0;i<7;i++)clouds.push({x:-500+r()*1400,y:40+r()*250,s:.7+r()*.9,v:.5+r()});
  for(let i=0;i<110;i++)drops.push({x:r()*1300-470,y:r()*900-130,l:9+r()*9});}
 const stars=(()=>{const r=rng32(3),a=[];for(let i=0;i<70;i++)a.push({x:-600+r()*1600,y:-200+r()*640,r:.5+r()*1.1,p:r()*TAU});return a;})();
@@ -664,13 +670,16 @@ function drawNote(c,x,y,kind,d,A,ring){
 }
 // 一樓的小屁孩和他丟上來的垃圾（寶特瓶、紙團、手搖杯、香蕉皮）
 function drawKid(c){
-  const k=sim.kid,endT=k.times[k.n-1]+k.fly,up=clamp((k.t+.7)/.3,0,1)*clamp((endT+.5-k.t)/.3,0,1),x=KID.x,y=KID.y+(1-up)*70;
+  const k=sim.kid,fled=k.fled!==undefined,endT=k.times[k.n-1]+k.fly,up=fled?clamp((1.2-k.fled)/.45,0,1):clamp((k.t+.7)/.3,0,1)*clamp((endT+.5-k.t)/.3,0,1),x=KID.x+(fled?Math.sin(time*50)*2.5:0),y=KID.y+(1-up)*70;
   const sw=k.items.length&&k.items[k.items.length-1].t<.22?1-k.items[k.items.length-1].t/.22:0;   // 剛丟出去的那一下手往前甩
   c.save();c.lineJoin='round';c.lineCap='round';c.strokeStyle=INK;c.lineWidth=2.2;
   c.fillStyle='#f6c453';rr(c,x-13,y-6,26,60,7);c.fill();c.stroke();                                // 黃 T 恤
   c.strokeStyle=INK;c.lineWidth=7;c.beginPath();c.moveTo(x-11,y+2);c.lineTo(x-17-sw*4,y-22+sw*16);c.stroke();c.strokeStyle='#f1c9a5';c.lineWidth=3.4;c.beginPath();c.moveTo(x-11,y+2);c.lineTo(x-17-sw*4,y-22+sw*16);c.stroke();   // 舉起來的手
   c.strokeStyle=INK;c.lineWidth=2.2;c.fillStyle='#f1c9a5';c.beginPath();c.arc(x,y-20,13,0,TAU);c.fill();c.stroke();
   c.fillStyle='#e0533d';c.beginPath();c.arc(x,y-23,13.4,Math.PI*1.02,TAU*.995);c.closePath();c.fill();c.stroke();c.beginPath();c.moveTo(x-12,y-24);c.lineTo(x-23,y-21);c.lineTo(x-12,y-19.5);c.closePath();c.fill();c.stroke();   // 反戴的帽子
+  if(fled){c.lineWidth=2;c.beginPath();c.moveTo(-7+x,y-19);c.lineTo(-3+x,y-17);c.lineTo(-7+x,y-15);c.moveTo(7+x,y-19);c.lineTo(3+x,y-17);c.lineTo(7+x,y-15);c.stroke();   // 哭臉
+    c.fillStyle=INK;c.beginPath();c.ellipse(x,y-10,3.6,4.4,0,0,TAU);c.fill();c.fillStyle='#7fc1f0';for(const q of[-9,9]){const dy=(time*46+q)%14;c.beginPath();c.ellipse(x+q,y-14+dy,1.8,3,0,0,TAU);c.fill();}
+    c.font='900 15px "Chiron GoRound TC","PingFang TC",sans-serif';c.textAlign='right';c.lineWidth=4.5;c.strokeStyle=INK;c.fillStyle='#fffdf5';c.strokeText('哇啊啊！',x-26,y-34);c.fillText('哇啊啊！',x-26,y-34);c.textAlign='left';c.restore();return;}
   c.fillStyle=INK;c.beginPath();c.arc(x-5,y-17,1.6,0,TAU);c.arc(x+4,y-17,1.6,0,TAU);c.fill();
   c.fillStyle='#fffdf5';c.beginPath();c.moveTo(x-6,y-12);c.quadraticCurveTo(x-.5,y-5,x+5,y-12);c.closePath();c.fill();c.lineWidth=1.6;c.stroke();   // 賊笑
   if(k.t<.3){c.font='900 15px "Chiron GoRound TC","PingFang TC",sans-serif';c.textAlign='right';c.lineWidth=4.5;c.strokeStyle=INK;c.fillStyle='#fffdf5';c.strokeText('嘿嘿～',x-26,y-34);c.fillText('嘿嘿～',x-26,y-34);c.textAlign='left';}
@@ -851,6 +860,11 @@ function render(){
   const pp=pigeonPos();if(pp)drawPigeon(g,pp);
   if(mode==='play'&&sim.uncle)drawUncle(g);
   if(mode==='play'&&sim.kid)drawKid(g);
+  if(peeFx>0){   // 被被朝小屁孩噴出去的水柱
+    const e=1-peeFx/.75,q=cloth.p[9],sx=q.x,sy=q.y+R,tx=KID.x,ty=KID.y-22,cx=(sx+tx)/2+30,cy=Math.min(sy,ty)-20,u1=clamp(e/.3,0,1),u0=clamp((e-.55)/.45,0,1);
+    const at=u=>{const v=1-u;return[v*v*sx+2*v*u*cx+u*u*tx,v*v*sy+2*v*u*cy+u*u*ty];};
+    g.lineCap='round';g.lineJoin='round';for(const [w,col] of[[9,INK],[5.5,'#7fc1f0'],[2,'rgba(255,255,255,.85)']]){g.lineWidth=w;g.strokeStyle=col;g.beginPath();for(let i=0;i<=16;i++){const u=lerp(u0,u1,i/16),pt=at(u);if(i)g.lineTo(pt[0],pt[1]+(w<9?0:0));else g.moveTo(pt[0],pt[1]);}g.stroke();}
+    if(u1>=1){g.fillStyle='#7fc1f0';for(let i=0;i<7;i++){const a=i*TAU/7+time*9,r=8+((time*60+i*9)%16);g.beginPath();g.arc(tx+Math.cos(a)*r,ty+Math.sin(a)*r*.7,2.2,0,TAU);g.fill();}}}
   // 冷氣水滴：外面一圈細細的白環提示「這個可以點」
   if(mode==='play'){const dp=sim.dripPos();if(dp){g.lineJoin='round';
       g.globalAlpha=.75;g.lineWidth=2;g.strokeStyle='#fffdf5';g.beginPath();g.arc(dp.x,dp.y,16+2*Math.sin(time*10),0,TAU);g.stroke();g.globalAlpha=1;
@@ -931,13 +945,14 @@ function hud(dt){
   const dd=Math.round(DIRT_COST*sim.dirt);if(dd!==lastDead){lastDead=dd;el.dead.hidden=dd<=0;el.dead.style.width=dd+'%';}
   const f=Math.round(sim.st);if(f!==lastFill){lastFill=f;el.fill.style.width=f+'%';}
   el.stam.classList.toggle('low',sim.st<ST_TAP*3);el.stam.classList.toggle('held',!!(sim.pigeon&&sim.pigeon.phase==='on'));
-  if(tiredT>0)tiredT-=dt;if(peckT>0)peckT-=dt;
+  if(tiredT>0)tiredT-=dt;if(peckT>0)peckT-=dt;if(peeFx>0)peeFx-=dt;
   el.vig.style.opacity=mode==='play'?(clamp((sim.h-.22)/.35,0,1)*(.75+.25*Math.sin(time*9))).toFixed(2):'0';
   if(mode==='play'){
     if(sim.qte)setHint('照順序，等縮圈貼上圈的瞬間點下去');
     else if(sim.uncle&&(sim.uncle.phase==='out'||sim.uncle.phase==='hawk'))setHint('點樓上阿伯！別讓他吐痰');
+    else if(sim.kid&&sim.kid.fled===undefined&&sim.wet>=PEE_COST)setHint('夠濕了！點小屁孩尿他');
     else if(sim.kid&&sim.kid.items.some(it=>!it.done))setHint('點掉飛上來的垃圾！');
-    else if(sim.ac)setHint('點掉冷氣的水滴！');
+    else if(sim.ac)setHint('點掉水滴，或留著存水尿小屁孩');
     else if(tiredT>0)setHint('沒力了…停一下再點');
     else if(sim.pigeon&&sim.pigeon.phase==='on')setHint(sim.pigeon.hp>1?`還要點 ${sim.pigeon.hp} 下才趕得走！`:'鴿子踩著會往外滑，還會大便。點牠！');
     else if(sim.v>20)setHint('正在滑！快連點');
@@ -953,7 +968,7 @@ function start(){
   Snd.init();Snd.blip(520,880,.16,'triangle',.1);
   paused=false;$('pause').hidden=true;
   sim=new Sim((Math.random()*1e9)|0);cloth.place(sim.s);mode='play';fallT=0;shake=0;inp.tap=inp.shoo=false;inp.hits.length=0;
-  feathers.length=0;el.title.hidden=true;el.over.hidden=true;el.hud.hidden=false;el.dayN.textContent='1';el.wx.textContent=WX.sunny;lastWindKey='';lastFill=-1;lastWet=-1;lastDead=-1;torA=0;tiredT=0;crawls=0;ripples.length=0;judges.length=0;bursts.length=0;stains.length=0;poopedToday=spatToday=false;drips.length=steam.length=sparks.length=0;
+  feathers.length=0;el.title.hidden=true;el.over.hidden=true;el.hud.hidden=false;el.dayN.textContent='1';el.wx.textContent=WX.sunny;lastWindKey='';lastFill=-1;lastWet=-1;lastDead=-1;torA=0;tiredT=0;crawls=0;ripples.length=0;judges.length=0;bursts.length=0;stains.length=0;poopedToday=spatToday=peedToday=false;peeFx=0;drips.length=steam.length=sparks.length=0;
   banner('Day 1｜棉被被吹到鄰居的遮雨棚上了',false,3);
 }
 function gameOver(){
@@ -979,8 +994,8 @@ function renderSkins(){
 }
 function handle(ev){
   switch(ev.type){
-    case'day':{const w=sim.weather,d=sim.day,pooped=poopedToday,spat=spatToday;poopedToday=spatToday=false;el.dayN.textContent=d;el.wx.textContent=sim.season==='plum'?'梅雨':WX[w];Snd.blip(660,990,.14,'triangle',.07);
-      const list=sim.season==='plum'?['梅雨季，天天濕，還在。','又下雨，它還在。','曬不乾，但沒掉。']:w==='cold'?['好冷，還在。','寒流來了，它在發抖。','冷到縮起來，沒掉。']:POSTS[w];post(ev.afterTor?'龍捲風過了，還在。':ev.afterQuake?'地震完，還在。':pooped?'被鴿子大便了，但還在。':spat?'被樓上阿伯吐痰了，但還在。':w==='sunny'&&sim.wet>.3?'出太陽了，正在曬乾。':list[Math.floor(Math.random()*list.length)]);
+    case'day':{const w=sim.weather,d=sim.day,pooped=poopedToday,spat=spatToday,peed=peedToday;poopedToday=spatToday=peedToday=false;el.dayN.textContent=d;el.wx.textContent=sim.season==='plum'?'梅雨':WX[w];Snd.blip(660,990,.14,'triangle',.07);
+      const list=sim.season==='plum'?['梅雨季，天天濕，還在。','又下雨，它還在。','曬不乾，但沒掉。']:w==='cold'?['好冷，還在。','寒流來了，它在發抖。','冷到縮起來，沒掉。']:POSTS[w];post(ev.afterTor?'龍捲風過了，還在。':ev.afterQuake?'地震完，還在。':pooped?'被鴿子大便了，但還在。':spat?'被樓上阿伯吐痰了，但還在。':peed?'尿了樓下小屁孩，還在。':w==='sunny'&&sim.wet>.3?'出太陽了，正在曬乾。':list[Math.floor(Math.random()*list.length)]);
       if(ev.news==='plumStart'){banner('梅雨季開始：連下好幾天雨，被被曬不乾',true,3.6);Snd.blip(500,260,.4,'sine',.07);}
       else if(ev.news==='plumEnd')banner('梅雨季結束，終於出太陽了',false,3);
       else if(ev.news==='coldStart'){banner('寒流來襲：力氣回得慢，東北風一直往外吹',true,3.6);Snd.blip(900,500,.35,'triangle',.06);}
@@ -1016,7 +1031,9 @@ function handle(ev){
       else if(ev.c>=.8)banner(`撐住了，只被${verb}出去一點點`,false,2.6);
       else{banner(ev.c===0?`一個都沒點到，被被被${what}${verb}出去了！`:`節奏沒抓好，被被被${verb}出去一截`,true,3);shake=Math.max(shake,9);Snd.blip(320,120,.3,'sawtooth',.07);}
       break;}
-    case'kid':banner('一樓的小屁孩在亂丟垃圾！點掉飛上來的垃圾',false,2.8);Snd.blip(700,900,.08,'square',.05);Snd.blip(900,700,.08,'square',.05,.1);break;
+    case'pee':peeFx=.75;peedToday=true;shake=Math.max(shake,4);banner(`尿到了！小屁孩 ${PEE_SCARE} 天不敢來`,false,2.8);Snd.blip(900,300,.5,'sine',.07);Snd.blip(500,900,.3,'square',.04,.25);break;
+    case'peeDry':judges.push({x:KID.x-20,y:KID.y-10,text:'沒水了',col:'#fffdf5',life:.7,dur:.7});Snd.blip(200,150,.1,'triangle',.05);break;
+    case'kid':banner(sim.wet>=PEE_COST?'小屁孩來丟垃圾了！被被夠濕，點他就能尿他':'一樓的小屁孩在亂丟垃圾！點掉飛上來的垃圾',false,3);Snd.blip(700,900,.08,'square',.05);Snd.blip(900,700,.08,'square',.05,.1);break;
     case'throw':Snd.blip(300,620,.12,'sine',.05);break;
     case'trashPop':{const it=sim.kid&&sim.kid.items[ev.i],p=it?sim.trashPos(it):null;if(p){bursts.push({x:p.x,y:p.y,life:.3,dur:.3,col:'#fffdf5',rays:6,big:false,a0:Math.random()*TAU});judges.push({x:p.x,y:p.y+26,text:'擋掉',col:'#fffdf5',life:.5,dur:.5});}Snd.blip(900,1300,.07,'triangle',.08);break;}
     case'trashHit':if(ev.on){shake=Math.max(shake,7);const q=cloth.p[7];judges.push({x:q.x,y:q.y+10,text:'被砸到！',col:'#ee5b3a',life:.7,dur:.7});Snd.blip(220,110,.14,'square',.08);}break;
@@ -1043,7 +1060,7 @@ function tick(dt){
   time+=dt;
   if(mode==='play'){
 
-    sim.step(dt,inp);inp.tap=false;inp.shoo=false;inp.uncle=false;inp.drip=false;inp.hits.length=0;inp.trash.length=0;
+    sim.step(dt,inp);inp.tap=false;inp.shoo=false;inp.uncle=false;inp.drip=false;inp.pee=false;inp.hits.length=0;inp.trash.length=0;
     while(sim.events.length)handle(sim.events.shift());
     if(sim.qte)shake=Math.max(shake,sim.qte.kind==='quake'?6:3);
     if(sim.weather==='typhoon'&&Math.random()<dt*.12)flash=1;
@@ -1114,7 +1131,10 @@ function down(cx,cy){
     else if(q.t-q.notes[hit].at<-QTE_EARLY){const o=q.notes[hit];judges.push({x:o.x,y:o.y,text:'還沒',col:'#fffdf5',life:.5,dur:.5});}   // 縮圈還很遠：不算，可以再點
     else inp.hits.push(hit);
     return;}
+  const onKid=sim.kid&&sim.kid.fled===undefined&&sim.kid.t>-.4&&Math.hypot(x-KID.x,y-(KID.y-12))<40;
+  if(onKid&&sim.wet>=PEE_COST){inp.pee=true;return;}   // 有水的時候，點在他身上一律算尿他（就算剛好有垃圾擋在前面）
   if(sim.kid){let got=false;for(const it of sim.kid.items){if(it.done||inp.trash.includes(it.i))continue;const tp=sim.trashPos(it);if(Math.hypot(x-tp.x,y-tp.y)<32){inp.trash.push(it.i);got=true;break;}}if(got)return;}
+  if(onKid){inp.pee=true;return;}
   {const dp=sim.dripPos();if(dp&&Math.hypot(x-dp.x,y-dp.y)<32){sim.dripY=dp.y;inp.drip=true;return;}}
   if(sim.uncle&&(sim.uncle.phase==='out'||sim.uncle.phase==='hawk')&&Math.hypot(x-UNCLE.x,y-UNCLE.y)<38){inp.uncle=true;ripples.push({x:UNCLE.x,y:UNCLE.y,life:.35,big:true});return;}
   const p=pigeonPos();
@@ -1144,7 +1164,7 @@ window.addEventListener('resize',resize);
 if(window.ResizeObserver)new ResizeObserver(resize).observe(gameEl);
 
 muteIcon();showBest();resize();requestAnimationFrame(frame);
-window.__bb={Sim,DAY_LEN,get paused(){return paused},get sim(){return sim},get mode(){return mode},start,pigeonXY(){const p=pigeonPos();if(!p)return null;const b=gameEl.getBoundingClientRect();return{x:b.left+ox+p.x*scale,y:b.top+oy+(p.y-10*PIGEON_SC[p.lv])*scale};},trashXY(){const k=sim.kid;if(!k)return null;const it=k.items.find(q=>!q.done);if(!it)return null;const p=sim.trashPos(it),b=gameEl.getBoundingClientRect();return{x:b.left+ox+p.x*scale,y:b.top+oy+p.y*scale};},dripXY(){const p=sim.dripPos();if(!p)return null;const b=gameEl.getBoundingClientRect();return{x:b.left+ox+p.x*scale,y:b.top+oy+p.y*scale};},uncleXY(){const b=gameEl.getBoundingClientRect();return{x:b.left+ox+UNCLE.x*scale,y:b.top+oy+UNCLE.y*scale};},qteXY(i){const p=sim.qtePos(i),b=gameEl.getBoundingClientRect();return{x:b.left+ox+p.x*scale,y:b.top+oy+p.y*scale};}};
+window.__bb={Sim,DAY_LEN,get paused(){return paused},get sim(){return sim},get mode(){return mode},start,pigeonXY(){const p=pigeonPos();if(!p)return null;const b=gameEl.getBoundingClientRect();return{x:b.left+ox+p.x*scale,y:b.top+oy+(p.y-10*PIGEON_SC[p.lv])*scale};},kidXY(){const b=gameEl.getBoundingClientRect();return{x:b.left+ox+KID.x*scale,y:b.top+oy+(KID.y-12)*scale};},trashXY(){const k=sim.kid;if(!k)return null;const it=k.items.find(q=>!q.done);if(!it)return null;const p=sim.trashPos(it),b=gameEl.getBoundingClientRect();return{x:b.left+ox+p.x*scale,y:b.top+oy+p.y*scale};},dripXY(){const p=sim.dripPos();if(!p)return null;const b=gameEl.getBoundingClientRect();return{x:b.left+ox+p.x*scale,y:b.top+oy+p.y*scale};},uncleXY(){const b=gameEl.getBoundingClientRect();return{x:b.left+ox+UNCLE.x*scale,y:b.top+oy+UNCLE.y*scale};},qteXY(i){const p=sim.qtePos(i),b=gameEl.getBoundingClientRect();return{x:b.left+ox+p.x*scale,y:b.top+oy+p.y*scale};}};
 })();
 </script>
 <!--/PAGE-->
