@@ -2,7 +2,7 @@
 <html lang="zh-Hant">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover, user-scalable=no">
 <meta name="description" content="你是卡在遮雨棚上的那條棉被。連點爬回牆邊、點掉圈圈，撐過強風、下雨、地震、龍捲風和鴿子，看你能撐幾天。">
 <meta name="theme-color" content="#9fd3ee">
 <link rel="canonical" href="https://stevenchiang88.github.io/trash_game/beibei/">
@@ -46,7 +46,8 @@
   --body:"Chiron GoRound TC","PingFang TC","Noto Sans TC","Microsoft JhengHei",sans-serif;
   --sticker:-2px -2px 0 var(--ink),2px -2px 0 var(--ink),-2px 2px 0 var(--ink),2px 2px 0 var(--ink),0 -2.5px 0 var(--ink),0 2.5px 0 var(--ink),-2.5px 0 0 var(--ink),2.5px 0 0 var(--ink);
 }
-html,body{height:100%}
+html,body{height:100%;touch-action:manipulation}   /* manipulation：不做「點兩下放大」 */
+button{touch-action:manipulation}
 body{background:var(--sky);color:var(--ink);font-family:var(--body);font-weight:500;overflow:hidden;overscroll-behavior:none;display:grid;place-items:center}
 #game{position:relative;height:100%;aspect-ratio:9/16;max-width:100%;overflow:hidden;touch-action:none;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent}
 #c{position:absolute;inset:0;width:100%;height:100%;display:block}
@@ -1143,6 +1144,18 @@ function down(cx,cy){
 }
 gameEl.addEventListener('pointerdown',e=>{if(e.target.closest('button'))return;e.preventDefault();Snd.init();down(e.clientX,e.clientY);});
 gameEl.addEventListener('contextmenu',e=>e.preventDefault());
+/* iOS Safari：這個遊戲就是要連點，但連點兩下會被當成「點兩下放大」，而且放大後縮不回來。把雙擊縮放、雙指縮放都擋掉 */
+let lastTouchEnd=0;
+document.addEventListener('touchend',e=>{const now=Date.now(),btn=e.target&&e.target.closest&&e.target.closest('button');
+  if(now-lastTouchEnd<=350&&!btn&&e.cancelable)e.preventDefault();   // 第二下不交給瀏覽器處理；按鈕除外，不然按鈕會按不到
+  lastTouchEnd=now;},{passive:false});
+for(const t of['gesturestart','gesturechange','gestureend'])document.addEventListener(t,e=>e.preventDefault(),{passive:false});
+document.addEventListener('dblclick',e=>e.preventDefault());
+// 萬一還是被放大了：動一下 viewport 設定，讓瀏覽器把縮放拉回 1 倍
+if(window.visualViewport){const vp=document.querySelector('meta[name=viewport]');let fixing=false;
+  visualViewport.addEventListener('resize',()=>{if(fixing||!vp||visualViewport.scale<1.02)return;fixing=true;const c0=vp.getAttribute('content');
+    vp.setAttribute('content','width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1, viewport-fit=cover, user-scalable=no');
+    setTimeout(()=>{vp.setAttribute('content',c0);fixing=false;},80);});}
 document.addEventListener('visibilitychange',()=>{last=0;if(document.hidden)setPaused(true);});
 window.addEventListener('blur',()=>setPaused(true));
 window.addEventListener('pagehide',()=>setPaused(true));
