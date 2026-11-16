@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover, user-scalable=no">
-<meta name="description" content="Chu克對電過敏，卻得披著太空毯上街拿報紙。左右換線、跳、蹲，閃開路上所有帶電的東西，看他能跑多遠。">
+<meta name="description" content="Chu克對電過敏，卻每天都得披著太空毯上街買報紙。左右換線、跳、蹲，閃開帶電的東西和迎面來的車，別被拿著手機的弟弟追上。">
 <meta name="theme-color" content="#f3d9a4">
 <link rel="canonical" href="https://stevenchiang88.github.io/trash_game/dianshi/">
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
@@ -11,7 +11,7 @@
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="絕命電師">
 <meta property="og:title" content="絕命電師｜披著太空毯，閃開整條街的電">
-<meta property="og:description" content="Chu克對電過敏，卻得披著太空毯上街拿報紙。左右換線、跳、蹲，閃開路上所有帶電的東西，看他能跑多遠。">
+<meta property="og:description" content="Chu克對電過敏，卻每天都得披著太空毯上街買報紙。左右換線、跳、蹲，閃開帶電的東西和迎面來的車，別被拿著手機的弟弟追上。">
 <meta property="og:url" content="https://stevenchiang88.github.io/trash_game/dianshi/">
 <meta property="og:image" content="https://stevenchiang88.github.io/trash_game/dianshi/og.png">
 <meta property="og:image:width" content="1200">
@@ -53,12 +53,16 @@ body{background:var(--dusk);color:var(--ink);font-family:var(--body);font-weight
 
 .hud{position:absolute;inset:0;pointer-events:none;display:flex;flex-direction:column;gap:8px;padding-block:12px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
 .top{display:flex;align-items:flex-start;justify-content:space-between;gap:8px}
-.left{display:flex;flex-direction:column;align-items:flex-start;gap:6px}
+.left{display:flex;flex-direction:column;align-items:flex-start;gap:7px}
 .count{display:flex;align-items:baseline;gap:5px;font-family:var(--display);color:var(--paper);text-shadow:var(--sticker);line-height:1}
 .count small{font-family:var(--body);font-weight:900;font-size:15px}
 .count b{font-size:44px;font-weight:700;font-variant-numeric:tabular-nums}
 .pill{display:flex;align-items:center;gap:6px;padding:3px 11px 3px 8px;border:2.5px solid var(--ink);border-radius:999px;background:var(--paper);font-weight:900;font-size:15px;font-variant-numeric:tabular-nums}
-.pill svg{width:22px;height:18px;display:block}
+.pill svg{width:18px;height:18px;display:block}
+/* 今天跑到哪了：填滿就是到報攤 */
+.prog{width:132px;height:12px;border:2.5px solid var(--ink);border-radius:999px;background:var(--paper);overflow:hidden}
+.prog i{display:block;height:100%;background:var(--lamp);transform-origin:left center;transform:scaleX(0)}
+.to{font-weight:900;font-size:13px;color:var(--paper);text-shadow:var(--sticker);font-variant-numeric:tabular-nums;line-height:1}
 .side{display:flex;align-items:center;gap:8px}
 .bolts{display:flex;gap:3px;padding:7px 10px;border:2.5px solid var(--ink);border-radius:999px;background:var(--paper)}
 /* 剩幾條命：紅心是還剩的，被電到一次就空一顆 */
@@ -107,8 +111,10 @@ body{background:var(--dusk);color:var(--ink);font-family:var(--body);font-weight
   <div class="hud" id="hud" hidden>
     <div class="top">
       <div class="left">
-        <div class="count"><b id="num">0</b><small>公尺</small></div>
-        <div class="pill" aria-label="撿到的報紙"><svg viewBox="0 0 22 18" aria-hidden="true"><rect x="1.2" y="1.2" width="19.6" height="15.6" fill="#f4efe2" stroke="#2b2a3a" stroke-width="2"/><rect x="4" y="4" width="14" height="3.4" fill="#2b2a3a"/><rect x="4" y="9.4" width="6.5" height="1.4" fill="#2b2a3a"/><rect x="4" y="12.2" width="6.5" height="1.4" fill="#2b2a3a"/><rect x="12" y="9.2" width="6" height="4.6" fill="#8a8f9c"/></svg><span id="papers">0</span></div>
+        <div class="count"><small>第</small><b id="num">1</b><small>天</small></div>
+        <div class="prog" aria-hidden="true"><i id="progFill"></i></div>
+        <div class="to" id="to"></div>
+        <div class="pill" aria-label="撿到的硬幣"><svg viewBox="0 0 18 18" aria-hidden="true"><circle cx="9" cy="9" r="7.6" fill="#ffcf4a" stroke="#2b2a3a" stroke-width="2"/><circle cx="9" cy="9" r="3.6" fill="#e3a62c"/></svg><span id="coins">0</span></div>
       </div>
       <div class="side">
         <div class="bolts" id="bolts" aria-label="Chu克還能被電幾次"></div>
@@ -121,13 +127,13 @@ body{background:var(--dusk);color:var(--ink);font-family:var(--body);font-weight
 
   <div class="screen" id="title">
     <h1 class="logo">絕命<span>電</span>師</h1>
-    <p class="tag">Chu克對電過敏，卻得上街拿報紙。<br>閃開路上所有帶電的東西。</p>
+    <p class="tag">Chu克對電過敏，卻每天都得上街買報紙。<br>閃開帶電的東西，別被拿手機的弟弟追上。</p>
     <div class="gap"></div>
     <ul class="how">
       <li><b>左右滑</b> 換線</li>
       <li><b>上滑</b> 跳</li>
       <li><b>下滑</b> 蹲</li>
-      <li><b>撿報紙</b> 冷靜一下</li>
+      <li><b>跑到報攤</b> 過一天</li>
     </ul>
     <button class="btn" id="start" type="button">出門</button>
     <div class="best" id="best"></div>
@@ -136,11 +142,12 @@ body{background:var(--dusk);color:var(--ink);font-family:var(--body);font-weight
 
   <div class="screen" id="over" hidden>
     <div class="card">
-      <p class="verdict">Chu克發作了。<br>跑了 <span class="n" id="ovN">0</span> 公尺。</p>
+      <p class="verdict"><span id="ovWhy">Chu克發作了。</span><br>撐到第 <span class="n" id="ovN">1</span> 天。</p>
       <dl class="stats">
-        <div><dt>最佳紀錄</dt><dd id="ovBest">0 公尺</dd></div>
-        <div><dt>撿到的報紙</dt><dd id="ovPaper">0 份</dd></div>
-        <div class="wide"><dt>封號</dt><dd id="ovRank"></dd></div>
+        <div><dt>最佳紀錄</dt><dd id="ovBest">第 1 天</dd></div>
+        <div><dt>總共跑了</dt><dd id="ovDist">0 公尺</dd></div>
+        <div><dt>封號</dt><dd id="ovRank"></dd></div>
+        <div><dt>剩下的硬幣</dt><dd id="ovCoin">0 枚</dd></div>
         <div class="wide"><dt>最後電到他的</dt><dd id="ovMiss"></dd></div>
       </dl>
       <div class="acts">
@@ -178,15 +185,15 @@ const mix=(a,b,t)=>{const A=rgb(a),B=rgb(b);return`rgb(${Math.round(lerp(A[0],B[
 /* ───────── 世界：三條線、往遠方縮小的馬路 ─────────
    x 是第幾條線（-1 左、0 中、1 右），z 是離 Chu克多遠（往前為正），y 是離地高度；1 單位大約一公尺，在 Chu克腳邊畫成 100px */
 const VW=360,VH=640,CX=180,HOR=176,GY=572,F=11,U=100,CHU=.82,SPAWN_Z=62,Z_NEAR=-2.6;
-const V0=10.5,JUMP_V=6.6,GRAV=22,SLIDE_T=.62,LANE_V=9.5,PAIN_MAX=3,PAPER_HEAL=100,DARK_T=6;
+const V0=10.5,VTOP=31,HEAL_COST=50,CHASE_RISK=.25,JUMP_V=6.6,GRAV=22,SLIDE_T=.62,LANE_V=9.5,PAIN_MAX=3,PAPER_HEAL=100,DARK_T=6;
 const S=z=>F/(F+z);
 /* 路上的東西。kind：full 只能換線閃開、low 要跳、high 要蹲；w=3 表示橫跨三條線 */
 const OB={
   box:{kind:'full',n:'變電箱',gy:.62},claw:{kind:'full',n:'夾娃娃機',gy:1},charger:{kind:'full',n:'充電樁',gy:1.2},ped:{kind:'full',n:'路人的手機',gy:.7},
   robo:{kind:'low',n:'掃地機器人',gy:.18},strip:{kind:'low',w:3,n:'延長線',gy:.15},
   sign:{kind:'high',n:'跑馬燈',gy:1.22},lights:{kind:'high',w:3,n:'燈串',gy:1.1},
+  scoot:{kind:'full',n:'電動機車',gy:.8,len:.7},bus:{kind:'full',n:'電動公車',gy:1,len:2.2},   // 迎面衝過來的車：len 是車身長度
 };
-const FULLS=['box','box','ped','ped','claw','charger'];
 
 /* ───────── 路人：造型沿用，但都不具名 ───────── */
 const CAST=[
@@ -208,7 +215,9 @@ const PEDS=CAST.concat(EXTRAS);
 const YELL={bro:['哥！外面很多電耶！','哥！報紙我買好了！'],lawyer:['你…還好嗎？','要不要我陪你走？'],partner:['早安！事務所見！','嘿！氣色不錯！'],helper:['報紙我會送啊！','先生你要去哪？'],
   ex:['…你披著什麼？','你家燈怎麼都不開？'],fixer:['…','門我修好了。'],doctor:['這是心理作用！','回來！我們談談！'],pi:['照片拍到了。','報告在這。'],
   neighbor:['又是你偷我報紙！','那是我的報紙！'],courier:['外送～借過～','先生簽收一下！'],kid:['媽媽，有鋁箔人！','叔叔你是太空人嗎？']};
-const MAN_ZAP=['啊啊啊——','我的皮膚在燒！','關掉！快關掉！'],MAN_NEAR=['我感覺到了…','好近…','嗡嗡嗡的…'],MAN_MILE=['報紙…報紙在哪…','我沒有病。','這不是心理作用。','再撐一下。','法律是神聖的。'];
+const MAN_ZAP=['啊啊啊——','我的皮膚在燒！','關掉！快關掉！'],MAN_NEAR=['我感覺到了…','好近…','嗡嗡嗡的…'],MAN_NEWS=['今天的頭條…','法律版在哪？','我沒有病。','這不是心理作用。','明天還要再來一次…'];
+// 每天路上多一點新東西
+const NEW={2:'小心迎面衝來的電動機車',3:'多了夾娃娃機，掃地機器人開始亂跑',4:'電動公車上路了',5:'今天整條路都是電'};
 
 /* ───────── 聲音 ───────── */
 const Snd={ctx:null,on:store.get('ds.mute')!=='1',
@@ -226,43 +235,53 @@ const Snd={ctx:null,on:store.get('ds.mute')!=='1',
 
 /* ───────── 狀態 ───────── */
 let mode='title',time=0,dist=0,speed=V0,lane=0,px=0,py=0,vy=0,slide=0,wantSlide=false,jumpBuf=0,lastLaneT=-9;
-let pain=0,invuln=0,shield=false,darkT=0,slow=0,papers=0,pStreak=0,pLast=-9,nearT=0,lastMile=0,dieT=0,lastHit='';
-let best=parseInt(store.get('ds.dist')||'0',10)||0,runs=parseInt(store.get('ds.runs')||'0',10)||0;
-let tier=0,stepPh=0,shake=0,flash=0,manSay='',manSayT=0,nextWz=0,nextPow=0,rowN=0,lastWide=-9,tutor=false;
+let pain=0,invuln=0,shield=false,darkT=0,slow=0,coins=0,pStreak=0,pLast=-9,nearT=0,dieT=0,lastHit='',cause='';
+let day=1,dayStart=0,goal=250,prevGoal=-999,standCoin=-1,annT=0,tipTxt='',tipT=0,dayFlash=0,warned=false;
+let chase=0,chaseX=1.6,chaseSay='',chaseSayT=0,ringT=0,lastTraf=-9;   // chase：追兵貼得多近（1 剛追上來，慢慢掉回 0）
+let best=parseInt(store.get('ds.dist')||'0',10)||0,bestDay=parseInt(store.get('ds.day')||'0',10)||0,runs=parseInt(store.get('ds.runs')||'0',10)||0;
+let stepPh=0,shake=0,flash=0,manSay='',manSayT=0,nextWz=0,nextPow=0,rowN=0,lastWide=-9,tutor=false;
+const resWz=[0,0,0];   // 每條線被來車「預約」到多遠：車開過來的那段路上不能擺東西
 const obs=[],items=[],sparks=[],pops=[],glows=[];
 
-function addOb(t,x,wz,extra){const d=OB[t],o=Object.assign({t,kind:d.kind,w:d.w||1,x,wz,done:false,ph:Math.random()*TAU,amp:0,sayT:0},extra);obs.push(o);return o;}
+function addOb(t,x,wz,extra){const d=OB[t],o=Object.assign({t,kind:d.kind,w:d.w||1,x,wz,done:false,ph:Math.random()*TAU,amp:0,sayT:0,ve:0},extra);obs.push(o);return o;}
 function wpick(list){let sum=0;for(const q of list)sum+=q[1];let r=Math.random()*sum;for(const q of list){if((r-=q[1])<0)return q[0];}return list[0][0];}
-// 排一列障礙：一定留一條過得去的路（直接跑、跳、或蹲），報紙就排在那條路上當提示
+const shuffle=a=>{for(let i=a.length-1;i>0;i--){const j=(Math.random()*(i+1))|0;[a[i],a[j]]=[a[j],a[i]];}return a;};
+// 一天：從上一個報攤跑到下一個報攤。一天比一天遠、一天比一天快
+const dayLen=d=>Math.min(1000,250+100*(d-1));
+const dayP=()=>clamp((dist-dayStart)/(goal-dayStart),0,1);
+const vNow=()=>Math.min(VTOP,V0+1.7*(day-1)+2.5*dayP());
+const diff=()=>clamp((day-1+dayP())/10,0,1);
+// 排一列障礙：一定留一條過得去的路（直接跑、跳、或蹲），硬幣就排在那條路上當提示
 function spawnRow(wz,gap,v){
-  rowN++;const D=clamp(dist/3000,0,1),open=[null,null,null],L3=[0,1,2];
-  const full=i=>{const t=pick(FULLS);addOb(t,i-1,wz,t==='ped'?{cast:pick(PEDS)}:t==='claw'?{ph:Math.random()*TAU}:null);open[i]='x';};
-  const low=i=>{addOb('robo',i-1,wz);open[i]='j';};
-  const high=i=>{addOb('sign',i-1,wz,{txt:pick(['特價','電器','開幕','光華','充電'])});open[i]='s';};
-  const other=i=>pick(L3.filter(k=>k!==i)),free=()=>pick(L3);
+  rowN++;const D=diff(),open=[null,null,null],L3=[0,1,2],ok=shuffle(L3.filter(i=>resWz[i]<wz));   // ok：沒有來車要經過的線
+  const fulls=['box','box','ped','ped'];if(day>=2)fulls.push('charger');if(day>=3)fulls.push('claw');
+  const put={F:i=>{const t=pick(fulls);addOb(t,i-1,wz,t==='ped'?{cast:pick(PEDS)}:null);open[i]='x';},
+    L:i=>{addOb('robo',i-1,wz);open[i]='j';},
+    H:i=>{addOb('sign',i-1,wz,{txt:pick(['特價','電器','開幕','光華','充電'])});open[i]='s';}};
   if(tutor&&rowN<=3){
     if(rowN===1){addOb('strip',0,wz,{tip:'往上滑　跳過去'});open.fill('j');}
     else if(rowN===2){addOb('lights',0,wz,{tip:'往下滑　鑽過去'});open.fill('s');}
     else{addOb('box',0,wz,{tip:'左右滑　閃開'});open[1]='x';const k=pick([0,2]);addOb('box',k-1,wz);open[k]='x';}
   }else{
-    const wideOK=rowN-lastWide>2;
-    const type=wpick([['one',22-8*D],['two',14+12*D],['low',12],['high',12],['mixL',8+8*D],['mixH',8+8*D],['trio',3+12*D],['roam',dist>300?7:0],['strip',wideOK?9:0],['lights',wideOK?9:0]]);
-    if(type==='one')full(free());
-    else if(type==='two'){const k=free();L3.forEach(i=>{if(i!==k)full(i);});}
-    else if(type==='low'){const i=free();low(i);if(Math.random()<.35+.3*D)full(other(i));}
-    else if(type==='high'){const i=free();high(i);if(Math.random()<.35+.3*D)full(other(i));}
-    else if(type==='mixL'){const i=free();full(i);low(other(i));}
-    else if(type==='mixH'){const i=free();full(i);high(other(i));}
-    else if(type==='trio'){const p=[0,1,2].sort(()=>Math.random()-.5),two=D>.5&&Math.random()<.4;full(p[0]);two?full(p[1]):low(p[1]);Math.random()<.5?high(p[2]):low(p[2]);}
+    const wideOK=rowN-lastWide>2,trafOK=day>=2&&ok.length>=2&&rowN-lastTraf>1&&wz<goal-40;
+    const type=wpick([['one',22-8*D],['two',14+12*D],['low',12],['high',12],['mixL',8+8*D],['mixH',8+8*D],['trio',day>=5?3+12*D:0],['roam',day>=3&&ok.length===3?7:0],['strip',wideOK?9:0],['lights',wideOK?9:0],['traf',trafOK?13+8*D:0]]);
+    const more=Math.random()<.35+.3*D;
+    const kinds=type==='one'?['F']:type==='two'?['F','F']:type==='low'?(more?['L','F']:['L']):type==='high'?(more?['H','F']:['H']):type==='mixL'?['F','L']:type==='mixH'?['F','H']
+      :type==='trio'?['F',D>.5&&Math.random()<.4?'F':'L',Math.random()<.5?'H':'L']:null;
+    if(kinds)kinds.slice(0,ok.length).forEach((k,i)=>put[k](ok[i]));
     else if(type==='roam'){addOb('robo',0,wz,{amp:1});open.fill('j');}
     else if(type==='strip'){addOb('strip',0,wz);open.fill('j');lastWide=rowN;}
-    else{addOb('lights',0,wz);open.fill('s');lastWide=rowN;}
+    else if(type==='lights'){addOb('lights',0,wz);open.fill('s');lastWide=rowN;}
+    else{   // 迎面來車：從更遠的地方開過來，剛好在這一列的時間點經過 Chu克
+      lastTraf=rowN;const n=D>.45&&ok.length===3&&Math.random()<.35?2:1,ve=v*.7,far=ve*(wz-dist)/v;
+      for(let q=0;q<n;q++){const i=ok[q],t=day>=4&&Math.random()<.4?'bus':'scoot';addOb(t,i-1,wz+far,{ve,len:OB[t].len});resWz[i]=wz+far+3;open[i]='x';}
+    }
   }
-  // 報紙：沿著一條過得去的線排；要跳的地方排成弧線，要蹲的地方貼地
+  // 硬幣：沿著一條過得去的線排；要跳的地方排成弧線，要蹲的地方貼地
   const okL=L3.filter(i=>open[i]!=='x'),easy=okL.filter(i=>open[i]===null),pl=easy.length&&Math.random()<.65?pick(easy):pick(okL),how=open[pl],reach=v*.3;
   if(wz>nextPow&&!(tutor&&rowN<=3)){nextPow=wz+rnd(380,560);items.push({t:!shield&&Math.random()<.55?'foil':'dark',x:pl-1,wz:wz-gap*.5,y:.6,got:false,ph:0});}
   else if(Math.random()<.78||(tutor&&rowN<=3))for(let d=-gap*.62;d<=gap*.2;d+=1.55){const k=1-(d/reach)*(d/reach);
-    items.push({t:'paper',x:pl-1,wz:wz+d,y:how==='j'&&k>0?.5+.8*k:how==='s'&&k>0?.32:.5,got:false,ph:d});}
+    items.push({t:'coin',x:pl-1,wz:wz+d,y:how==='j'&&k>0?.5+.8*k:how==='s'&&k>0?.32:.5,got:false,ph:d});}
 }
 
 /* ───────── 畫面 ───────── */
@@ -481,14 +500,62 @@ function drawOb(c,o,dead,al){
     const cols=['#ffd35c','#ee5b3a','#8fdcf7','#7df2a0'];
     for(let i=0;i<11;i++){const p=P(.05+i*.09),on=!dead&&(Math.floor(time*4)+i)%5!==0;c.beginPath();c.moveTo(p[0],p[1]);c.lineTo(p[0],p[1]+12);c.stroke();c.fillStyle=on?cols[i%4]:'#77798a';c.beginPath();c.ellipse(p[0],p[1]+21,7.5,9.5,0,0,TAU);c.fill();c.stroke();}
     c.lineWidth=3;if(!dead)for(const q of[-100,0,100])arcs(c,q,-112,34,2,sd+q);
+  }else if(t==='scoot'){   // 迎面騎來的電動機車
+    c.fillStyle=INK;c.beginPath();c.ellipse(0,-16,12,16,0,0,TAU);c.fill();
+    c.fillStyle='#5c7fb8';c.beginPath();c.moveTo(-25,-104);c.lineTo(25,-104);c.lineTo(29,-154);c.lineTo(-29,-154);c.closePath();c.fill();c.stroke();
+    c.fillStyle='#f5f1e6';c.beginPath();c.moveTo(-23,-34);c.lineTo(23,-34);c.lineTo(17,-98);c.lineTo(-17,-98);c.closePath();c.fill();c.stroke();
+    c.fillStyle=dead?'#b9a57a':'#fff3b0';c.beginPath();c.arc(0,-80,10,0,TAU);c.fill();c.stroke();
+    c.lineWidth=6;c.beginPath();c.moveTo(-38,-106);c.lineTo(38,-106);c.stroke();c.lineWidth=3;c.fillStyle='#c9ced6';for(const q of[-40,40]){c.beginPath();c.moveTo(q,-106);c.lineTo(q,-120);c.stroke();c.beginPath();c.arc(q,-125,6.5,0,TAU);c.fill();c.stroke();}
+    c.fillStyle='#ecccae';c.beginPath();c.arc(-36,-108,6,0,TAU);c.arc(36,-108,6,0,TAU);c.fill();c.stroke();
+    c.fillStyle='#ee5b3a';c.beginPath();c.arc(0,-172,21,0,TAU);c.fill();c.stroke();c.fillStyle=INK;rrect(c,-15,-180,30,14,5);c.fill();
+    if(!dead)arcs(c,0,-70,46,3,sd);
+  }else if(t==='bus'){   // 電動公車
+    c.fillStyle=INK;c.fillRect(-46,-14,22,14);c.fillRect(24,-14,22,14);
+    c.fillStyle='#3fae8f';rrect(c,-54,-184,108,172,12);c.fill();c.stroke();c.fillStyle='#35917a';c.fillRect(-52,-44,104,30);
+    c.fillStyle='#1c1b29';rrect(c,-42,-178,84,20,4);c.fill();c.stroke();c.fillStyle=dead?'#55452a':'#ffb84a';c.font='900 14px '+FONT;c.textAlign='center';c.textBaseline='middle';c.fillText('電動公車',0,-167.5);c.textBaseline='alphabetic';c.textAlign='left';
+    c.fillStyle=dead?'#9fb4bd':'#d8f3fb';rrect(c,-45,-152,90,62,6);c.fill();c.stroke();c.lineWidth=2.2;c.beginPath();c.moveTo(0,-152);c.lineTo(0,-90);c.moveTo(-30,-96);c.lineTo(-12,-118);c.moveTo(14,-96);c.lineTo(32,-118);c.stroke();c.lineWidth=3;
+    c.fillStyle='#ffd35c';c.beginPath();c.moveTo(3,-80);c.lineTo(-7,-64);c.lineTo(0,-64);c.lineTo(-3,-52);c.lineTo(8,-69);c.lineTo(1,-69);c.closePath();c.fill();c.stroke();
+    c.fillStyle=dead?'#b9a57a':'#fff3b0';for(const q of[-38,38]){c.beginPath();c.arc(q,-30,9,0,TAU);c.fill();c.stroke();}
+    c.fillStyle='#2b2a3a';rrect(c,-54,-20,108,12,4);c.fill();c.fillStyle=PAPER;c.fillRect(-13,-36,26,11);c.strokeRect(-13,-36,26,11);
+    if(!dead)arcs(c,0,-100,70,4,sd);
   }
+}
+// 對摺的報紙：報頭「日報」、一條粗線、幾行字和一張照片
+function drawNews(c){c.fillStyle='#cfc7b2';c.fillRect(-23,-16,54,42);c.strokeRect(-23,-16,54,42);c.fillStyle='#f4efe2';c.fillRect(-28,-21,54,42);c.strokeRect(-28,-21,54,42);
+  c.fillStyle=INK;c.font='900 15px '+FONT;c.textAlign='center';c.textBaseline='middle';c.fillText('日報',-1,-11.5);c.textBaseline='alphabetic';c.textAlign='left';c.fillRect(-24,-3.5,46,2.6);
+  c.fillStyle='#8a8f9c';c.fillRect(2,2.5,20,14);c.fillStyle='rgba(43,42,58,.55)';for(let i=0;i<4;i++)c.fillRect(-24,3+i*4,22,1.8);}
+// 報攤：每天的終點。橫跨馬路的布條，加上路邊擺滿報紙的攤子
+function drawStand(c){
+  c.lineJoin='round';c.strokeStyle=INK;c.lineWidth=3;
+  c.fillStyle='#8a8fa6';for(const q of[-176,168]){c.fillRect(q,-310,8,310);c.strokeRect(q,-310,8,310);}
+  c.fillStyle=PAPER;c.fillRect(-172,-316,344,70);c.strokeRect(-172,-316,344,70);c.fillStyle='#ee5b3a';c.fillRect(-170.5,-314.5,341,9);c.fillRect(-170.5,-256.5,341,9);
+  c.fillStyle=INK;c.font='900 42px '+FONT;c.textAlign='center';c.textBaseline='middle';c.fillText('報　攤',0,-281);c.textBaseline='alphabetic';c.textAlign='left';
+  for(const sd of[-1,1]){c.save();c.translate(sd*246,0);
+    c.fillStyle='#b98a5a';c.fillRect(-56,-96,112,96);c.strokeRect(-56,-96,112,96);c.fillStyle='#8a6a48';c.fillRect(-54.5,-30,109,10);
+    for(const q of[-34,2,38]){c.save();c.translate(q,-112);c.scale(.62,.62);drawNews(c);c.restore();c.lineWidth=3;}
+    c.fillStyle='#8a8fa6';c.fillRect(-60,-190,6,190);c.fillRect(54,-190,6,190);
+    c.fillStyle=PAPER;c.beginPath();c.moveTo(-64,-196);c.lineTo(64,-196);c.lineTo(76,-154);c.lineTo(-76,-154);c.closePath();c.fill();c.stroke();
+    c.fillStyle='#ee5b3a';for(let q=-2;q<=2;q+=2){c.beginPath();c.moveTo(q*25.6-12.8,-196);c.lineTo(q*25.6+12.8,-196);c.lineTo(q*30.4+15.2,-154);c.lineTo(q*30.4-15.2,-154);c.closePath();c.fill();}
+    c.beginPath();c.moveTo(-64,-196);c.lineTo(64,-196);c.lineTo(76,-154);c.lineTo(-76,-154);c.closePath();c.stroke();c.restore();}
+}
+// 追在後面的人（背面）：芥末黃西裝、往後梳的頭髮，右手高舉著響個不停的手機
+function drawBroBack(c){
+  const K=CAST[0],p=Math.sin(dist*2.1);c.lineJoin='round';c.lineCap='round';c.strokeStyle=INK;c.lineWidth=3;
+  for(const sd of[-1,1]){const lift=Math.max(0,sd*p)*22;c.fillStyle=K.legs;rrect(c,sd*14-10,-76,20,72-lift,6);c.fill();c.stroke();c.fillStyle=INK;c.beginPath();c.ellipse(sd*14,-5-lift,12,6.5,0,0,TAU);c.fill();}
+  c.translate(0,-Math.abs(p)*4);c.fillStyle=K.top;
+  c.beginPath();c.moveTo(-30,-130);c.quadraticCurveTo(-52,-104,-45+p*6,-78);c.lineTo(-33+p*6,-80);c.quadraticCurveTo(-34,-104,-22,-118);c.closePath();c.fill();c.stroke();
+  c.beginPath();c.moveTo(-33,-136);c.quadraticCurveTo(0,-146,33,-136);c.lineTo(37,-62);c.lineTo(-37,-62);c.closePath();c.fill();c.stroke();c.lineWidth=2;c.beginPath();c.moveTo(0,-140);c.lineTo(0,-62);c.stroke();c.lineWidth=3;
+  c.beginPath();c.moveTo(24,-134);c.lineTo(43,-174);c.lineTo(56,-169);c.lineTo(36,-118);c.closePath();c.fill();c.stroke();
+  c.fillStyle=K.skin;c.beginPath();c.arc(51,-178,7.5,0,TAU);c.fill();c.stroke();c.fillStyle='#3a3d52';rrect(c,43,-210,16,28,3);c.fill();c.stroke();
+  c.strokeStyle=VOLT;for(const q of[0,.5]){const u=(time*2.6+q)%1;c.lineWidth=3.4*(1-u)+1;c.beginPath();c.arc(51,-198,13+u*24,-2.5,-.6);c.stroke();}c.strokeStyle=INK;c.lineWidth=3;
+  c.fillStyle=K.skin;c.beginPath();c.ellipse(-23,-164,4,6,0,0,TAU);c.ellipse(23,-164,4,6,0,0,TAU);c.fill();c.stroke();c.beginPath();c.arc(0,-166,22,0,TAU);c.fill();c.stroke();
+  c.fillStyle=K.hair;c.beginPath();c.arc(0,-168,22.5,Math.PI*.95,Math.PI*2.05);c.quadraticCurveTo(15,-150,0,-149);c.quadraticCurveTo(-15,-150,-22.4,-164.5);c.closePath();c.fill();c.stroke();
 }
 function drawItem(c,it){
   c.lineJoin='round';c.lineCap='round';c.strokeStyle=INK;c.lineWidth=3;const bob=Math.sin(time*4+it.ph)*4;c.translate(0,bob);
-  if(it.t==='paper'){   // 對摺的報紙：報頭「日報」、一條粗線、幾行字和一張照片
-    c.scale(.85,.85);c.rotate(-.1+Math.sin(time*3+it.ph)*.07);c.fillStyle='#cfc7b2';c.fillRect(-23,-16,54,42);c.strokeRect(-23,-16,54,42);c.fillStyle='#f4efe2';c.fillRect(-28,-21,54,42);c.strokeRect(-28,-21,54,42);
-    c.fillStyle=INK;c.font='900 15px '+FONT;c.textAlign='center';c.textBaseline='middle';c.fillText('日報',-1,-11.5);c.textBaseline='alphabetic';c.textAlign='left';c.fillRect(-24,-3.5,46,2.6);
-    c.fillStyle='#8a8f9c';c.fillRect(2,2.5,20,14);c.fillStyle='rgba(43,42,58,.55)';for(let i=0;i<4;i++)c.fillRect(-24,3+i*4,22,1.8);}
+  if(it.t==='coin'){   // 十元硬幣，邊轉邊飄
+    c.scale(.3+.7*Math.abs(Math.cos(time*3.2+it.ph*.7)),1);c.fillStyle='#ffcf4a';c.beginPath();c.arc(0,0,17,0,TAU);c.fill();c.stroke();c.fillStyle='#e3a62c';c.beginPath();c.arc(0,0,11.5,0,TAU);c.fill();
+    c.fillStyle=PAPER;c.font='700 13px Fredoka,sans-serif';c.textAlign='center';c.textBaseline='middle';c.fillText('10',0,.5);c.textBaseline='alphabetic';c.textAlign='left';}
   else{const dark=it.t==='dark';c.fillStyle=dark?INK:LAMP;c.beginPath();c.arc(0,0,30,0,TAU);c.fill();c.stroke();c.strokeStyle=dark?VOLT:PAPER;c.lineWidth=2.4;c.setLineDash([7,6]);c.lineDashOffset=-time*18;c.beginPath();c.arc(0,0,37,0,TAU);c.stroke();c.setLineDash([]);c.strokeStyle=INK;c.lineWidth=3;
     if(dark){c.fillStyle='#55596e';c.beginPath();c.moveTo(5,-19);c.lineTo(-11,3);c.lineTo(-1,3);c.lineTo(-5,19);c.lineTo(12,-5);c.lineTo(2,-5);c.closePath();c.fill();c.strokeStyle='#ee5b3a';c.lineWidth=5.5;c.beginPath();c.moveTo(-17,-17);c.lineTo(17,17);c.stroke();}   // 熄掉的閃電：停電
     else{c.fillStyle=FOIL;c.beginPath();c.moveTo(-17,-12);c.lineTo(12,-18);c.lineTo(18,10);c.lineTo(-11,17);c.closePath();c.fill();c.stroke();c.fillStyle=FOIL_L;c.beginPath();c.moveTo(-17,-12);c.lineTo(12,-18);c.lineTo(-2,0);c.closePath();c.fill();c.fillStyle=FOIL_D;c.beginPath();c.moveTo(18,10);c.lineTo(-11,17);c.lineTo(-2,0);c.closePath();c.fill();}}   // 摺好的太空毯
@@ -539,9 +606,8 @@ function bubble(c,text,x,y,al,up){
   c.globalAlpha=al;c.fillStyle=PAPER;c.strokeStyle=INK;c.lineWidth=2.5;c.lineJoin='round';rrect(c,bx,by,w,28,11);c.fill();c.stroke();c.beginPath();c.moveTo(tx-7,ty);c.lineTo(tx,ty+d*10);c.lineTo(tx+7,ty);c.fill();c.stroke();c.fillRect(tx-5.5,up?y+1:y-4,11,3);
   c.fillStyle=INK;c.textAlign='center';c.textBaseline='middle';c.fillText(text,bx+w/2,by+14.5);c.textBaseline='alphabetic';c.textAlign='left';c.globalAlpha=1;
 }
-// 越跑越快：前面加得快（500 公尺 17、1 公里 20、2 公里 23），2.5 公里後再慢慢加到 31
-const vAt=d=>V0+14*(1-Math.exp(-d/800))+clamp((d-2500)/700,0,7);
-const nightK=()=>{const ph=(dist/2400)%1;return smooth(.24,.44,ph)-smooth(.8,.98,ph);};
+// 天色：每天從白天跑到入夜，到報攤拿到報紙就是隔天早上
+const nightK=()=>mode==='title'?0:smooth(.5,.93,dayP());
 const obX=o=>o.amp?clamp(o.x+Math.sin(time*1.5+o.ph)*o.amp,-1,1):o.x;
 function render(){
   const W=cv.width,H=cv.height,k=dpr*scale;let sx=0,sy=0;if(shake>0&&!reduced){sx=(Math.random()-.5)*shake;sy=(Math.random()-.5)*shake;}
@@ -564,9 +630,11 @@ function render(){
   const dl=[],BSP=3.4,PSP=13;
   for(let i=Math.ceil((dist+Z_NEAR)/BSP);i*BSP-dist<64;i++){dl.push({z:i*BSP-dist+.01,k:0,i,sd:-1});dl.push({z:i*BSP-dist,k:0,i,sd:1});}
   for(let i=Math.ceil((dist+Z_NEAR-5)/PSP);i*PSP+5-dist<64;i++){dl.push({z:i*PSP+5-dist,k:1,i,sd:-1});dl.push({z:i*PSP+5-dist,k:1,i,sd:1});}
-  for(const o of obs){const z=o.wz-dist;if(z>Z_NEAR&&z<SPAWN_Z+4)dl.push({z,k:2,o});}
+  for(const o of obs){const z=o.wz-dist;if(z>Z_NEAR&&z<(o.ve?140:SPAWN_Z+4))dl.push({z,k:2,o});}
+  for(const q of[goal,prevGoal]){const z=q-dist;if(z>Z_NEAR&&z<90)dl.push({z:z+.03,k:5});}
   for(const it of items){const z=it.wz-dist;if(!it.got&&z>Z_NEAR&&z<SPAWN_Z+4)dl.push({z:z+.02,k:3,it});}
   const front=mode!=='play';dl.push({z:mode==='title'?5.5:front?-9:0,k:4});
+  const ck=smooth(.02,.3,chase),cside=chaseX<0?-1:1;if(mode==='play'&&ck>0)dl.push({z:-1.3,k:6});
   dl.sort((a,b)=>b.z-a.z);
   for(const d of dl){const s=S(d.k===4&&d.z<0?0:d.z),gx=CX,gy=HOR+(GY-HOR)*s;
     if(d.k===0){const sp=BLD[Math.floor(hash(d.i*2+(d.sd>0?1:0),7)*BLD.length)],x=gx+d.sd*3.92*U*s;if(x-1.7*U*s>R||x+1.7*U*s<L)continue;g.save();g.translate(x,gy);g.scale(s*d.sd,s);g.drawImage(sp,-170,-640,340,640);g.restore();}
@@ -581,10 +649,15 @@ function render(){
       if(!dead)for(const q of(o.w===3?[-1,0,1]:[0]))glows.push([x+q*U*s,gy-OB[o.t].gy*U*s,95*s,'rgba(53,200,245,1)',.16+.2*nk+.05*Math.sin(time*9+o.ph)]);}
     else if(d.k===3){const it=d.it;g.save();g.translate(gx+it.x*U*s,gy);g.scale(s,s);g.fillStyle='rgba(43,42,58,.16)';g.beginPath();g.ellipse(0,0,20,5,0,0,TAU);g.fill();g.translate(0,-it.y*U);drawItem(g,it);g.restore();
       if(it.t!=='paper')glows.push([gx+it.x*U*s,gy-it.y*U*s,80*s,it.t==='dark'?'rgba(53,200,245,1)':'rgba(255,196,96,1)',.35]);}
+    else if(d.k===5){g.save();g.translate(gx,gy);g.scale(s,s);drawStand(g);g.restore();}
+    else if(d.k===6){   // 追兵：從畫面下方的邊邊冒出來，手機朝著 Chu克
+      const x=gx+chaseX*U*s;g.save();g.translate(x,gy+(1-ck)*300);g.scale(s*-cside,s);drawBroBack(g);g.restore();glows.push([x-cside*51*s,gy+(1-ck)*300-198*s,60*s,'rgba(53,200,245,1)',.45*ck]);}
     else{   // Chu克
       const x=gx+px*U*s;g.save();g.translate(x,gy);g.scale(s,s);g.fillStyle='rgba(43,42,58,.24)';const sh=1-clamp(py,0,1)*.45;g.beginPath();g.ellipse(0,0,(front?58:44)*sh,(front?12:9.5)*sh,0,0,TAU);g.fill();
       if(mode==='title')drawManFront(g,0,-143,.6,false);
-      else if(front)drawManFront(g,0,-100,.42,mode==='dying');
+      else if(front){
+        if(cause==='caught'){g.save();g.translate(84,0);g.scale(-1,1);drawPerson(g,{kind:CAST[0],mood:0,reach:.55},0,-141,.5,1);g.strokeStyle=INK;g.lineWidth=3;g.fillStyle='#3a3d52';rrect(g,30,-128,13,22,3);g.fill();g.stroke();g.fillStyle='#8fdcf7';g.fillRect(32.5,-125,8,14);arcs(g,36,-118,26,3,5);g.restore();}   // 追上來把手機遞到他耳邊
+        drawManFront(g,0,-100,.42,mode==='dying');}
       else{g.translate(0,-py*U);g.scale(CHU,CHU);if(invuln>0&&Math.floor(time*14)%2)g.globalAlpha=.45;drawChu(g);}
       g.restore();glows.push([x+(front?34:53)*s,gy-(py*U+(front?62:48))*s,(dead?170:110)*s,'rgba(255,196,96,1)',dead?.6:.2+.3*nk]);}
   }
@@ -598,6 +671,11 @@ function render(){
   // 路人喊的話、Chu克的碎念
   for(const o of obs){if(o.sayT>0&&o.say){const z=o.wz-dist;if(z<Z_NEAR)continue;const s=S(z);bubble(g,o.say,CX+o.x*U*s,HOR+(GY-HOR)*s-1.95*U*s-8,clamp(o.sayT*4,0,1));}}
   if(manSayT>0&&mode==='play')bubble(g,manSay,CX+px*U,GY+26,clamp(manSayT*4,0,1),true);
+  if(chaseSayT>0&&mode==='play'&&ck>0){const s=S(-1.3);bubble(g,chaseSay,CX+chaseX*U*s-cside*40,HOR+(GY-HOR)*s+(1-ck)*300-232*s,clamp(chaseSayT*4,0,1)*ck);}
+  // 來車警告：車還遠的時候，在它那條線上閃一個驚嘆號
+  if(mode==='play')for(const o of obs){const z=o.wz-dist;if(!o.ve||o.done||z<7||z>95)continue;const s=S(6.5),x=CX+o.x*U*s,y=HOR+(GY-HOR)*s-30,b=Math.floor(time*7)%2;
+    g.lineJoin='round';g.lineWidth=3;g.strokeStyle=INK;g.fillStyle=b?'#ee5b3a':'#ffd35c';g.beginPath();g.moveTo(x,y-25);g.lineTo(x+25,y+18);g.lineTo(x-25,y+18);g.closePath();g.fill();g.stroke();
+    g.fillStyle=b?PAPER:INK;g.fillRect(x-2.6,y-9,5.2,15);g.fillRect(x-2.6,y+9,5.2,5);}
   if(darkT>0&&mode==='play'){const w=120,f=darkT/DARK_T;g.lineWidth=2.5;g.strokeStyle=INK;g.fillStyle=INK;rrect(g,CX-w/2,128,w,12,6);g.fill();g.stroke();g.fillStyle=VOLT;rrect(g,CX-w/2+2,130,Math.max(8,(w-4)*f),8,4);g.fill();
     g.font='900 14px '+FONT;g.textAlign='center';g.lineWidth=4.5;g.lineJoin='round';g.strokeText('停電中',CX,120);g.fillStyle=PAPER;g.fillText('停電中',CX,120);g.textAlign='left';}
   // 速度線：跑得越快，從遠方往畫面外飛的白線越多、越長
@@ -611,29 +689,33 @@ function render(){
   g.globalAlpha=1;g.textBaseline='alphabetic';g.textAlign='left';
   g.setTransform(1,0,0,1,0,0);
   if(flash>0){g.fillStyle=VOLT;g.globalAlpha=flash*.55;g.fillRect(0,0,W,H);g.globalAlpha=1;}
+  if(dayFlash>0){g.fillStyle=PAPER;g.globalAlpha=dayFlash*.85;g.fillRect(0,0,W,H);g.globalAlpha=1;}   // 過一天：畫面白一下，天色換回早上
 }
 
 /* ───────── HUD 與流程 ───────── */
-const el={hud:$('hud'),num:$('num'),papers:$('papers'),bolts:$('bolts'),hint:$('hint'),title:$('title'),over:$('over'),best:$('best'),mute:$('mute')};
-const RANKS=[[3000,'絕命電師'],[2000,'人體避雷針'],[1300,'太空毯飛毛腿'],[800,'整條街都繞過了'],[400,'巷口跑得掉'],[150,'出門拿個報紙'],[0,'剛踏出家門']];
-let lastHint='',lastNum=-1,lastPap=-1,paused=false;
+const el={hud:$('hud'),num:$('num'),coins:$('coins'),to:$('to'),fill:$('progFill'),bolts:$('bolts'),hint:$('hint'),title:$('title'),over:$('over'),best:$('best'),mute:$('mute')};
+const RANKS=[[15,'絕命電師'],[11,'人體避雷針'],[8,'太空毯飛毛腿'],[6,'整條街都繞過了'],[4,'巷口跑得掉'],[2,'出門買個報紙'],[1,'剛踏出家門']];
+let lastHint='',lastNum=-1,lastCoin=-1,lastTo=-1,paused=false;
 function setHint(t){if(t!==lastHint){lastHint=t;el.hint.textContent=t;}}
 function drawBolts(){el.bolts.innerHTML='';for(let i=0;i<PAIN_MAX;i++)el.bolts.insertAdjacentHTML('beforeend',`<svg viewBox="0 0 22 20" class="${i<PAIN_MAX-pain?'on':''}" aria-hidden="true"><path d="M11 18.2C4.6 13.6 1.6 10.3 1.6 6.6a4.7 4.7 0 0 1 9.4-1.3 4.7 4.7 0 0 1 9.4 1.3c0 3.7-3 7-9.400 11.600z"/></svg>`);}
 function muteIcon(){el.mute.innerHTML=Snd.on
   ?'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9.5v5h3.5L12 18.5v-13L7.5 9.5z" fill="currentColor"/><path d="M15.5 9a4.2 4.2 0 0 1 0 6M18 6.5a8 8 0 0 1 0 11"/></svg>'
   :'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9.5v5h3.5L12 18.5v-13L7.5 9.5z" fill="currentColor"/><path d="M16 9.5l5 5M21 9.5l-5 5"/></svg>';
   el.mute.setAttribute('aria-pressed',String(!Snd.on));}
-function showBest(){el.best.textContent=best>0?`最佳紀錄　${best} 公尺`:'';}
+function showBest(){el.best.textContent=bestDay>0?`最佳紀錄　第 ${bestDay} 天`:'';}
 function pop(x,y,text,col,big){pops.push({x,y,text,col,life:big?1:.75,dur:big?1:.75,big});}
 function say(t,d){manSay=t;manSayT=d||1.5;}
+function tip(t,d){tipTxt=t;tipT=d;}
 function burst(x,y,n,col,v){for(let i=0;i<n;i++)sparks.push({x:x+rnd(-12,12),y:y+rnd(-12,12),vx:rnd(-v,v),vy:rnd(-v*1.3,v*.3),r:rnd(1.8,3.6),col,life:rnd(.3,.65)});}
 const manXY=()=>[CX+px*U,GY-py*U-66];
 
 function start(){
   Snd.init();Snd.blip(420,640,.14,'triangle',.1);paused=false;$('pause').hidden=true;
-  dist=0;speed=V0;lane=0;px=0;py=0;vy=0;slide=0;wantSlide=false;jumpBuf=0;pain=0;invuln=0;shield=false;darkT=0;slow=0;papers=0;pStreak=0;nearT=0;lastMile=0;lastHit='';manSayT=0;
-  obs.length=items.length=sparks.length=pops.length=0;shake=flash=0;rowN=0;lastWide=-9;tier=0;stepPh=0;nextWz=34;nextPow=260;tutor=runs<2;runs++;store.set('ds.runs',String(runs));
-  mode='play';lastNum=lastPap=-1;el.title.hidden=true;el.over.hidden=true;el.hud.hidden=false;drawBolts();say('報紙…我只是去拿報紙。',2);
+  dist=0;speed=V0;lane=0;px=0;py=0;vy=0;slide=0;wantSlide=false;jumpBuf=0;pain=0;invuln=0;shield=false;darkT=0;slow=0;coins=0;pStreak=0;nearT=0;lastHit='';cause='';manSayT=0;
+  day=1;dayStart=0;goal=dayLen(1);prevGoal=-999;standCoin=-1;annT=0;tipT=0;dayFlash=0;warned=false;resWz.fill(0);lastTraf=-9;
+  chase=.24;chaseX=1.6;chaseSay='哥！你的電話！';chaseSayT=2;ringT=0;   // 一開場他就在後面，跑幾步就甩開
+  obs.length=items.length=sparks.length=pops.length=0;shake=flash=0;rowN=0;lastWide=-9;stepPh=0;nextWz=34;nextPow=260;tutor=runs<2;runs++;store.set('ds.runs',String(runs));
+  mode='play';lastNum=lastCoin=lastTo=-1;el.title.hidden=true;el.over.hidden=true;el.hud.hidden=false;drawBolts();say('我只是去買份報紙。',2);
 }
 function jump(){vy=JUMP_V;py=.001;slide=0;wantSlide=false;jumpBuf=0;Snd.blip(300,640,.15,'triangle',.08);}
 function doSlide(){slide=SLIDE_T;wantSlide=false;Snd.blip(300,120,.16,'sawtooth',.045);}
@@ -644,60 +726,81 @@ function act(d){
   else if(d==='U'){if(py<=0)jump();else{jumpBuf=.16;wantSlide=false;}}
   else if(d==='D'){if(py>0){vy=Math.min(vy,-10);wantSlide=true;jumpBuf=0;}else doSlide();}
 }
+// 被電到：少一顆心，後面的人也趁機追近。他還貼在後面時又被電到，就會被追上
 function hit(o){
   if(invuln>0||darkT>0)return;const[mx,my]=manXY();
   if(shield){shield=false;invuln=1;shake=8;pop(mx,my-70,'太空毯擋住了！',PAPER,true);say('還好多裹了一層。');Snd.blip(900,300,.2,'triangle',.1);burst(mx,my,16,FOIL_L,160);return;}
-  pain++;drawBolts();invuln=1.6;slow=.9;shake=16;flash=1;Snd.zap();lastHit=OB[o.t].n;if(o.t==='ped'){o.shock=1;o.say='對、對不起！';o.sayT=1.2;}
-  pop(mx,my-80,'有電！',VOLT,true);burst(mx,my,14,VOLT,200);say(pick(MAN_ZAP),1.2);
-  if(pain>=PAIN_MAX){mode='dying';dieT=0;}
+  invuln=1.6;slow=.9;shake=16;flash=1;Snd.zap();lastHit=OB[o.t].n;if(o.t==='ped'){o.shock=1;o.say='對、對不起！';o.sayT=1.2;}
+  burst(mx,my,14,VOLT,200);
+  if(chase>CHASE_RISK&&!(tutor&&dist<90)){cause='caught';lastHit+='，接著是弟弟遞過來的手機';pop(mx,my-80,'被追上了！',VOLT,true);mode='dying';dieT=0;return;}
+  pain++;drawBolts();pop(mx,my-80,'有電！',VOLT,true);say(pick(MAN_ZAP),1.2);
+  if(pain>=PAIN_MAX){cause='zap';mode='dying';dieT=0;return;}
+  chase=1;ringT=0;chaseSay=pick(['哥！你的電話！','哥！等我一下！','哥！是事務所打來的！']);chaseSayT=2;
+  if(!warned){warned=true;tip('他追上來了！現在再被電到就會被追上',3.5);}
 }
 function collect(it){
   it.got=true;const[mx,my]=manXY();
-  if(it.t==='paper'){papers++;pStreak=time-pLast<.5?pStreak+1:0;pLast=time;Snd.blip(700*Math.pow(2,Math.min(pStreak,12)/12),1100*Math.pow(2,Math.min(pStreak,12)/12),.06,'triangle',.06);
-    if(papers%PAPER_HEAL===0){if(pain>0){pain--;drawBolts();pop(mx,my-90,'看完報紙，冷靜下來了',LAMP,true);say('…呼。');Snd.blip(520,1040,.3,'sine',.08);}else pop(mx,my-90,`報紙 ${papers} 份！`,LAMP);}}
+  if(it.t==='coin'){coins++;pStreak=time-pLast<.5?pStreak+1:0;pLast=time;Snd.blip(700*Math.pow(2,Math.min(pStreak,12)/12),1100*Math.pow(2,Math.min(pStreak,12)/12),.06,'triangle',.06);}
   else if(it.t==='foil'){shield=true;pop(mx,my-90,'多裹一層太空毯',PAPER,true);say('這樣好多了。');burst(mx,my,12,FOIL_L,140);for(let i=0;i<3;i++)Snd.blip(600+i*200,900+i*200,.1,'triangle',.08,i*.07);}
   else{darkT=DARK_T;pop(mx,my-90,'全區停電！',VOLT,true);say('終於…安靜了。',2.2);Snd.blip(400,60,.5,'sawtooth',.09);}
 }
+// 跑到報攤：拿到今天的報紙，過一天。受傷的話花硬幣多買一份，冷靜下來補一顆心
+function dayClear(){
+  const[mx,my]=manXY();prevGoal=goal;day++;dayStart=goal;goal=dayStart+dayLen(day);dayFlash=1;annT=1.1;
+  pop(CX,150,'拿到今天的報紙！',LAMP,true);burst(mx,my,18,LAMP,190);for(let i=0;i<4;i++)Snd.blip(520*Math.pow(2,i/4),780*Math.pow(2,i/4),.12,'triangle',.08,i*.09);
+  if(pain>0&&coins>=HEAL_COST){coins-=HEAL_COST;pain--;drawBolts();pop(mx,my-96,`多買一份冷靜一下　−${HEAL_COST}`,PAPER);}
+  else if(pain>0)pop(mx,my-96,`硬幣不夠 ${HEAL_COST}，沒辦法多買一份`,PAPER);
+  say(pick(MAN_NEWS),2);
+}
 function gameOver(){
-  mode='over';paused=false;$('pause').hidden=true;const n=Math.floor(dist);if(n>best){best=n;store.set('ds.dist',String(n));}
-  $('ovN').textContent=n;$('ovBest').textContent=best+' 公尺';$('ovPaper').textContent=papers+' 份';$('ovRank').textContent=RANKS.find(r=>n>=r[0])[1];$('ovMiss').textContent=lastHit||'—';
+  mode='over';paused=false;$('pause').hidden=true;const n=Math.floor(dist);if(n>best){best=n;store.set('ds.dist',String(n));}if(day>bestDay){bestDay=day;store.set('ds.day',String(day));}
+  $('ovWhy').textContent=cause==='caught'?'被追上了。':'Chu克發作了。';$('ovN').textContent=day;$('ovBest').textContent=`第 ${bestDay} 天`;$('ovDist').textContent=n+' 公尺';$('ovCoin').textContent=coins+' 枚';
+  $('ovRank').textContent=RANKS.find(r=>day>=r[0])[1];$('ovMiss').textContent=lastHit||'—';
   $('copied').textContent='';el.hud.hidden=true;el.over.hidden=false;showBest();
 }
 function tick(dt){
-  time+=dt;shake=Math.max(0,shake-dt*26);flash=Math.max(0,flash-dt*3.5);
+  time+=dt;shake=Math.max(0,shake-dt*26);flash=Math.max(0,flash-dt*3.5);dayFlash=Math.max(0,dayFlash-dt*2.4);
   for(let i=sparks.length-1;i>=0;i--){const s=sparks[i];s.x+=s.vx*dt;s.y+=s.vy*dt;s.vy+=300*dt;if((s.life-=dt)<=0)sparks.splice(i,1);}
   for(let i=pops.length-1;i>=0;i--)if((pops[i].life-=dt)<=0)pops.splice(i,1);
   if(mode==='dying'){dieT+=dt;if(Math.random()<.5){const[mx,my]=manXY();burst(mx,my,1,VOLT,180);}if(dieT>1.3)gameOver();return;}
   if(mode!=='play')return;
-  const vT=vAt(dist);slow=Math.max(0,slow-dt);speed=vT*(1-.45*clamp(slow/.9,0,1));dist+=speed*dt;
+  const vT=vNow();slow=Math.max(0,slow-dt);speed=vT*(1-.45*clamp(slow/.9,0,1));dist+=speed*dt;
   px+=clamp(lane-px,-LANE_V*dt,LANE_V*dt);
-  if(jumpBuf>0)jumpBuf-=dt;if(invuln>0)invuln-=dt;if(manSayT>0)manSayT-=dt;if(nearT>0)nearT-=dt;if(slide>0)slide-=dt;
+  if(jumpBuf>0)jumpBuf-=dt;if(invuln>0)invuln-=dt;if(manSayT>0)manSayT-=dt;if(chaseSayT>0)chaseSayT-=dt;if(nearT>0)nearT-=dt;if(slide>0)slide-=dt;if(tipT>0)tipT-=dt;
+  if(annT>0&&(annT-=dt)<=0){pop(CX,150,`第 ${day} 天`,PAPER,true);if(NEW[day])tip(NEW[day],4.5);}
+  // 追兵：慢慢被甩開；還貼在後面的時候手機響個不停
+  if(chase>0){const was=chase;chase=Math.max(0,chase-dt/5.5);if(chase>CHASE_RISK){if((ringT-=dt)<=0){ringT=.55;Snd.blip(1500,1500,.05,'square',.03);Snd.blip(1800,1800,.05,'square',.03,.08);}}
+    else if(was>CHASE_RISK){const[mx,my]=manXY();pop(mx,my-70,'甩開了！',PAPER);}}
+  chaseX+=clamp((px>.4?-1.6:px<-.4?1.6:chaseX<0?-1.6:1.6)-chaseX,-6*dt,6*dt);
   if(darkT>0){darkT-=dt;if(darkT<=0){darkT=0;invuln=Math.max(invuln,.7);pop(CX,150,'電來了！',VOLT);Snd.blip(80,500,.3,'sawtooth',.07);}}
   if(py>0){vy-=GRAV*dt;py+=vy*dt;if(py<=0){py=0;vy=0;if(wantSlide)doSlide();else if(jumpBuf>0)jump();}}
-  // 排新的障礙
-  while(nextWz<dist+SPAWN_Z){const gap=vT*lerp(1.08,.56,smooth(0,3200,dist));spawnRow(nextWz,gap,vT);nextWz+=gap;}
-  // 碰撞：東西經過腳邊那一小段距離時，看有沒有做對動作
+  if(dist>=goal)dayClear();
+  // 排新的障礙；報攤前後留一段空路，只放硬幣
+  while(nextWz<dist+SPAWN_Z){
+    if(nextWz>goal-16&&nextWz<goal+26){if(standCoin!==goal){standCoin=goal;for(let d=-13;d<=22;d+=1.55)items.push({t:'coin',x:0,wz:goal+d,y:.5,got:false,ph:d});}nextWz=goal+26;continue;}
+    const gap=vT*lerp(1.08,.56,diff());spawnRow(nextWz,gap,vT);nextWz+=gap;}
+  // 碰撞：東西經過腳邊那一小段距離時，看有沒有做對動作。車會自己往這邊開，所以用「這一格掃過的範圍」來判斷
   const low=slide>0&&py<=0;
-  for(let i=obs.length-1;i>=0;i--){const o=obs[i],z=o.wz-dist,half=o.kind==='low'?.5:.36;if(o.sayT>0)o.sayT-=dt;
+  for(let i=obs.length-1;i>=0;i--){const o=obs[i];if(o.ve)o.wz-=o.ve*dt;const z=o.wz-dist,front=o.kind==='low'?.5:.36,back=-(o.len||front),was=o.pz===undefined?z:o.pz;o.pz=z;if(o.sayT>0)o.sayT-=dt;
     if(o.t==='ped'&&!o.said&&z<17){o.said=true;if(Math.random()<.7){o.say=pick(YELL[o.cast.id]||['欸！']);o.sayT=1.5;}}
-    if(z<Z_NEAR-.4){obs.splice(i,1);continue;}if(o.done)continue;
+    if(o.ve&&!o.honk&&z<34){o.honk=true;Snd.blip(440,415,.22,'square',.05);Snd.blip(554,523,.22,'square',.04);}
+    if(z<Z_NEAR-.4-(o.len||0)){obs.splice(i,1);continue;}if(o.done)continue;
     const inLane=o.w===3||Math.abs(px-obX(o))<.6;
-    if(z<half&&z>-half){if(inLane&&!(o.kind==='low'?py>.3:o.kind==='high'?low:false)){o.done=true;hit(o);}}
-    else if(z<=-half){o.done=true;
+    if(z<front&&was>back){if(inLane&&!(o.kind==='low'?py>.3:o.kind==='high'?low:false)){o.done=true;hit(o);}}
+    else if(z<=back){o.done=true;
       if(invuln<=0&&darkT<=0&&nearT<=0&&((inLane&&o.kind!=='full')||(o.kind==='full'&&time-lastLaneT<.28&&Math.abs(px-o.x)<1.3))){nearT=1.6;const[mx,my]=manXY();pop(mx,my-70,pick(['好險！','過了！','漂亮！']),PAPER);if(Math.random()<.3)say(pick(MAN_NEAR),1.1);}}
   }
   const mid=py+(low?.3:.7);
   for(let i=items.length-1;i>=0;i--){const it=items[i],z=it.wz-dist;if(z<Z_NEAR-.4){items.splice(i,1);continue;}
-    if(!it.got&&z<.6&&z>-.6&&Math.abs(px-it.x)<.6&&Math.abs(mid-it.y)<(it.t==='paper'?.8:1.2))collect(it);}
-  // 腳步聲跟著速度變快；每快一級提示一次
+    if(!it.got&&z<.6&&z>-.6&&Math.abs(px-it.x)<.6&&Math.abs(mid-it.y)<(it.t==='coin'?.8:1.2))collect(it);}
+  // 腳步聲跟著速度變快
   const ph=Math.floor(dist*1.9/Math.PI);if(ph!==stepPh){stepPh=ph;if(py<=0&&slide<=0)Snd.blip(150,90,.035,'square',.022);}
-  const tr=Math.floor((vT-V0)/3);if(tr>tier){tier=tr;pop(CX,205,'越跑越快！',PAPER);Snd.blip(500,900,.18,'sawtooth',.05);}
-  const mile=Math.floor(dist/500);if(mile>lastMile){lastMile=mile;pop(CX,170,`${mile*500} 公尺！`,LAMP,true);say(pick(MAN_MILE),1.8);Snd.blip(660,990,.12,'triangle',.08);Snd.blip(990,1320,.14,'triangle',.06,.1);}
 }
 function hud(){
   if(mode!=='play'&&mode!=='dying')return;
-  const n=Math.floor(dist);if(n!==lastNum){lastNum=n;el.num.textContent=n;}if(papers!==lastPap){lastPap=papers;el.papers.textContent=papers;}
-  let tip='';for(const o of obs){const z=o.wz-dist;if(o.tip&&!o.done&&z<30&&z>0){tip=o.tip;break;}}setHint(tip);
+  if(day!==lastNum){lastNum=day;el.num.textContent=day;}if(coins!==lastCoin){lastCoin=coins;el.coins.textContent=coins;}
+  const to=Math.max(0,Math.ceil(goal-dist));if(to!==lastTo){lastTo=to;el.to.textContent=`報攤還有 ${to} 公尺`;el.fill.style.transform=`scaleX(${dayP().toFixed(3)})`;}
+  let t='';for(const o of obs){const z=o.wz-dist;if(o.tip&&!o.done&&z<30&&z>0){t=o.tip;break;}}setHint(t||(tipT>0?tipTxt:''));
 }
 const H=1/60;let acc=0,last=0,hold=false;
 function setPaused(p){if(p&&(paused||mode!=='play'))return;if(!p&&!paused)return;paused=p;$('pause').hidden=!p;last=0;acc=0;swipe=null;if(Snd.ctx){try{p?Snd.ctx.suspend():Snd.ctx.resume();}catch(e){}}if(p)$('resume').focus({preventScroll:true});}
@@ -734,7 +837,7 @@ $('resume').addEventListener('click',()=>setPaused(false));
 el.mute.addEventListener('click',()=>{Snd.init();Snd.setOn(!Snd.on);muteIcon();});
 $('share').addEventListener('click',async()=>{
   const link=document.querySelector('link[rel=canonical]'),out=$('copied');
-  const text=`我在《絕命電師》陪Chu克披著太空毯跑了 ${Math.floor(dist)} 公尺，封號「${$('ovRank').textContent}」。你能跑多遠？`+(link?' '+link.href:'');
+  const text=`我在《絕命電師》陪Chu克披著太空毯上街買報紙，撐到第 ${day} 天（共 ${Math.floor(dist)} 公尺），封號「${$('ovRank').textContent}」。你能撐幾天？`+(link?' '+link.href:'');
   try{await navigator.clipboard.writeText(text);out.textContent='已複製，貼到脆上炫耀吧';}
   catch(e){out.textContent=text;const r=document.createRange();r.selectNodeContents(out);const s=getSelection();s.removeAllRanges();s.addRange(r);}
 });
@@ -742,8 +845,11 @@ window.addEventListener('resize',resize);
 if(window.ResizeObserver)new ResizeObserver(resize).observe(gameEl);
 
 muteIcon();showBest();drawBolts();resize();requestAnimationFrame(frame);
-window.__ds={OB,obs,items,act,start,tick,obX,addOb,PEDS,set hold(v){hold=v;},set lane(v){lane=px=v;},get mode(){return mode},get dist(){return dist},set dist(v){dist=v;nextWz=Math.max(nextWz,v+30);},get speed(){return speed},vAt,get pain(){return pain},set pain(v){pain=v;drawBolts();},get paused(){return paused},
-  get lane(){return lane},get px(){return px},get runs(){return runs},set runs(v){runs=v;},get lastHit(){return lastHit},get py(){return py},get slide(){return slide},get papers(){return papers},get shield(){return shield},set shield(v){shield=v;},get darkT(){return darkT},set darkT(v){darkT=v;},
+window.__ds={OB,obs,items,act,start,tick,obX,addOb,PEDS,dayLen,vNow,set hold(v){hold=v;},set lane(v){lane=px=v;},get lane(){return lane},get mode(){return mode},get dist(){return dist},set dist(v){dist=v;nextWz=Math.max(nextWz,v+30);},
+  get speed(){return speed},get pain(){return pain},set pain(v){pain=v;drawBolts();},get paused(){return paused},get px(){return px},get runs(){return runs},set runs(v){runs=v;},get lastHit(){return lastHit},get cause(){return cause},
+  get py(){return py},get slide(){return slide},get coins(){return coins},set coins(v){coins=v;},get shield(){return shield},set shield(v){shield=v;},get darkT(){return darkT},set darkT(v){darkT=v;},
+  get day(){return day},get goal(){return goal},get chase(){return chase},set chase(v){chase=v;},
+  setDay(d){day=d;dayStart=dist;goal=dist+dayLen(d);nextWz=Math.max(nextWz,dist+30);},
   xy(wx,wy){const b=gameEl.getBoundingClientRect();return{x:b.left+ox+wx*scale,y:b.top+oy+wy*scale};}};
 })();
 </script>
