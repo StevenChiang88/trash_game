@@ -1,0 +1,541 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover, user-scalable=no">
+<meta name="description" content="夸克對電過敏。客人進門前，把他們身上帶電的東西全部丟進信箱，漏掉一樣他就會發作。">
+<meta name="theme-color" content="#f3d9a4">
+<link rel="canonical" href="https://stevenchiang88.github.io/trash_game/dianshi/">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="絕命電師">
+<meta property="og:title" content="絕命電師｜客人進門前，先把電留在信箱">
+<meta property="og:description" content="夸克對電過敏。客人進門前，把他們身上帶電的東西全部丟進信箱，漏掉一樣他就會發作。">
+<meta property="og:url" content="https://stevenchiang88.github.io/trash_game/dianshi/">
+<meta property="og:image" content="https://stevenchiang88.github.io/trash_game/dianshi/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="門口站著一位客人，身邊飄著手機、手錶、鑰匙等物品，旁邊有一個信箱">
+<meta property="og:locale" content="zh_TW">
+<meta name="twitter:card" content="summary_large_image">
+<style>
+  /* 與發佈環境相同的最小底座：上下避開瀏海與手勢列 */
+  html{box-sizing:border-box;padding:env(safe-area-inset-top,0px) 0 env(safe-area-inset-bottom,0px)}
+  body{margin:0}
+  [hidden]{display:none!important}
+</style>
+<!--PAGE-->
+<title>絕命電師</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chiron+GoRound+TC:wght@500;900&family=Fredoka:wght@600;700&display=swap">
+<style>
+/* 版面：門口的一格畫面。夸克裹著太空毯站在左下角的門邊，客人站中間，要檢查的東西是他身邊的一顆顆圓鈕，信箱在右下角 */
+:root{
+  --ink:#2b2a3a;        /* 描邊與文字 */
+  --paper:#fff8ea;      /* 圓鈕、卡片的紙白 */
+  --lamp:#ffb84a;       /* 煤油燈的暖黃：主色 */
+  --lamp-deep:#c97a1c;
+  --volt:#35c8f5;       /* 電的顏色：只用在「有電」上 */
+  --alert:#ee5b3a;      /* 點錯、發作 */
+  --ok:#2f9a7c;         /* 安全過關 */
+  --dusk:#f3d9a4;       /* 傍晚的天色 */
+  --backdrop:#1c1b29;   /* 電腦版：手機畫面外的底色 */
+  --display:"Fredoka","Chiron GoRound TC","PingFang TC","Microsoft JhengHei",sans-serif;
+  --body:"Chiron GoRound TC","PingFang TC","Noto Sans TC","Microsoft JhengHei",sans-serif;
+  --sticker:-2px -2px 0 var(--ink),2px -2px 0 var(--ink),-2px 2px 0 var(--ink),2px 2px 0 var(--ink),0 -2.5px 0 var(--ink),0 2.5px 0 var(--ink),-2.5px 0 0 var(--ink),2.5px 0 0 var(--ink);
+}
+html,body{height:100%;touch-action:manipulation}
+button{touch-action:manipulation}
+body{background:var(--dusk);color:var(--ink);font-family:var(--body);font-weight:500;overflow:hidden;overscroll-behavior:none;display:grid;place-items:center}
+#game{position:relative;height:100%;aspect-ratio:9/16;max-width:100%;overflow:hidden;touch-action:none;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent}
+#c{position:absolute;inset:0;width:100%;height:100%;display:block}
+
+.hud{position:absolute;inset:0;pointer-events:none;display:flex;flex-direction:column;gap:8px;padding-block:12px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.top{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.count{display:flex;align-items:baseline;gap:5px;font-family:var(--display);color:var(--paper);text-shadow:var(--sticker);line-height:1}
+.count small{font-family:var(--body);font-weight:900;font-size:15px}
+.count b{font-size:44px;font-weight:700;font-variant-numeric:tabular-nums}
+.side{display:flex;align-items:center;gap:8px}
+.bolts{display:flex;gap:2px;padding:5px 9px;border:2.5px solid var(--ink);border-radius:999px;background:var(--paper)}
+.bolts svg{width:20px;height:24px;display:block;fill:var(--paper);stroke:var(--ink);stroke-width:2.2;stroke-linejoin:round}
+.bolts svg.hit{fill:var(--volt)}
+.icon-btn{pointer-events:auto;width:40px;height:40px;display:grid;place-items:center;border:2.5px solid var(--ink);border-radius:50%;background:var(--paper);color:var(--ink);cursor:pointer;padding:0}
+.icon-btn svg{width:20px;height:20px}
+.icon-btn:focus-visible,.btn:focus-visible{outline:3px solid var(--volt);outline-offset:3px}
+.timer{height:16px;border:2.5px solid var(--ink);border-radius:999px;background:var(--paper);overflow:hidden}
+.timer i{display:block;height:100%;width:100%;background:var(--lamp);transform-origin:left center}
+.timer.low i{background:var(--alert)}
+.gap{flex:1}
+.hint{align-self:center;text-align:center;font-weight:900;font-size:17px;color:var(--paper);text-shadow:var(--sticker);min-height:1.5em;text-wrap:balance}
+.btn{pointer-events:auto;font:inherit;font-weight:900;font-size:20px;color:var(--ink);background:var(--lamp);border:3px solid var(--ink);border-radius:16px;padding:12px 30px;box-shadow:0 5px 0 var(--ink);cursor:pointer;transition:transform .06s,box-shadow .06s}
+.btn:active{transform:translateY(4px);box-shadow:0 1px 0 var(--ink)}
+.btn.ghost{background:var(--paper);font-size:16px;padding:10px 20px}
+#enter{align-self:center;min-width:132px}
+
+.screen{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;gap:14px;padding-block:28px 24px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));text-align:center}
+#title{background:linear-gradient(rgba(28,27,41,.5),rgba(28,27,41,.2) 45%,rgba(28,27,41,.55))}
+.logo{margin:5vh 0 0;font-weight:900;font-size:clamp(50px,16vw,80px);line-height:1;letter-spacing:.02em;color:var(--paper);text-shadow:var(--sticker),0 7px 0 var(--ink);transform:rotate(-3deg)}
+.logo span{display:inline-block;color:var(--volt)}
+.tag{margin:6px 0 0;font-weight:900;font-size:17px;color:var(--paper);text-shadow:var(--sticker);text-wrap:balance}
+.how{display:flex;flex-wrap:wrap;justify-content:center;gap:8px;margin:0;padding:0;list-style:none;font-size:14px}
+.how li{padding:6px 12px;border:2.5px solid var(--ink);border-radius:999px;background:var(--paper);white-space:nowrap}
+.how b{font-weight:900;color:var(--lamp-deep)}
+.best{font-weight:900;font-size:14px;color:var(--paper);text-shadow:var(--sticker);min-height:1.4em}
+.home{pointer-events:auto;font-weight:900;font-size:14px;color:var(--paper);text-shadow:var(--sticker);text-underline-offset:4px}
+
+#over,#pause{justify-content:center;background:rgba(28,27,41,.5)}
+.card{width:min(330px,100%);display:flex;flex-direction:column;gap:14px;padding:18px;border:3px solid var(--ink);border-radius:22px;background:var(--paper);box-shadow:0 7px 0 var(--ink);text-align:left;animation:pop .35s cubic-bezier(.3,1.5,.5,1)}
+@keyframes pop{from{transform:translateY(30px) scale(.94);opacity:0}}
+.verdict{margin:0;font-weight:900;font-size:30px;line-height:1.25}
+.verdict .n{font-family:var(--display);font-weight:700;color:var(--alert)}
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:10px 12px;margin:0}
+.stats dt{font-size:12px;opacity:.65}
+.stats dd{margin:0;font-weight:900;font-size:17px;font-variant-numeric:tabular-nums}
+.stats .wide{grid-column:1/-1}
+.acts{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.copied{font-size:13px;font-weight:900;color:var(--ok);min-height:1.3em;user-select:text;-webkit-user-select:text}
+.note{margin:0;font-size:14px;opacity:.75}
+@media (min-aspect-ratio:10/16){body{background:var(--backdrop)}#game{height:min(100% - 32px,900px);border-radius:26px;box-shadow:0 0 0 3px var(--ink),0 18px 50px rgba(0,0,0,.45)}}
+@media (prefers-reduced-motion:reduce){.card{animation:none}}
+</style>
+</head>
+<body>
+<div id="game">
+  <canvas id="c" aria-label="門口的客人和他身上的東西"></canvas>
+
+  <div class="hud" id="hud" hidden>
+    <div class="top">
+      <div class="count"><small>第</small><b id="num">1</b><small>位客人</small></div>
+      <div class="side">
+        <div class="bolts" id="bolts" aria-label="夸克還撐得住幾次"></div>
+        <button class="icon-btn" id="pauseBtn" type="button" aria-label="暫停"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="6" y="5" width="4.5" height="14" rx="1.6"/><rect x="13.5" y="5" width="4.5" height="14" rx="1.6"/></svg></button>
+        <button class="icon-btn" id="mute" type="button" aria-label="聲音開關"></button>
+      </div>
+    </div>
+    <div class="timer" id="timer"><i id="timerFill"></i></div>
+    <div class="gap"></div>
+    <div class="hint" id="hint"></div>
+    <button class="btn" id="enter" type="button">請進</button>
+  </div>
+
+  <div class="screen" id="title">
+    <h1 class="logo">絕命<span>電</span>師</h1>
+    <p class="tag">夸克對電過敏。客人進門前，把帶電的東西全部丟進信箱。</p>
+    <div class="gap"></div>
+    <ul class="how">
+      <li><b>點帶電的</b> 丟進信箱</li>
+      <li><b>沒電的</b> 別亂點</li>
+      <li><b>檢查完</b> 按「請進」</li>
+    </ul>
+    <button class="btn" id="start" type="button">開門</button>
+    <div class="best" id="best"></div>
+    <a class="home" href="../">其他遊戲</a>
+  </div>
+
+  <div class="screen" id="over" hidden>
+    <div class="card">
+      <p class="verdict">夸克發作了。<br>撐過 <span class="n" id="ovN">0</span> 位客人。</p>
+      <dl class="stats">
+        <div><dt>這次</dt><dd id="ovRun">0 位</dd></div>
+        <div><dt>最佳紀錄</dt><dd id="ovBest">0 位</dd></div>
+        <div class="wide"><dt>封號</dt><dd id="ovRank"></dd></div>
+        <div class="wide"><dt>最後漏掉的</dt><dd id="ovMiss"></dd></div>
+      </dl>
+      <div class="acts">
+        <button class="btn" id="again" type="button">再玩一次</button>
+        <button class="btn ghost" id="share" type="button">複製戰績</button>
+      </div>
+      <div class="copied" id="copied"></div>
+    </div>
+  </div>
+
+  <div class="screen" id="pause" hidden>
+    <div class="card">
+      <p class="verdict">暫停中</p>
+      <p class="note">離開畫面會自動暫停，按「繼續」再接著玩。</p>
+      <div class="acts"><button class="btn" id="resume" type="button">繼續</button></div>
+    </div>
+  </div>
+</div>
+
+<script>
+(() => {
+'use strict';
+const clamp=(x,a,b)=>x<a?a:x>b?b:x, lerp=(a,b,t)=>a+(b-a)*t, TAU=Math.PI*2;
+const rnd=(a,b)=>a+Math.random()*(b-a), pick=a=>a[(Math.random()*a.length)|0];
+const shuffle=a=>{for(let i=a.length-1;i>0;i--){const j=(Math.random()*(i+1))|0;[a[i],a[j]]=[a[j],a[i]];}return a;};
+const store={get(k){try{return localStorage.getItem(k)}catch(e){return null}},set(k,v){try{localStorage.setItem(k,v)}catch(e){}}};
+const $=id=>document.getElementById(id);
+const INK='#2b2a3a',PAPER='#fff8ea',VOLT='#35c8f5';
+
+/* ───────── 物品：e=1 是帶電的。每個 d(c) 都畫在以 (0,0) 為中心、大約 ±18 的範圍裡 ───────── */
+const P=(c,f)=>{c.beginPath();f();};
+const IT={
+  phone:{n:'手機',e:1,d(c){c.fillStyle='#3a3d52';rrect(c,-9,-16,18,32,4);c.fill();c.stroke();c.fillStyle='#8fdcf7';rrect(c,-6.5,-12,13,21,1.5);c.fill();c.fillStyle=PAPER;c.beginPath();c.arc(0,12.5,1.6,0,TAU);c.fill();}},
+  swatch:{n:'智慧手錶',e:1,d(c){c.fillStyle='#55596e';c.fillRect(-5,-18,10,36);c.strokeRect(-5,-18,10,36);c.fillStyle='#3a3d52';rrect(c,-10,-10,20,20,5);c.fill();c.stroke();c.fillStyle='#8fdcf7';rrect(c,-6.5,-6.5,13,13,2.5);c.fill();c.fillStyle=INK;c.font='700 8px Fredoka,sans-serif';c.textAlign='center';c.fillText('12:0',0,3);}},
+  fob:{n:'遙控鑰匙',e:1,d(c){c.fillStyle='#c9ced6';c.beginPath();c.moveTo(-2.5,2);c.lineTo(-2.5,17);c.lineTo(0,19);c.lineTo(2.5,17);c.lineTo(2.5,13);c.lineTo(5,12);c.lineTo(2.5,10);c.lineTo(2.5,2);c.closePath();c.fill();c.stroke();c.fillStyle='#3a3d52';rrect(c,-9,-18,18,21,5);c.fill();c.stroke();c.fillStyle='#ee5b3a';c.beginPath();c.arc(0,-11,2.6,0,TAU);c.fill();c.fillStyle='#8fdcf7';c.beginPath();c.arc(0,-3.5,2.6,0,TAU);c.fill();}},
+  buds:{n:'藍牙耳機',e:1,d(c){for(const s of[-1,1]){c.save();c.translate(s*7,0);c.rotate(s*.2);c.fillStyle=PAPER;rrect(c,-2.6,-2,5.2,16,2.6);c.fill();c.stroke();c.beginPath();c.arc(0,-6,6.5,0,TAU);c.fill();c.stroke();c.fillStyle='#8fdcf7';c.beginPath();c.arc(s*-1.5,-6,1.6,0,TAU);c.fill();c.restore();}}},
+  laptop:{n:'筆電',e:1,d(c){c.fillStyle='#55596e';rrect(c,-14,-14,28,19,2.5);c.fill();c.stroke();c.fillStyle='#8fdcf7';c.fillRect(-11,-11,22,13);c.fillStyle='#c9ced6';c.beginPath();c.moveTo(-17,5);c.lineTo(17,5);c.lineTo(19,12);c.lineTo(-19,12);c.closePath();c.fill();c.stroke();c.fillStyle=INK;c.fillRect(-4,7.5,8,1.6);}},
+  pbank:{n:'行動電源',e:1,d(c){c.fillStyle=PAPER;rrect(c,-10,-14,20,28,4);c.fill();c.stroke();c.fillStyle='#8fdcf7';for(let i=0;i<4;i++){c.beginPath();c.arc(-6+i*4,-8,1.5,0,TAU);c.fill();}c.strokeStyle=INK;c.lineWidth=2.2;c.beginPath();c.moveTo(0,14);c.quadraticCurveTo(0,20,7,18);c.quadraticCurveTo(14,16,13,9);c.stroke();c.fillStyle='#55596e';c.fillRect(-3,10,6,4);}},
+  ereader:{n:'電子書',e:1,d(c){c.fillStyle='#55596e';rrect(c,-12,-16,24,32,3.5);c.fill();c.stroke();c.fillStyle='#e9eef0';c.fillRect(-9,-13,18,23);c.fillStyle='#7c8194';for(let i=0;i<5;i++)c.fillRect(-7,-10+i*4.2,i===4?9:14,1.5);c.fillStyle='#8fdcf7';c.beginPath();c.arc(0,13,1.4,0,TAU);c.fill();}},
+  torch:{n:'手電筒',e:1,d(c){c.save();c.rotate(-.5);c.fillStyle='#fff2a8';c.beginPath();c.moveTo(8,-6);c.lineTo(22,-13);c.lineTo(22,13);c.lineTo(8,6);c.closePath();c.fill();c.fillStyle='#ee5b3a';rrect(c,-16,-4.5,18,9,2.5);c.fill();c.stroke();c.fillStyle='#c9ced6';c.beginPath();c.moveTo(2,-4.5);c.lineTo(9,-8);c.lineTo(9,8);c.lineTo(2,4.5);c.closePath();c.fill();c.stroke();c.fillStyle=INK;c.fillRect(-9,-6.5,5,2.5);c.restore();}},
+  calc:{n:'計算機',e:1,d(c){c.fillStyle='#55596e';rrect(c,-11,-16,22,32,3.5);c.fill();c.stroke();c.fillStyle='#bfe6c9';c.fillRect(-8,-13,16,8);c.fillStyle=INK;c.font='700 7px Fredoka,sans-serif';c.textAlign='right';c.fillText('88.8',7,-6.5);for(let r=0;r<3;r++)for(let q=0;q<3;q++){c.fillStyle=r===2&&q===2?'#ee5b3a':PAPER;c.fillRect(-8+q*6,-2+r*5.5,4,3.6);}}},
+  efan:{n:'手持電風扇',e:1,d(c){c.fillStyle=PAPER;rrect(c,-3.5,3,7,15,3);c.fill();c.stroke();c.fillStyle='#8fdcf7';c.beginPath();c.arc(0,10,1.5,0,TAU);c.fill();c.fillStyle='#dfe6ea';c.beginPath();c.arc(0,-6,12,0,TAU);c.fill();c.stroke();c.fillStyle='#7ab8d8';for(let i=0;i<3;i++){c.save();c.translate(0,-6);c.rotate(i*TAU/3+.3);c.beginPath();c.ellipse(0,-5.5,3,5.5,.4,0,TAU);c.fill();c.restore();}c.fillStyle=INK;c.beginPath();c.arc(0,-6,2,0,TAU);c.fill();}},
+  battery:{n:'電池',e:1,d(c){c.save();c.rotate(.5);c.fillStyle='#c9ced6';c.fillRect(-3,-18,6,4);c.strokeRect(-3,-18,6,4);c.fillStyle='#ee9b3a';rrect(c,-7,-14,14,30,2.5);c.fill();c.stroke();c.fillStyle=INK;c.fillRect(-7,2,14,14);c.fillStyle=PAPER;c.font='700 11px Fredoka,sans-serif';c.textAlign='center';c.fillText('+',0,-4);c.restore();}},
+  watch:{n:'機械錶',e:0,d(c){c.fillStyle='#8a5a3a';c.fillRect(-5,-18,10,36);c.strokeRect(-5,-18,10,36);c.fillStyle='#e9d8a6';c.beginPath();c.arc(0,0,11,0,TAU);c.fill();c.stroke();c.fillStyle=PAPER;c.beginPath();c.arc(0,0,7.5,0,TAU);c.fill();c.strokeStyle=INK;c.lineWidth=1.8;c.beginPath();c.moveTo(0,0);c.lineTo(0,-5.5);c.moveTo(0,0);c.lineTo(4,2);c.stroke();}},
+  key:{n:'鑰匙',e:0,d(c){c.fillStyle='#e0b24a';c.beginPath();c.moveTo(-2.5,-2);c.lineTo(-2.5,16);c.lineTo(0,18.5);c.lineTo(2.5,16);c.lineTo(2.5,12);c.lineTo(6,11);c.lineTo(2.5,9);c.lineTo(2.5,6);c.lineTo(5,5);c.lineTo(2.5,3.5);c.lineTo(2.5,-2);c.closePath();c.fill();c.stroke();c.beginPath();c.arc(0,-10,8.5,0,TAU);c.fill();c.stroke();c.fillStyle=PAPER;c.beginPath();c.arc(0,-11.5,3,0,TAU);c.fill();c.stroke();}},
+  book:{n:'書',e:0,d(c){c.fillStyle='#b5503f';rrect(c,-13,-15,26,30,2.5);c.fill();c.stroke();c.fillStyle=PAPER;c.fillRect(-9,-15,2,30);c.fillRect(11,-12,2,25);c.fillStyle='#f3d9a4';c.fillRect(-4,-9,12,3);c.fillRect(-4,-3,8,2);}},
+  notebook:{n:'筆記本',e:0,d(c){c.fillStyle='#f6e9b8';rrect(c,-11,-15,23,30,2);c.fill();c.stroke();c.strokeStyle='#9aa7c9';c.lineWidth=1.2;for(let i=0;i<5;i++){c.beginPath();c.moveTo(-6,-8+i*5);c.lineTo(9,-8+i*5);c.stroke();}c.strokeStyle=INK;c.lineWidth=1.8;for(let i=0;i<6;i++){c.beginPath();c.arc(-11,-11+i*4.6,2.3,0,TAU);c.stroke();}}},
+  candle:{n:'蠟燭',e:0,d(c){c.fillStyle='#ffb84a';c.beginPath();c.moveTo(0,-19);c.quadraticCurveTo(6,-11,0,-6);c.quadraticCurveTo(-6,-11,0,-19);c.fill();c.stroke();c.fillStyle=PAPER;rrect(c,-6,-4,12,20,2);c.fill();c.stroke();c.strokeStyle=INK;c.lineWidth=1.6;c.beginPath();c.moveTo(0,-4);c.lineTo(0,-8);c.stroke();c.fillStyle='#c9ced6';c.fillRect(-10,15,20,3.5);c.strokeRect(-10,15,20,3.5);}},
+  abacus:{n:'算盤',e:0,d(c){c.fillStyle='#8a5a3a';rrect(c,-16,-12,32,24,2.5);c.fill();c.stroke();c.fillStyle='#f6e9b8';c.fillRect(-13,-9,26,18);c.fillStyle=INK;c.fillRect(-13,-4,26,1.6);for(let i=0;i<5;i++){const x=-10+i*5;c.fillRect(x-.6,-9,1.2,18);c.fillStyle='#b5503f';c.beginPath();c.arc(x,-6.5,2,0,TAU);c.arc(x,i%2?1:4,2,0,TAU);c.arc(x,7,2,0,TAU);c.fill();c.fillStyle=INK;}}},
+  wallet:{n:'皮夾',e:0,d(c){c.fillStyle='#7a4a2e';rrect(c,-15,-10,30,21,4);c.fill();c.stroke();c.fillStyle='#bfe6c9';c.fillRect(-9,-14,18,6);c.strokeRect(-9,-14,18,6);c.fillStyle='#9a6442';rrect(c,-15,-6,30,17,4);c.fill();c.stroke();c.fillStyle='#e0b24a';c.beginPath();c.arc(9,2.5,2.6,0,TAU);c.fill();c.stroke();}},
+  umbrella:{n:'雨傘',e:0,d(c){c.fillStyle='#5c9fd6';c.beginPath();c.moveTo(-16,-2);c.quadraticCurveTo(0,-26,16,-2);c.quadraticCurveTo(11,-6,8,-2);c.quadraticCurveTo(4,-6,0,-2);c.quadraticCurveTo(-4,-6,-8,-2);c.quadraticCurveTo(-11,-6,-16,-2);c.fill();c.stroke();c.strokeStyle=INK;c.lineWidth=2.4;c.beginPath();c.moveTo(0,-2);c.lineTo(0,13);c.quadraticCurveTo(0,18,-5,16);c.stroke();}},
+  apple:{n:'蘋果',e:0,d(c){c.fillStyle='#e0533d';c.beginPath();c.moveTo(0,-7);c.bezierCurveTo(16,-17,18,10,6,15);c.quadraticCurveTo(0,17,-6,15);c.bezierCurveTo(-18,10,-16,-17,0,-7);c.fill();c.stroke();c.strokeStyle=INK;c.lineWidth=2.2;c.beginPath();c.moveTo(0,-7);c.quadraticCurveTo(1,-13,4,-16);c.stroke();c.fillStyle='#57b08a';c.beginPath();c.ellipse(7,-14,5,2.5,-.5,0,TAU);c.fill();c.stroke();}},
+  pencil:{n:'鉛筆',e:0,d(c){c.save();c.rotate(.5);c.fillStyle='#ffd35c';c.fillRect(-4,-12,8,24);c.strokeRect(-4,-12,8,24);c.fillStyle='#f29aa8';rrect(c,-4,-18,8,6,2);c.fill();c.stroke();c.fillStyle='#e9d8a6';c.beginPath();c.moveTo(-4,12);c.lineTo(0,20);c.lineTo(4,12);c.closePath();c.fill();c.stroke();c.fillStyle=INK;c.beginPath();c.moveTo(-1.3,17.4);c.lineTo(0,20);c.lineTo(1.3,17.4);c.fill();c.restore();}},
+  pfan:{n:'紙扇',e:0,d(c){c.fillStyle='#f6e9b8';c.beginPath();c.moveTo(0,14);c.lineTo(-17,-5);c.quadraticCurveTo(0,-22,17,-5);c.closePath();c.fill();c.stroke();c.strokeStyle='#b5503f';c.lineWidth=1.4;for(let i=-2;i<=2;i++){c.beginPath();c.moveTo(0,14);c.lineTo(i*7.5,-9-(2-Math.abs(i))*3.5);c.stroke();}c.fillStyle='#8a5a3a';c.beginPath();c.arc(0,14,2.6,0,TAU);c.fill();c.strokeStyle=INK;c.lineWidth=1.8;c.stroke();}},
+  letter:{n:'信',e:0,d(c){c.fillStyle=PAPER;rrect(c,-15,-10,30,21,2);c.fill();c.stroke();c.strokeStyle=INK;c.lineWidth=1.8;c.beginPath();c.moveTo(-15,-9);c.lineTo(0,3);c.lineTo(15,-9);c.stroke();c.fillStyle='#e0533d';c.fillRect(7,-7,5,6);}},
+};
+const E_IDS=Object.keys(IT).filter(k=>IT[k].e),H_IDS=Object.keys(IT).filter(k=>!IT[k].e);
+const LOOKALIKE={swatch:'watch',fob:'key',ereader:'notebook',torch:'candle',calc:'abacus',efan:'pfan',laptop:'book',phone:'wallet',battery:'pencil',pbank:'letter'};   // 長得像的一對：一個有電、一個沒電
+function rrect(c,x,y,w,h,r){c.beginPath();c.moveTo(x+r,y);c.arcTo(x+w,y,x+w,y+h,r);c.arcTo(x+w,y+h,x,y+h,r);c.arcTo(x,y+h,x,y,r);c.arcTo(x,y,x+w,y,r);c.closePath();}
+
+/* ───────── 客人 ───────── */
+const VW=360,VH=640,TOK_R=27;
+const SLOTS=[[66,232],[294,238],[54,322],[306,330],[70,410],[294,422],[158,512],[238,504]];   // 東西出現的位置：繞著客人一圈
+const BOX={x:300,y:556};                                                                    // 信箱口
+const KINDS=[
+  {id:'neighbor',hi:['我來借個醬油','我看你燈又沒開'],skin:'#f1c9a5',hair:'#5a4636',shirt:'#e58f8f',style:'bun'},
+  {id:'courier', hi:['外送～麻煩簽收','您的包裹'],        skin:'#e8b88f',hair:'#2b2a3a',shirt:'#f0a13c',style:'helmet'},
+  {id:'office',  hi:['我送文件過來','事務所要我來一趟'],  skin:'#f1c9a5',hair:'#3a3d52',shirt:'#5c7fb8',style:'tie'},
+  {id:'kid',     hi:['叔叔，我的球掉進你家了','可以借廁所嗎'],skin:'#f4d2b0',hair:'#6b4a2a',shirt:'#6fbf8e',style:'cap'},
+  {id:'repair',  hi:['查瓦斯表','聽說你家沒電，要修嗎'],  skin:'#d9a57c',hair:'#2b2a3a',shirt:'#8a8fa6',style:'hardhat'},
+  {id:'bro',     hi:['哥，我來看你啦','哥，我身上真的沒東西'],skin:'#f1c9a5',hair:'#8a5a3a',shirt:'#c95fa8',style:'slick',sly:1},
+];
+let nth=0,pain=0,streak=0,best=parseInt(store.get('ds.best')||'0',10)||0,mode='title',vis=null,time=0,shake=0,flash=0,lastMiss=[];
+const PAIN_MAX=3,HEAL_EVERY=6;
+const sparks=[],bolts=[],pops=[];
+
+function makeVisitor(k){
+  const kind=k===1?KINDS[0]:(k>=4&&Math.random()<.22?KINDS[5]:pick(KINDS.slice(0,5)));
+  const n=k===1?2:Math.min(8,3+Math.floor((k-1)/3));                       // 幾樣東西：越後面越多
+  let nE=k===1?1:k<=3?1+((Math.random()*2)|0):Math.max(0,Math.min(n,Math.round(rnd(.2,.75)*n)));
+  if(k>=5&&Math.random()<.1)nE=0;                                          // 偶爾來個身上完全沒電的：別亂點
+  if(kind.sly&&nE<2)nE=Math.min(n,2);
+  const es=shuffle(E_IDS.slice()).slice(0,nE),hs=[];
+  for(const e of es)if(hs.length<n-nE&&LOOKALIKE[e]&&Math.random()<.6&&k>2)hs.push(LOOKALIKE[e]);   // 故意放長得像的來混淆
+  for(const h of shuffle(H_IDS.slice()))if(hs.length<n-nE&&!hs.includes(h))hs.push(h);
+  const ids=shuffle(es.concat(hs)),slots=shuffle(SLOTS.slice(0,Math.max(4,Math.min(8,n+2))).map((s,i)=>i));
+  const toks=ids.map((id,i)=>({id,e:IT[id].e,x:SLOTS[slots[i]][0],y:SLOTS[slots[i]][1],state:'in',t:-.12*i,hid:false,sh:0}));
+  // 包包：Day… 第 6 位之後有人會把東西藏在包包裡，要先點包包打開
+  let bag=null;
+  if(k>=6&&toks.length>=4&&(kind.sly||Math.random()<.45)){const inside=shuffle(toks.slice()).slice(0,kind.sly?2:1+((Math.random()*2)|0));
+    if(kind.sly){const el=toks.filter(t=>t.e);for(let i=0;i<inside.length&&i<el.length;i++)inside[i]=el[i];}      // 弟弟專門把有電的藏起來
+    const bx=inside[0].x,by=inside[0].y;inside.forEach(t=>{t.hid=true;});
+    bag={x:bx,y:by,state:'in',t:0,inside};
+    inside.forEach((t,i)=>{if(i>0){const free=SLOTS.find(s=>!toks.some(o=>!o.hid&&o.x===s[0]&&o.y===s[1])&&!(s[0]===bx&&s[1]===by)&&!inside.some((o,j)=>j<i&&o.x===s[0]&&o.y===s[1]));if(free){t.x=free[0];t.y=free[1];}}});}
+  const T=(k===1?10:Math.max(3.4,8-.17*k)+n*.15)+(bag?.7:0);
+  return{k,kind,hi:pick(kind.hi),toks,bag,T,t:0,phase:'enter',pt:0,wrong:0,say:'',sayT:0,mood:0,left:[]};
+}
+
+/* ───────── 聲音 ───────── */
+const Snd={ctx:null,on:store.get('ds.mute')!=='1',
+  init(){if(this.ctx){if(this.ctx.state==='suspended'&&!paused)this.ctx.resume();return;}
+    try{const C=window.AudioContext||window.webkitAudioContext,c=this.ctx=new C();this.master=c.createGain();this.master.gain.value=this.on?1:0;this.master.connect(c.destination);
+      const buf=c.createBuffer(1,c.sampleRate,c.sampleRate),d=buf.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=Math.random()*2-1;this.noise=buf;}catch(e){this.ctx=null;}},
+  blip(f0,f1,dur,type,vol,delay){if(!this.ctx)return;const c=this.ctx,t=c.currentTime+(delay||0),o=c.createOscillator(),g=c.createGain();
+    o.type=type||'sine';o.frequency.setValueAtTime(f0,t);o.frequency.exponentialRampToValueAtTime(Math.max(30,f1),t+dur);
+    g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(vol||.1,t+.012);g.gain.exponentialRampToValueAtTime(.0008,t+dur);o.connect(g);g.connect(this.master);o.start(t);o.stop(t+dur+.03);},
+  zap(){if(!this.ctx)return;const c=this.ctx,t=c.currentTime,s=c.createBufferSource(),f=c.createBiquadFilter(),g=c.createGain();s.buffer=this.noise;f.type='bandpass';f.frequency.value=2400;f.Q.value=.7;
+    g.gain.setValueAtTime(.22,t);g.gain.exponentialRampToValueAtTime(.001,t+.55);s.connect(f);f.connect(g);g.connect(this.master);s.start(t);s.stop(t+.6);
+    for(let i=0;i<5;i++)this.blip(rnd(90,160),rnd(60,90),.09,'sawtooth',.09,i*.09);},
+  setOn(v){this.on=v;store.set('ds.mute',v?'0':'1');if(this.ctx)this.master.gain.setTargetAtTime(v?1:0,this.ctx.currentTime,.02);}
+};
+
+/* ───────── 畫面 ───────── */
+const gameEl=$('game'),cv=$('c'),g=cv.getContext('2d');
+const reduced=window.matchMedia&&matchMedia('(prefers-reduced-motion:reduce)').matches;
+let cw=1,ch=1,dpr=1,scale=1,ox=0,oy=0,wx0=0,wx1=VW,wy0=0,wy1=VH;
+const stat=document.createElement('canvas'),PAD=14;
+function resize(){
+  const b=gameEl.getBoundingClientRect();cw=Math.max(1,b.width);ch=Math.max(1,b.height);dpr=Math.min(window.devicePixelRatio||1,2);
+  cv.width=Math.round(cw*dpr);cv.height=Math.round(ch*dpr);scale=Math.min(cw/VW,ch/VH);ox=(cw-VW*scale)/2;oy=(ch-VH*scale)/2;
+  wx0=-ox/scale;wx1=(cw-ox)/scale;wy0=-oy/scale;wy1=(ch-oy)/scale;
+  stat.width=Math.round((cw+PAD*2)*dpr);stat.height=Math.round((ch+PAD*2)*dpr);
+  const s=stat.getContext('2d');s.setTransform(dpr*scale,0,0,dpr*scale,(ox+PAD)*dpr,(oy+PAD)*dpr);drawScene(s);
+}
+// 從門裡往外看：傍晚的街、圍籬、遠處的電線桿；近處是門廊地板和右下角的信箱
+function drawScene(c){
+  const L=wx0-PAD/scale-2,R=wx1+PAD/scale+2,T=wy0-PAD/scale-2,B=wy1+PAD/scale+2;
+  let gr=c.createLinearGradient(0,T,0,430);gr.addColorStop(0,'#f6c98a');gr.addColorStop(.6,'#f9e2b4');gr.addColorStop(1,'#fdf0d2');c.fillStyle=gr;c.fillRect(L,T,R-L,440-T);
+  c.fillStyle='rgba(255,246,214,.9)';c.beginPath();c.arc(84,150,34,0,TAU);c.fill();
+  // 遠處的房子
+  c.fillStyle='#e3b98c';for(const [x,w,h] of[[-40,90,70],[60,70,96],[140,84,62],[236,74,88],[318,90,66]]){c.fillRect(x,404-h,w,h);c.beginPath();c.moveTo(x-6,404-h);c.lineTo(x+w/2,404-h-26);c.lineTo(x+w+6,404-h);c.fill();}
+  c.fillStyle='rgba(255,236,170,.75)';for(const [x,y] of[[80,344],[104,344],[160,366],[258,348],[334,360]])c.fillRect(x,y,10,12);
+  // 電線桿和電線（他最怕的東西）
+  c.strokeStyle='#8a6a52';c.lineWidth=5;c.lineCap='round';c.beginPath();c.moveTo(250,404);c.lineTo(250,222);c.moveTo(232,240);c.lineTo(268,240);c.moveTo(236,256);c.lineTo(264,256);c.stroke();
+  c.lineWidth=1.6;c.beginPath();for(const y of[240,256]){c.moveTo(250,y);c.quadraticCurveTo(140,y+34,L,y+8);c.moveTo(250,y);c.quadraticCurveTo(320,y+26,R,y+6);}c.stroke();
+  // 草地、人行道、圍籬
+  c.fillStyle='#9cc27a';c.fillRect(L,404,R-L,40);c.fillStyle='#d9cdb4';c.fillRect(L,432,R-L,16);
+  c.fillStyle=PAPER;c.strokeStyle=INK;c.lineWidth=2;for(let x=Math.floor(L/22)*22;x<R;x+=22){c.beginPath();c.moveTo(x,444);c.lineTo(x,404);c.lineTo(x+6,396);c.lineTo(x+12,404);c.lineTo(x+12,444);c.closePath();c.fill();c.stroke();}
+  c.fillRect(L,414,R-L,5);c.strokeRect(L,414,R-L,5);
+  // 門廊地板
+  gr=c.createLinearGradient(0,444,0,B);gr.addColorStop(0,'#b98a5c');gr.addColorStop(1,'#8f643f');c.fillStyle=gr;c.fillRect(L,444,R-L,B-444);
+  c.strokeStyle='rgba(43,42,58,.3)';c.lineWidth=1.6;c.beginPath();for(let i=-9;i<=9;i++){c.moveTo(180+i*30,444);c.lineTo(180+i*86,B);}c.moveTo(L,444);c.lineTo(R,444);c.stroke();
+  // 腳踏墊
+  c.fillStyle='#b5503f';c.strokeStyle=INK;c.lineWidth=2.5;c.beginPath();c.moveTo(112,474);c.lineTo(248,474);c.lineTo(262,500);c.lineTo(98,500);c.closePath();c.fill();c.stroke();
+  // 信箱
+  c.fillStyle='#7a5a44';c.fillRect(BOX.x-5,BOX.y+26,10,B-BOX.y);c.strokeRect(BOX.x-5,BOX.y+26,10,B-BOX.y);
+  c.fillStyle='#5f8fb8';c.beginPath();c.moveTo(BOX.x-34,BOX.y+30);c.lineTo(BOX.x-34,BOX.y-2);c.quadraticCurveTo(BOX.x-34,BOX.y-30,BOX.x,BOX.y-30);c.quadraticCurveTo(BOX.x+34,BOX.y-30,BOX.x+34,BOX.y-2);c.lineTo(BOX.x+34,BOX.y+30);c.closePath();c.fill();c.stroke();
+  c.fillStyle=INK;c.beginPath();c.ellipse(BOX.x,BOX.y-4,24,13,0,0,TAU);c.fill();
+  c.fillStyle='#ee5b3a';c.fillRect(BOX.x+30,BOX.y-34,5,26);c.strokeRect(BOX.x+30,BOX.y-34,5,26);c.fillRect(BOX.x+35,BOX.y-34,13,10);c.strokeRect(BOX.x+35,BOX.y-34,13,10);
+  c.fillStyle=PAPER;c.font='900 11px "Chiron GoRound TC","PingFang TC",sans-serif';c.textAlign='center';c.fillText('有電的放這',BOX.x,BOX.y+22);
+  // 門框的暗邊：我們是從屋裡往外看
+  c.fillStyle='#3a2f2a';c.fillRect(L,T,14-L,B-T);c.fillRect(346,T,R-346,B-T);c.fillRect(L,T,R-L,58-T);
+  c.fillStyle='rgba(0,0,0,.25)';c.fillRect(14,58,6,B-58);c.fillRect(340,58,6,B-58);c.fillRect(14,58,332,6);
+}
+
+function drawPerson(c,v,x,y,sc,al){
+  const K=v.kind,mood=v.mood;c.save();c.translate(x,y);c.scale(sc,sc);c.globalAlpha=al;c.lineJoin='round';c.lineCap='round';c.strokeStyle=INK;c.lineWidth=3;
+  // 腿、身體、手
+  c.fillStyle='#4a4f66';rrect(c,-30,170,26,112,8);c.fill();c.stroke();rrect(c,4,170,26,112,8);c.fill();c.stroke();
+  c.fillStyle=K.shirt;c.beginPath();c.moveTo(-44,30);c.quadraticCurveTo(0,10,44,30);c.lineTo(50,180);c.lineTo(-50,180);c.closePath();c.fill();c.stroke();
+  for(const s of[-1,1]){c.fillStyle=K.shirt;c.beginPath();c.moveTo(s*40,34);c.quadraticCurveTo(s*72,60,s*66,138);c.lineTo(s*48,138);c.quadraticCurveTo(s*50,80,s*32,62);c.closePath();c.fill();c.stroke();c.fillStyle=K.skin;c.beginPath();c.arc(s*57,146,11,0,TAU);c.fill();c.stroke();}
+  if(K.style==='tie'){c.fillStyle=PAPER;c.beginPath();c.moveTo(-14,24);c.lineTo(0,46);c.lineTo(14,24);c.closePath();c.fill();c.stroke();c.fillStyle='#b5503f';c.beginPath();c.moveTo(-5,40);c.lineTo(5,40);c.lineTo(8,96);c.lineTo(0,108);c.lineTo(-8,96);c.closePath();c.fill();c.stroke();}
+  if(K.style==='helmet'){c.fillStyle=PAPER;c.fillRect(-26,86,52,40);c.strokeRect(-26,86,52,40);c.fillStyle=INK;c.font='900 15px "Chiron GoRound TC",sans-serif';c.textAlign='center';c.fillText('外送',0,112);}
+  if(K.style==='hardhat'){c.fillStyle='#f6e36a';c.fillRect(-46,96,92,10);c.strokeRect(-46,96,92,10);}
+  if(K.sly){c.fillStyle='#ffd35c';for(const [px,py] of[[-22,70],[18,92],[-8,128],[26,150],[-30,152]]){c.beginPath();c.arc(px,py,4,0,TAU);c.fill();}}   // 花襯衫
+  // 頭
+  c.fillStyle=K.skin;c.beginPath();c.arc(0,-18,40,0,TAU);c.fill();c.stroke();
+  c.fillStyle=K.hair;
+  if(K.style==='bun'){c.beginPath();c.arc(0,-62,15,0,TAU);c.fill();c.stroke();c.beginPath();c.arc(0,-24,41,Math.PI*1.08,Math.PI*1.92);c.quadraticCurveTo(0,-36,-39,-36);c.fill();c.stroke();}
+  else if(K.style==='helmet'){c.fillStyle='#f0a13c';c.beginPath();c.arc(0,-24,44,Math.PI,TAU);c.lineTo(48,-14);c.lineTo(-48,-14);c.closePath();c.fill();c.stroke();}
+  else if(K.style==='hardhat'){c.fillStyle='#f6e36a';c.beginPath();c.arc(0,-28,42,Math.PI,TAU);c.closePath();c.fill();c.stroke();c.fillRect(-52,-32,104,9);c.strokeRect(-52,-32,104,9);}
+  else if(K.style==='cap'){c.fillStyle='#e0533d';c.beginPath();c.arc(0,-26,41,Math.PI,TAU);c.closePath();c.fill();c.stroke();c.beginPath();c.moveTo(20,-28);c.lineTo(62,-22);c.lineTo(20,-16);c.closePath();c.fill();c.stroke();}
+  else{c.beginPath();c.arc(0,-24,41,Math.PI*1.05,Math.PI*1.95);c.quadraticCurveTo(10,-44,-39,-30);c.fill();c.stroke();}
+  // 臉：mood 0 普通、1 不爽、2 開心、3 嚇到
+  c.fillStyle=INK;
+  if(mood===3){c.fillStyle=PAPER;c.beginPath();c.arc(-14,-18,8,0,TAU);c.arc(14,-18,8,0,TAU);c.fill();c.lineWidth=2;c.stroke();c.fillStyle=INK;c.beginPath();c.arc(-14,-18,3,0,TAU);c.arc(14,-18,3,0,TAU);c.fill();c.beginPath();c.ellipse(0,6,7,9,0,0,TAU);c.fill();}
+  else{c.beginPath();c.arc(-14,-18,4,0,TAU);c.arc(14,-18,4,0,TAU);c.fill();c.lineWidth=3;
+    if(mood===1){c.beginPath();c.moveTo(-23,-30);c.lineTo(-8,-25);c.moveTo(23,-30);c.lineTo(8,-25);c.moveTo(-9,8);c.quadraticCurveTo(0,2,9,8);c.stroke();}
+    else if(mood===2||K.sly){c.beginPath();c.moveTo(-12,2);c.quadraticCurveTo(0,16,12,2);c.stroke();if(K.sly&&mood!==2){c.beginPath();c.moveTo(-22,-29);c.lineTo(-8,-31);c.stroke();}}
+    else{c.beginPath();c.moveTo(-8,5);c.quadraticCurveTo(0,10,8,5);c.stroke();}}
+  c.restore();
+}
+// 夸克：灰髮、西裝領帶，全身裹著銀色太空毯，手上提著煤油燈，站在門邊。pain 越高越難受，被電到會整個炸毛
+const MAN={x:62};
+function drawMan(c){
+  const zap=mode==='play'&&vis&&vis.phase==='result'&&vis.left.length>0,jx=zap?(Math.random()-.5)*7:pain>=2?Math.sin(time*31)*1.2:0,by=wy1+6,bob=Math.sin(time*1.9)*1.2;
+  c.save();c.translate(MAN.x+jx,by+bob);c.lineJoin='round';c.lineCap='round';c.strokeStyle=INK;c.lineWidth=3;
+  // 燈光
+  c.fillStyle='rgba(255,196,96,.26)';c.beginPath();c.arc(62,-96,54+Math.sin(time*7)*3,0,TAU);c.fill();
+  // 太空毯：先畫披在頭後面的那一圈
+  const foil=(pts,fill)=>{c.fillStyle=fill;c.beginPath();pts.forEach((q,i)=>i?c.lineTo(q[0],q[1]):c.moveTo(q[0],q[1]));c.closePath();c.fill();c.stroke();};
+  foil([[-50,-96],[-56,-136],[-44,-170],[-24,-190],[2,-196],[28,-188],[46,-166],[54,-134],[48,-96]],'#b9c2cd');
+  // 臉
+  c.fillStyle='#ecccae';c.beginPath();c.ellipse(-36,-134,6,9,0,0,TAU);c.ellipse(36,-134,6,9,0,0,TAU);c.fill();c.stroke();
+  c.beginPath();c.moveTo(-31,-150);c.quadraticCurveTo(-34,-108,-16,-96);c.quadraticCurveTo(0,-88,16,-96);c.quadraticCurveTo(34,-108,31,-150);c.quadraticCurveTo(0,-172,-31,-150);c.fill();c.stroke();
+  // 灰髮（後梳、旁分，髮線偏高）
+  c.fillStyle='#c3c6cd';c.beginPath();
+  if(zap){c.moveTo(-33,-146);for(let i=0;i<9;i++){const a=Math.PI*(1.02+i*.12);c.lineTo(Math.cos(a)*(i%2?36:56),-146+Math.sin(a)*(i%2?26:50)+(Math.random()-.5)*5);}c.lineTo(33,-146);c.quadraticCurveTo(0,-160,-33,-146);}
+  else{c.moveTo(-34,-142);c.quadraticCurveTo(-40,-178,-8,-182);c.quadraticCurveTo(30,-186,35,-142);c.quadraticCurveTo(30,-158,12,-162);c.quadraticCurveTo(-12,-166,-24,-156);c.quadraticCurveTo(-30,-152,-34,-142);}
+  c.fill();c.stroke();
+  // 皺紋、眉毛、眼睛、鼻子、嘴
+  c.lineWidth=1.6;c.strokeStyle='rgba(43,42,58,.45)';c.beginPath();c.moveTo(-14,-153);c.quadraticCurveTo(0,-156,14,-153);c.moveTo(-22,-112);c.quadraticCurveTo(-18,-104,-12,-101);c.moveTo(22,-112);c.quadraticCurveTo(18,-104,12,-101);c.stroke();
+  c.strokeStyle='#8e929c';c.lineWidth=4;const br=zap?-6:pain?-3-pain:0;c.beginPath();c.moveTo(-23,-142+br*.2);c.lineTo(-8,-140-br);c.moveTo(23,-142+br*.2);c.lineTo(8,-140-br);c.stroke();
+  c.strokeStyle=INK;c.fillStyle=INK;c.lineWidth=2.4;
+  if(zap){c.beginPath();for(const s of[-1,1]){c.moveTo(s*19,-136);c.lineTo(s*9,-126);c.moveTo(s*9,-136);c.lineTo(s*19,-126);}c.stroke();c.fillStyle=INK;c.beginPath();c.ellipse(0,-106,9,8,0,0,TAU);c.fill();}
+  else{c.fillStyle=PAPER;c.beginPath();c.ellipse(-14,-131,6,pain>=2?6.5:5,0,0,TAU);c.ellipse(14,-131,6,pain>=2?6.5:5,0,0,TAU);c.fill();
+    const lookX=vis&&mode==='play'?2.2:1,lookY=-.6;c.fillStyle=INK;c.beginPath();c.arc(-14+lookX,-131+lookY,2.6,0,TAU);c.arc(14+lookX,-131+lookY,2.6,0,TAU);c.fill();
+    c.lineWidth=2.4;c.beginPath();if(pain>=2){c.moveTo(-9,-103);c.quadraticCurveTo(-4,-108,0,-104);c.quadraticCurveTo(4,-100,9,-105);}else if(pain===1){c.moveTo(-8,-104);c.quadraticCurveTo(0,-108,8,-104);}else{c.moveTo(-8,-105);c.lineTo(8,-105);}c.stroke();
+    if(pain>=1){c.fillStyle='#8fdcf7';c.beginPath();c.ellipse(27,-150+((time*26)%16),2.2,3.6,0,0,TAU);c.fill();}}
+  c.lineWidth=2.2;c.strokeStyle=INK;c.beginPath();c.moveTo(1,-128);c.quadraticCurveTo(6,-117,0,-115);c.stroke();
+  // 襯衫領子、領帶、西裝
+  c.lineWidth=3;c.fillStyle='#3a3d52';foil([[-34,-86],[34,-86],[46,10],[-46,10]],'#3a3d52');
+  c.fillStyle=PAPER;c.beginPath();c.moveTo(-17,-94);c.lineTo(0,-70);c.lineTo(17,-94);c.lineTo(10,-98);c.lineTo(0,-88);c.lineTo(-10,-98);c.closePath();c.fill();c.stroke();
+  c.fillStyle='#8e3b3b';c.beginPath();c.moveTo(-5,-84);c.lineTo(5,-84);c.lineTo(8,-40);c.lineTo(0,-28);c.lineTo(-8,-40);c.closePath();c.fill();c.stroke();
+  // 太空毯：裹住肩膀和身體，前面留一道開口看得到西裝
+  const sh=zap?3:0;
+  foil([[-22,-96],[-58,-84],[-76,-40],[-80,14],[-16,14],[-12,-50]],'#cfd6de');
+  foil([[22,-96],[56,-86],[70,-52],[60,-24],[78,14],[18,14],[12,-50]],'#cfd6de');
+  c.fillStyle='#e9eef2';for(const t of[[[-54,-80],[-30,-60],[-62,-40]],[[-70,-20],[-40,-10],[-64,10]],[[30,-84],[54,-70],[34,-52]],[[40,-16],[66,4],[36,10]]]){c.beginPath();t.forEach((q,i)=>i?c.lineTo(q[0],q[1]):c.moveTo(q[0],q[1]));c.closePath();c.fill();}
+  c.fillStyle='#a9b3bf';for(const t of[[[-30,-60],[-14,-44],[-40,-10]],[[34,-52],[56,-40],[40,-16]],[[-62,-40],[-40,-10],[-70,-20]]]){c.beginPath();t.forEach((q,i)=>i?c.lineTo(q[0],q[1]):c.moveTo(q[0],q[1]));c.closePath();c.fill();}
+  c.strokeStyle='rgba(255,255,255,.85)';c.lineWidth=1.8;c.beginPath();for(const q of[[-66,-56,-52,-70],[-48,-24,-30,-36],[44,-74,58,-62],[30,-30,50,-22],[-34,-176,-18,-186],[30,-176,42,-160]]){c.moveTo(q[0]+sh,q[1]);c.lineTo(q[2]+sh,q[3]);}c.stroke();
+  // 提燈的手和煤油燈
+  c.strokeStyle=INK;c.lineWidth=3;c.fillStyle='#ecccae';c.beginPath();c.arc(62,-52,9,0,TAU);c.fill();c.stroke();
+  c.lineWidth=2.4;c.beginPath();c.arc(62,-72,9,Math.PI,TAU);c.moveTo(53,-72);c.lineTo(53,-62);c.moveTo(71,-72);c.lineTo(71,-62);c.stroke();
+  c.fillStyle='#55596e';c.fillRect(52,-126,20,6);c.strokeRect(52,-126,20,6);c.fillRect(49,-84,26,7);c.strokeRect(49,-84,26,7);
+  c.fillStyle='rgba(255,236,170,.92)';rrect(c,51,-120,22,36,6);c.fill();c.stroke();
+  c.fillStyle='#ffb84a';c.beginPath();c.moveTo(62,-112+Math.sin(time*9)*1.5);c.quadraticCurveTo(68,-101,62,-93);c.quadraticCurveTo(56,-101,62,-112);c.fill();
+  if(zap){c.strokeStyle=VOLT;c.lineWidth=2.6;for(let i=0;i<5;i++){const a=Math.random()*TAU,r=58+Math.random()*26;c.beginPath();c.moveTo(Math.cos(a)*40,-110+Math.sin(a)*60);c.lineTo(Math.cos(a)*r+(Math.random()-.5)*14,-110+Math.sin(a)*(r+20));c.stroke();}}
+  c.restore();
+}
+function drawToken(c,x,y,sc,al,drawIcon,ring){
+  c.save();c.translate(x,y);c.scale(sc,sc);c.globalAlpha=al;c.lineJoin='round';c.lineCap='round';
+  c.fillStyle=INK;c.beginPath();c.arc(0,5,TOK_R,0,TAU);c.fill();
+  const gr=c.createRadialGradient(-8,-10,3,0,0,TOK_R);gr.addColorStop(0,'#ffffff');gr.addColorStop(1,'#f3e9d2');c.fillStyle=gr;c.beginPath();c.arc(0,0,TOK_R,0,TAU);c.fill();
+  c.lineWidth=3.5;c.strokeStyle=ring||INK;c.stroke();
+  c.strokeStyle=INK;c.lineWidth=2;c.textBaseline='alphabetic';drawIcon(c);c.restore();
+}
+function bagIcon(c){c.fillStyle='#8a5a3a';rrect(c,-15,-8,30,24,5);c.fill();c.stroke();c.strokeStyle=INK;c.lineWidth=2.6;c.beginPath();c.moveTo(-8,-8);c.quadraticCurveTo(0,-24,8,-8);c.stroke();c.fillStyle='#e0b24a';c.fillRect(-4,0,8,6);c.lineWidth=2;c.strokeRect(-4,0,8,6);
+  c.fillStyle=PAPER;c.font='700 13px Fredoka,sans-serif';c.textAlign='center';c.lineWidth=3.5;c.strokeText('?',12,-10);c.fillText('?',12,-10);}
+
+function render(){
+  const W=cv.width,H=cv.height,k=dpr*scale;let sx=0,sy=0;if(shake>0&&!reduced){sx=(Math.random()-.5)*shake;sy=(Math.random()-.5)*shake;}
+  g.setTransform(1,0,0,1,0,0);g.fillStyle='#3a2f2a';g.fillRect(0,0,W,H);
+  g.drawImage(stat,Math.round((sx-PAD/scale)*k),Math.round((sy-PAD/scale)*k));
+  g.setTransform(k,0,0,k,(ox+sx)*dpr,(oy+sy)*dpr);
+  const v=vis;
+  if(v){
+    // 客人：走進來 → 站著被檢查 → 朝我們走過來（進門）
+    let px=180,sc=1,al=1;
+    if(v.phase==='enter'){const e=clamp(v.pt/.45,0,1),q=1-(1-e)*(1-e);px=lerp(-90,180,q);}
+    else if(v.phase==='go'){const e=clamp(v.pt/.5,0,1);sc=1+e*.35;al=1-e*e;}
+    else if(v.phase==='result')al=0;
+    if(al>0)drawPerson(g,v,px,236+Math.sin(time*2.2)*1.5,sc,al);
+    // 對白
+    if(v.sayT>0&&v.say&&v.phase!=='result'){g.font='900 15px "Chiron GoRound TC","PingFang TC",sans-serif';const w=Math.min(250,g.measureText(v.say).width+22),bx=clamp(px-w/2,24,336-w),by=148;
+      g.globalAlpha=clamp(v.sayT*3,0,1);g.fillStyle=PAPER;g.strokeStyle=INK;g.lineWidth=2.5;rrect(g,bx,by-24,w,32,12);g.fill();g.stroke();g.beginPath();g.moveTo(px-8,by+8);g.lineTo(px,by+19);g.lineTo(px+8,by+8);g.fill();g.stroke();g.fillStyle=PAPER;g.fillRect(px-7,by+5,14,5);
+      g.fillStyle=INK;g.textAlign='center';g.textBaseline='middle';g.fillText(v.say,bx+w/2,by-7,w-14);g.textBaseline='alphabetic';g.globalAlpha=1;}
+    // 包包
+    const b=v.bag;if(b&&b.state!=='gone'&&v.phase!=='enter'){const e=clamp(b.t/.2,0,1);drawToken(g,b.x+(b.sh>0?Math.sin(time*60)*3:0),b.y,b.state==='open'?1+e*.3:1,b.state==='open'?1-e:(v.phase==='go'||v.phase==='result'?0:1),bagIcon,null);}
+    // 物品
+    for(const t of v.toks){if(t.hid||t.state==='gone'||v.phase==='enter')continue;
+      if(t.state==='in'){const e=clamp(t.t/.18,0,1),pop=e<1?.5+.5*(1+2.2*Math.pow(e-1,3)+1.2*Math.pow(e-1,2)):1;if(t.t<0)continue;
+        const zapped=v.phase==='result'&&t.e;if((v.phase==='go'||v.phase==='result')&&!zapped)continue;
+        drawToken(g,t.x+(t.sh>0?Math.sin(time*70)*3.5:0),t.y+Math.sin(time*2.4+t.x)*2,pop*(zapped?1.12:1),1,IT[t.id].d,t.sh>0?'#ee5b3a':zapped?VOLT:null);
+        if(zapped){g.font='900 13px "Chiron GoRound TC","PingFang TC",sans-serif';g.textAlign='center';g.lineWidth=4.5;g.strokeStyle=INK;g.fillStyle=VOLT;g.strokeText(IT[t.id].n,t.x,t.y+TOK_R+19);g.fillText(IT[t.id].n,t.x,t.y+TOK_R+19);}}
+      else if(t.state==='fly'){const e=clamp(t.t/.34,0,1),q=e*e,x=lerp(t.x,BOX.x,q),y=lerp(t.y,BOX.y-4,q)-Math.sin(e*Math.PI)*46;drawToken(g,x,y,1-e*.62,1,IT[t.id].d,null);}}
+    // 漏掉的電：一道一道打向我們
+    g.lineJoin='round';g.lineCap='round';
+    for(const z of bolts){g.globalAlpha=clamp(z.life*4,0,1);for(const [w,col] of[[7,INK],[3.2,VOLT],[1.2,'#ffffff']]){g.lineWidth=w;g.strokeStyle=col;g.beginPath();z.pts.forEach((p,i)=>i?g.lineTo(p[0],p[1]):g.moveTo(p[0],p[1]));g.stroke();}}
+    g.globalAlpha=1;
+  }
+  drawMan(g);
+  // 特效
+  for(const s of sparks){g.globalAlpha=clamp(s.life*2,0,1);g.fillStyle=s.col;g.beginPath();g.arc(s.x,s.y,s.r,0,TAU);g.fill();}
+  g.textAlign='center';g.textBaseline='middle';g.font='900 19px "Chiron GoRound TC","PingFang TC",sans-serif';g.lineJoin='round';
+  for(const p of pops){const e=1-p.life/p.dur,pp=1+.5*Math.pow(clamp(1-e*6,0,1),2);g.globalAlpha=clamp(p.life*4,0,1);g.save();g.translate(p.x,p.y-e*18);g.scale(pp*(p.big?1.5:1),pp*(p.big?1.5:1));g.lineWidth=5.5;g.strokeStyle=INK;g.strokeText(p.text,0,0);g.fillStyle=p.col;g.fillText(p.text,0,0);g.restore();}
+  g.globalAlpha=1;g.textBaseline='alphabetic';g.textAlign='left';
+  g.setTransform(1,0,0,1,0,0);
+  if(flash>0){g.fillStyle=VOLT;g.globalAlpha=flash*.55;g.fillRect(0,0,W,H);g.globalAlpha=1;}
+}
+
+/* ───────── HUD 與流程 ───────── */
+const el={hud:$('hud'),num:$('num'),bolts:$('bolts'),timer:$('timer'),fill:$('timerFill'),hint:$('hint'),enter:$('enter'),title:$('title'),over:$('over'),best:$('best'),mute:$('mute')};
+const RANKS=[[40,'絕命電師'],[25,'電磁結界'],[15,'人體金屬探測器'],[8,'稱職的守門人'],[3,'勉強擋得住'],[0,'第一天上班的門房']];
+let lastHint='',lastFill=-1,paused=false;
+function setHint(t){if(t!==lastHint){lastHint=t;el.hint.textContent=t;}}
+function drawBolts(){el.bolts.innerHTML='';for(let i=0;i<PAIN_MAX;i++)el.bolts.insertAdjacentHTML('beforeend',`<svg viewBox="0 0 20 24" class="${i<pain?'hit':''}" aria-hidden="true"><path d="M12 1.5 3 13.5h6l-2 9 10-13h-6.5z"/></svg>`);}
+function muteIcon(){el.mute.innerHTML=Snd.on
+  ?'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9.5v5h3.5L12 18.5v-13L7.5 9.5z" fill="currentColor"/><path d="M15.5 9a4.2 4.2 0 0 1 0 6M18 6.5a8 8 0 0 1 0 11"/></svg>'
+  :'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9.5v5h3.5L12 18.5v-13L7.5 9.5z" fill="currentColor"/><path d="M16 9.5l5 5M21 9.5l-5 5"/></svg>';
+  el.mute.setAttribute('aria-pressed',String(!Snd.on));}
+function showBest(){el.best.textContent=best>0?`最佳紀錄　${best} 位客人`:'';}
+function pop(x,y,text,col,big){pops.push({x,y,text,col,life:big?1:.75,dur:big?1:.75,big});}
+
+function start(){
+  Snd.init();Snd.blip(420,640,.14,'triangle',.1);paused=false;$('pause').hidden=true;
+  nth=0;pain=0;streak=0;lastMiss=[];sparks.length=bolts.length=pops.length=0;shake=flash=0;mode='play';
+  el.title.hidden=true;el.over.hidden=true;el.hud.hidden=false;drawBolts();next();
+}
+function next(){nth++;vis=makeVisitor(nth);el.num.textContent=nth;el.enter.disabled=false;lastFill=-1;Snd.blip(180,150,.06,'square',.07);Snd.blip(180,150,.06,'square',.07,.12);}   // 叩叩
+function tapAt(x,y){
+  const v=vis;if(!v||v.phase!=='check')return;
+  const b=v.bag;if(b&&b.state==='in'&&Math.hypot(x-b.x,y-b.y)<TOK_R+10){b.state='open';b.t=0;b.inside.forEach((t,i)=>{t.hid=false;t.t=-.08*i;});Snd.blip(300,520,.1,'triangle',.08);pop(b.x,b.y-40,'打開包包','#fff8ea');return;}
+  let hit=null,bd=TOK_R+10;for(const t of v.toks){if(t.hid||t.state!=='in'||t.t<0)continue;const d=Math.hypot(x-t.x,y-t.y);if(d<bd){bd=d;hit=t;}}
+  if(!hit)return;
+  if(hit.e){hit.state='fly';hit.t=0;Snd.blip(520,880,.08,'triangle',.09);}
+  else{hit.sh=.4;v.wrong++;v.t+=1.3;v.mood=1;v.say=`欸，那是我的${IT[hit.id].n}！`;v.sayT=1.4;shake=Math.max(shake,4);pop(hit.x,hit.y-40,'沒有電！','#ee5b3a');Snd.blip(220,140,.16,'square',.07);}   // 點錯：客人不爽，時間少 1.3 秒
+}
+function admit(){const v=vis;if(!v||v.phase!=='check')return;v.phase='go';v.pt=0;el.enter.disabled=true;
+  v.left=v.toks.filter(t=>t.e&&t.state==='in');v.toks.forEach(t=>{if(t.hid){t.hid=false;t.t=1;}});if(v.bag&&v.bag.state==='in')v.bag.state='gone';
+  Snd.blip(300,200,.18,'sine',.06);}
+function resolve(){
+  const v=vis;v.phase='result';v.pt=0;
+  if(v.left.length){   // 有電的東西進門了
+    const hurt=v.left.length>=3?2:1;pain=Math.min(PAIN_MAX,pain+hurt);streak=0;lastMiss=v.left.map(t=>IT[t.id].n);drawBolts();
+    shake=16;flash=1;Snd.zap();pop(196,300,'啊啊啊——有電！',VOLT,true);
+    for(const t of v.left){const pts=[[t.x,t.y]];let x=t.x,y=t.y;const tx=MAN.x,ty=wy1-120;for(let i=1;i<=7;i++){x=lerp(t.x,tx,i/7)+(i<7?rnd(-20,20):0);y=lerp(t.y,ty,i/7)+(i<7?rnd(-14,14):0);pts.push([x,y]);}bolts.push({pts,life:.7});}
+  }else{
+    streak++;const clean=v.wrong===0;pop(180,300,clean?'安全！':'安全（但客人不太高興）',clean?'#ffd35c':'#fff8ea',clean);Snd.blip(660,990,.12,'triangle',.09);Snd.blip(990,1320,.14,'triangle',.07,.1);
+    for(let i=0;i<10;i++)sparks.push({x:180+rnd(-70,70),y:300+rnd(-40,40),vx:rnd(-60,60),vy:rnd(-120,-30),r:rnd(2,4),col:'#ffd35c',life:rnd(.4,.8)});
+    if(streak>0&&streak%HEAL_EVERY===0&&pain>0){pain--;drawBolts();pop(180,340,'深呼吸，緩過來了',VOLT);}   // 連續安全幾位就恢復一格
+  }
+}
+function gameOver(){
+  mode='over';paused=false;$('pause').hidden=true;const n=nth-1;if(n>best){best=n;store.set('ds.best',String(n));}
+  $('ovN').textContent=n;$('ovRun').textContent=n+' 位';$('ovBest').textContent=best+' 位';$('ovRank').textContent=RANKS.find(r=>n>=r[0])[1];$('ovMiss').textContent=lastMiss.join('、')||'—';
+  $('copied').textContent='';el.hud.hidden=true;el.over.hidden=false;showBest();
+}
+function tick(dt){
+  time+=dt;shake=Math.max(0,shake-dt*26);flash=Math.max(0,flash-dt*3.5);
+  for(let i=sparks.length-1;i>=0;i--){const s=sparks[i];s.x+=s.vx*dt;s.y+=s.vy*dt;s.vy+=260*dt;if((s.life-=dt)<=0)sparks.splice(i,1);}
+  for(let i=bolts.length-1;i>=0;i--)if((bolts[i].life-=dt)<=0)bolts.splice(i,1);
+  for(let i=pops.length-1;i>=0;i--)if((pops[i].life-=dt)<=0)pops.splice(i,1);
+  const v=vis;if(mode!=='play'||!v)return;
+  v.pt+=dt;if(v.sayT>0)v.sayT-=dt;if(v.bag){v.bag.t+=dt;if(v.bag.state==='open'&&v.bag.t>.2)v.bag.state='gone';}
+  for(const t of v.toks){t.t+=dt;if(t.sh>0)t.sh-=dt;if(t.state==='fly'&&t.t>=.34){t.state='gone';Snd.blip(160,110,.07,'square',.08);for(let i=0;i<4;i++)sparks.push({x:BOX.x+rnd(-12,12),y:BOX.y-8,vx:rnd(-50,50),vy:rnd(-90,-30),r:2.5,col:VOLT,life:.4});}}
+  if(v.phase==='enter'&&v.pt>=.45){v.phase='check';v.pt=0;v.say=v.hi;v.sayT=1.6;v.toks.forEach((t,i)=>{if(t.t>0)t.t=-.1*i;});}
+  else if(v.phase==='check'){v.t+=dt;if(v.t>=v.T)admit();}
+  else if(v.phase==='go'&&v.pt>=.5)resolve();
+  else if(v.phase==='result'&&v.pt>=(v.left.length?1.5:.8)){if(pain>=PAIN_MAX)gameOver();else next();}
+}
+function hud(){
+  const v=vis;if(mode!=='play'||!v)return;
+  const left=v.phase==='check'?clamp(1-v.t/v.T,0,1):v.phase==='enter'?1:0,f=Math.round(left*200);
+  if(f!==lastFill){lastFill=f;el.fill.style.transform=`scaleX(${left.toFixed(3)})`;el.timer.classList.toggle('low',left<.3);}
+  if(v.phase==='result')setHint(v.left.length?'漏掉的東西標出來了，下次記得':'');
+  else if(v.k===1)setHint('帶電的點掉丟進信箱，檢查完按「請進」');
+  else if(v.bag&&v.bag.state==='in'&&v.k<=9)setHint('包包裡可能藏東西，點開看看');
+  else if(v.k<=3)setHint('長得很像的要看清楚');
+  else setHint('');
+}
+const H=1/60;let acc=0,last=0;
+function setPaused(p){if(p&&(paused||mode!=='play'))return;if(!p&&!paused)return;paused=p;$('pause').hidden=!p;last=0;acc=0;if(Snd.ctx){try{p?Snd.ctx.suspend():Snd.ctx.resume();}catch(e){}}if(p)$('resume').focus({preventScroll:true});}
+function frame(now){
+  const dt=Math.min(.05,(now-(last||now))/1000);last=now;
+  if(!paused){acc+=dt;let n=0;while(acc>=H&&n++<6){tick(H);acc-=H;}if(n>=6)acc=0;hud();}
+  render();requestAnimationFrame(frame);
+}
+
+/* ───────── 輸入 ───────── */
+gameEl.addEventListener('pointerdown',e=>{if(e.target.closest('button,a'))return;e.preventDefault();Snd.init();if(mode!=='play'||paused)return;
+  const b=gameEl.getBoundingClientRect();tapAt((e.clientX-b.left-ox)/scale,(e.clientY-b.top-oy)/scale);});
+gameEl.addEventListener('contextmenu',e=>e.preventDefault());
+/* iOS Safari：快速點兩下會被當成「點兩下放大」，而且放大後縮不回來，所以把雙擊縮放、雙指縮放都擋掉 */
+let lastTouchEnd=0;
+document.addEventListener('touchend',e=>{const now=Date.now(),btn=e.target&&e.target.closest&&e.target.closest('button,a');if(now-lastTouchEnd<=350&&!btn&&e.cancelable)e.preventDefault();lastTouchEnd=now;},{passive:false});
+for(const t of['gesturestart','gesturechange','gestureend'])document.addEventListener(t,e=>e.preventDefault(),{passive:false});
+document.addEventListener('dblclick',e=>e.preventDefault());
+document.addEventListener('visibilitychange',()=>{last=0;if(document.hidden)setPaused(true);});
+window.addEventListener('blur',()=>setPaused(true));
+window.addEventListener('pagehide',()=>setPaused(true));
+window.addEventListener('keydown',e=>{if(e.code==='Escape'||e.code==='KeyP'){if(!e.repeat)setPaused(!paused);return;}
+  if(paused||e.repeat||(e.code!=='Space'&&e.code!=='Enter'))return;if(e.target.closest&&e.target.closest('button,a'))return;e.preventDefault();
+  if(mode==='title'||mode==='over')start();else admit();});
+$('start').addEventListener('click',start);
+$('again').addEventListener('click',start);
+el.enter.addEventListener('click',()=>{Snd.init();admit();});
+$('pauseBtn').addEventListener('click',()=>setPaused(true));
+$('resume').addEventListener('click',()=>setPaused(false));
+el.mute.addEventListener('click',()=>{Snd.init();Snd.setOn(!Snd.on);muteIcon();});
+$('share').addEventListener('click',async()=>{
+  const link=document.querySelector('link[rel=canonical]'),out=$('copied');
+  const text=`我在《絕命電師》幫夸克擋了 ${nth-1} 位客人身上的電，封號「${$('ovRank').textContent}」。你擋得住幾位？`+(link?' '+link.href:'');
+  try{await navigator.clipboard.writeText(text);out.textContent='已複製，貼到脆上炫耀吧';}
+  catch(e){out.textContent=text;const r=document.createRange();r.selectNodeContents(out);const s=getSelection();s.removeAllRanges();s.addRange(r);}
+});
+window.addEventListener('resize',resize);
+if(window.ResizeObserver)new ResizeObserver(resize).observe(gameEl);
+
+// 標題畫面背景：放一位客人當示意
+vis=makeVisitor(7);vis.phase='check';vis.toks.forEach(t=>{t.t=1;});vis.sayT=0;
+muteIcon();showBest();drawBolts();resize();requestAnimationFrame(frame);
+window.__ds={IT,get vis(){return vis},get mode(){return mode},get nth(){return nth},get pain(){return pain},get paused(){return paused},start,admit,makeVisitor,
+  xy(wx,wy){const b=gameEl.getBoundingClientRect();return{x:b.left+ox+wx*scale,y:b.top+oy+wy*scale};}};
+})();
+</script>
+<!--/PAGE-->
+</body>
+</html>
