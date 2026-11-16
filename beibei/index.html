@@ -120,6 +120,7 @@ body{background:var(--sky);color:var(--ink);font-family:var(--body);font-weight:
 .skin-name{font-weight:900;font-size:14px;color:var(--quilt);text-shadow:var(--sticker);min-height:1.4em;margin-top:-6px}
 .unlock{font-weight:900;font-size:15px;color:var(--tin-deep)}
 .best{font-weight:900;font-size:14px;color:var(--quilt);text-shadow:var(--sticker);min-height:1.4em}
+.home{pointer-events:auto;font-weight:900;font-size:14px;color:var(--quilt);text-shadow:var(--sticker);text-underline-offset:4px}
 
 #over,#pause{justify-content:center;background:rgba(47,44,69,.45)}
 .pause-note{margin:0;font-size:14px;opacity:.75}
@@ -183,6 +184,7 @@ body{background:var(--sky);color:var(--ink);font-family:var(--body);font-weight:
     <div class="skin-name" id="skinName"></div>
     <button class="btn" id="start" type="button">開始曬被</button>
     <div class="best" id="best"></div>
+    <a class="home" href="../">其他遊戲</a>
   </div>
 
   <div class="screen" id="over" hidden>
@@ -1142,11 +1144,11 @@ function down(cx,cy){
   if(p&&sim.pigeon.phase!=='out'&&Math.hypot(x-p.x,y-(p.y-10*PIGEON_SC[p.lv]))<30+10*PIGEON_SC[p.lv]){if(sim.pigeon.phase==='in'){sim.pigeon.phase='on';sim.pigeon.t=0;}inp.shoo=true;return;}
   inp.tap=true;ripples.push({x,y,life:.35});
 }
-gameEl.addEventListener('pointerdown',e=>{if(e.target.closest('button'))return;e.preventDefault();Snd.init();down(e.clientX,e.clientY);});
+gameEl.addEventListener('pointerdown',e=>{if(e.target.closest('button,a'))return;e.preventDefault();Snd.init();down(e.clientX,e.clientY);});
 gameEl.addEventListener('contextmenu',e=>e.preventDefault());
 /* iOS Safari：這個遊戲就是要連點，但連點兩下會被當成「點兩下放大」，而且放大後縮不回來。把雙擊縮放、雙指縮放都擋掉 */
 let lastTouchEnd=0;
-document.addEventListener('touchend',e=>{const now=Date.now(),btn=e.target&&e.target.closest&&e.target.closest('button');
+document.addEventListener('touchend',e=>{const now=Date.now(),btn=e.target&&e.target.closest&&e.target.closest('button,a');
   if(now-lastTouchEnd<=350&&!btn&&e.cancelable)e.preventDefault();   // 第二下不交給瀏覽器處理；按鈕除外，不然按鈕會按不到
   lastTouchEnd=now;},{passive:false});
 for(const t of['gesturestart','gesturechange','gestureend'])document.addEventListener(t,e=>e.preventDefault(),{passive:false});
@@ -1160,7 +1162,7 @@ document.addEventListener('visibilitychange',()=>{last=0;if(document.hidden)setP
 window.addEventListener('blur',()=>setPaused(true));
 window.addEventListener('pagehide',()=>setPaused(true));
 window.addEventListener('keydown',e=>{if(e.code==='Escape'||e.code==='KeyP'){if(!e.repeat)setPaused(!paused);return;}
-  if(paused||(e.code!=='Space'&&e.code!=='ArrowUp'))return;if(e.target.closest&&e.target.closest('button'))return;e.preventDefault();if(e.repeat)return;
+  if(paused||(e.code!=='Space'&&e.code!=='ArrowUp'))return;if(e.target.closest&&e.target.closest('button,a'))return;e.preventDefault();if(e.repeat)return;
   if(mode==='title'||mode==='over'){start();return;}if(mode==='play'&&!sim.qte)inp.tap=true;});
 $('start').addEventListener('click',start);
 $('again').addEventListener('click',start);
