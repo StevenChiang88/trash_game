@@ -1,0 +1,573 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover, user-scalable=no">
+<meta name="description" content="騎著機車拍英文報告。進彎按住壓車，壓得越低越帥，壓過頭就摔。十次車禍九次快，一次英文報告。">
+<meta name="theme-color" content="#26253a">
+<link rel="canonical" href="https://stevenchiang88.github.io/trash_game/baogao/">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="用生命做英文報告">
+<meta property="og:title" content="用生命做英文報告｜壓車耍帥">
+<meta property="og:description" content="騎著機車拍英文報告。進彎按住壓車，壓得越低越帥，壓過頭就摔。十次車禍九次快，一次英文報告。">
+<meta property="og:url" content="https://stevenchiang88.github.io/trash_game/baogao/">
+<meta property="og:image" content="https://stevenchiang88.github.io/trash_game/baogao/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="從後面看，穿黑外套的大學生載著同學騎機車壓車過彎，腳架磨出火花，畫面是錄影的取景框，下面有英文字幕">
+<meta property="og:locale" content="zh_TW">
+<meta name="twitter:card" content="summary_large_image">
+<style>
+  /* 與發佈環境相同的最小底座：上下避開瀏海與手勢列 */
+  html{box-sizing:border-box;padding:env(safe-area-inset-top,0px) 0 env(safe-area-inset-bottom,0px)}
+  body{margin:0}
+  [hidden]{display:none!important}
+</style>
+<!--PAGE-->
+<title>用生命做英文報告</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chiron+GoRound+TC:wght@500;900&family=Fredoka:wght@600;700&display=swap">
+<style>
+/* 版面：整個畫面是跟在後面拍的影片（像賽車遊戲那樣往前騎）。他載著同學邊騎邊唸英文報告，
+   上面是錄影的資訊（REC、第幾次拍、帥度），右邊是壓車的量表，下面是英文字幕。整個畫面按住就是壓車 */
+:root{
+  --ink:#26253a;        /* 描邊與文字 */
+  --paper:#fff6e6;      /* 卡片 */
+  --rec:#e5432f;        /* 錄影紅：主色，也是「壓過頭」 */
+  --sun:#ffc93c;        /* 按鈕、火花、帥 */
+  --band:#35b08a;       /* 壓得剛好 */
+  --ok:#2f9a7c;
+  --asphalt:#5f6170;
+  --backdrop:#16151f;
+  --display:"Fredoka","Chiron GoRound TC","PingFang TC","Microsoft JhengHei",sans-serif;
+  --body:"Chiron GoRound TC","PingFang TC","Noto Sans TC","Microsoft JhengHei",sans-serif;
+  --sticker:-2px -2px 0 var(--ink),2px -2px 0 var(--ink),-2px 2px 0 var(--ink),2px 2px 0 var(--ink),0 -2.5px 0 var(--ink),0 2.5px 0 var(--ink),-2.5px 0 0 var(--ink),2.5px 0 0 var(--ink);
+}
+html,body{height:100%;touch-action:none;overscroll-behavior:none}
+button{touch-action:manipulation}
+body{background:var(--backdrop);color:var(--ink);font-family:var(--body);font-weight:500;overflow:hidden;display:grid;place-items:center}
+#game{position:relative;height:100%;aspect-ratio:9/16;max-width:100%;overflow:hidden;touch-action:none;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent;background:var(--asphalt)}
+#c{position:absolute;inset:0;width:100%;height:100%;display:block}
+
+.hud{position:absolute;inset:0;pointer-events:none;display:flex;flex-direction:column;gap:8px;padding-block:14px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.top{display:flex;align-items:flex-start;justify-content:space-between;gap:8px}
+.left{display:flex;flex-direction:column;align-items:flex-start;gap:6px}
+/* 錄影資訊：紅點會閃 */
+.rec{display:flex;align-items:center;gap:7px;font-family:var(--display);font-weight:700;font-size:15px;color:#fff;text-shadow:0 1px 3px rgba(0,0,0,.7);letter-spacing:.04em}
+.rec i{width:11px;height:11px;border-radius:50%;background:var(--rec);animation:blink 1s steps(2) infinite}
+@keyframes blink{50%{opacity:.25}}
+.score{display:flex;align-items:baseline;gap:6px;font-family:var(--display);color:var(--paper);text-shadow:var(--sticker);line-height:1}
+.score small{font-family:var(--body);font-weight:900;font-size:15px}
+.score b{font-size:38px;font-weight:700;font-variant-numeric:tabular-nums}
+.score em{font-style:normal;font-family:var(--body);font-weight:900;font-size:14px;color:var(--sun)}
+.side{display:flex;flex-direction:column;gap:8px}
+.icon-btn{pointer-events:auto;width:40px;height:40px;display:grid;place-items:center;border:2.5px solid var(--ink);border-radius:50%;background:var(--paper);color:var(--ink);cursor:pointer;padding:0}
+.icon-btn svg{width:20px;height:20px}
+.icon-btn:focus-visible,.btn:focus-visible,.lv:focus-visible{outline:3px solid var(--band);outline-offset:3px}
+.gap{flex:1}
+/* 英文字幕：像影片下方的字幕條 */
+.cap{align-self:center;margin-top:auto;width:min(328px,100%);min-height:64px;display:flex;flex-direction:column;justify-content:center;gap:2px;padding:8px 14px;border-radius:12px;background:rgba(22,21,31,.72);color:#fff;text-align:center}
+.cap b{font-family:var(--display);font-weight:600;font-size:19px;line-height:1.25;min-height:1.25em;text-wrap:balance}
+.cap span{font-weight:900;font-size:13px;color:var(--sun);min-height:1.3em}
+
+.btn{pointer-events:auto;font:inherit;font-weight:900;font-size:20px;color:var(--ink);background:var(--sun);border:3px solid var(--ink);border-radius:16px;padding:12px 26px;box-shadow:0 5px 0 var(--ink);cursor:pointer;transition:transform .06s,box-shadow .06s}
+.btn:active{transform:translateY(4px);box-shadow:0 1px 0 var(--ink)}
+.btn.ghost{background:var(--paper);font-size:15px;padding:10px 16px}
+
+.screen{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;gap:12px;padding-block:24px 18px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));text-align:center}
+#title{background:linear-gradient(rgba(22,21,31,.72),rgba(22,21,31,.25) 30%,rgba(22,21,31,.55) 55%,rgba(22,21,31,.86))}
+.logo{margin:2vh 0 0;font-weight:900;font-size:clamp(34px,10.5vw,50px);line-height:1.08;letter-spacing:.02em;color:var(--paper);text-shadow:var(--sticker),0 6px 0 var(--ink);transform:rotate(-3deg)}
+.logo span{display:block;color:var(--sun);font-size:1.22em}
+.tag{margin:4px 0 0;font-weight:900;font-size:16px;color:var(--paper);text-shadow:var(--sticker);text-wrap:balance}
+.how{display:flex;flex-wrap:wrap;justify-content:center;gap:7px;margin:0;padding:0;list-style:none;font-size:13.5px}
+.how li{padding:5px 11px;border:2.5px solid var(--ink);border-radius:999px;background:var(--paper);white-space:nowrap}
+.how b{font-weight:900;color:var(--rec)}
+/* 作業清單：一份作業一關，做完才開下一份 */
+.levels{pointer-events:auto;width:min(330px,100%);display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:auto;max-height:46%;overflow-y:auto;touch-action:pan-y;overscroll-behavior:contain;padding:2px}
+.lv{font:inherit;color:var(--ink);text-align:left;display:grid;grid-template-columns:1fr auto;align-items:center;gap:2px 6px;padding:7px 10px;border:2.5px solid var(--ink);border-radius:12px;background:var(--paper);cursor:pointer;box-shadow:0 3px 0 var(--ink)}
+.lv b{font-weight:900;font-size:14px;line-height:1.2}.lv small{grid-column:1;font-size:11px;opacity:.7;line-height:1.2}
+.lv .g{grid-row:1/3;grid-column:2;font-family:var(--display);font-weight:700;font-size:22px;color:var(--rec);min-width:20px;text-align:center}
+.lv.next{background:var(--sun)}
+.lv:disabled{cursor:default;box-shadow:none;background:rgba(255,246,230,.45);border-color:rgba(38,37,58,.45);color:rgba(38,37,58,.6)}
+.lv:not(:disabled):active{transform:translateY(2px);box-shadow:0 1px 0 var(--ink)}
+.best{font-weight:900;font-size:13px;color:var(--paper);text-shadow:var(--sticker);min-height:1.4em}
+.home{pointer-events:auto;font-weight:900;font-size:14px;color:var(--paper);text-shadow:var(--sticker);text-underline-offset:4px}
+
+#over,#pause{justify-content:center;background:rgba(22,21,31,.6)}
+.card{width:min(330px,100%);max-height:100%;overflow-y:auto;touch-action:pan-y;overscroll-behavior:contain;display:flex;flex-direction:column;gap:12px;padding:18px;border:3px solid var(--ink);border-radius:22px;background:var(--paper);box-shadow:0 7px 0 var(--ink);text-align:left;animation:pop .35s cubic-bezier(.3,1.5,.5,1)}
+@keyframes pop{from{transform:scale(.85);opacity:0}}
+.verdict{margin:0;font-weight:900;font-size:28px;line-height:1.25}
+.verdict .n{font-family:var(--display);font-weight:700;color:var(--rec)}
+/* 大大的成績或觀看次數 */
+.big{display:flex;align-items:baseline;gap:10px;padding:10px 14px;border:2.5px solid var(--ink);border-radius:14px;background:#fff}
+.big b{font-family:var(--display);font-weight:700;font-size:46px;line-height:1;color:var(--rec);font-variant-numeric:tabular-nums}
+.big span{font-weight:900;font-size:14px}
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:9px 12px;margin:0}
+.stats dt{font-size:12px;opacity:.65}
+.stats dd{margin:0;font-weight:900;font-size:16px;font-variant-numeric:tabular-nums}
+.stats .wide{grid-column:1/-1}
+.acts{display:flex;flex-wrap:wrap;gap:9px;align-items:center}
+.copied{font-size:13px;font-weight:900;color:var(--ok);min-height:1.3em;user-select:text;-webkit-user-select:text}
+.note{margin:0;font-size:14px;opacity:.75}
+@media (prefers-reduced-motion:reduce){.card{animation:none}.rec i{animation:none}}
+</style>
+</head>
+<body>
+<div id="game">
+  <canvas id="c" aria-label="從後面看，一個大學生載著同學騎機車，邊騎邊唸英文報告，進彎的時候壓車"></canvas>
+
+  <div class="hud" id="hud" hidden>
+    <div class="top">
+      <div class="left">
+        <div class="rec"><i></i><span>REC</span><span id="take">Take 1</span><span id="clock">00:00</span></div>
+        <div class="score"><small>帥度</small><b id="num">0</b><em id="streak"></em></div>
+      </div>
+      <div class="side">
+        <button class="icon-btn" id="pauseBtn" type="button" aria-label="暫停"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="6" y="5" width="4.5" height="14" rx="1.6"/><rect x="13.5" y="5" width="4.5" height="14" rx="1.6"/></svg></button>
+        <button class="icon-btn" id="mute" type="button" aria-label="聲音開關"></button>
+      </div>
+    </div>
+    <div class="cap"><b id="cap"></b><span id="hint"></span></div>
+  </div>
+
+  <div class="screen" id="title">
+    <h1 class="logo">用生命做<span>英文報告</span></h1>
+    <p class="tag">騎車拍英文報告。壓得越低越帥，壓過頭就摔。</p>
+    <ul class="how">
+      <li><b>進彎按住</b> 壓車</li>
+      <li><b>放開</b> 回正</li>
+      <li><b>貼近紅線</b> 磨出火花</li>
+      <li><b>壓不夠</b> 衝出彎道</li>
+    </ul>
+    <div class="levels" id="levels"></div>
+    <div class="best" id="best"></div>
+    <a class="home" href="../">其他遊戲</a>
+  </div>
+
+  <div class="screen" id="over" hidden>
+    <div class="card">
+      <p class="verdict" id="ovTitle"></p>
+      <div class="big"><b id="ovBig"></b><span id="ovBigL"></span></div>
+      <dl class="stats">
+        <div><dt>作業</dt><dd id="ovLv"></dd></div>
+        <div><dt>報告進度</dt><dd id="ovProg"></dd></div>
+        <div><dt>帥度</dt><dd id="ovScore"></dd></div>
+        <div><dt id="ovXL"></dt><dd id="ovX"></dd></div>
+        <div class="wide"><dt id="ovNoteL"></dt><dd id="ovNote"></dd></div>
+      </dl>
+      <div class="acts">
+        <button class="btn" id="again" type="button">重拍</button>
+        <button class="btn ghost" id="toList" type="button">作業清單</button>
+        <button class="btn ghost" id="share" type="button">複製戰績</button>
+      </div>
+      <div class="copied" id="copied"></div>
+    </div>
+  </div>
+
+  <div class="screen" id="pause" hidden>
+    <div class="card">
+      <p class="verdict">暫停中</p>
+      <p class="note">離開畫面會自動暫停，按「繼續」再接著騎。</p>
+      <div class="acts"><button class="btn" id="resume" type="button">繼續</button><button class="btn ghost" id="quit" type="button">作業清單</button></div>
+    </div>
+  </div>
+</div>
+<script>
+(() => {
+'use strict';
+const clamp=(x,a,b)=>x<a?a:x>b?b:x, lerp=(a,b,t)=>a+(b-a)*t, TAU=Math.PI*2, RAD=Math.PI/180;
+const rnd=(a,b)=>a+Math.random()*(b-a), pick=a=>a[(Math.random()*a.length)|0];
+const hash=(i,k)=>{const x=Math.sin(i*127.1+k*311.7)*43758.5453;return x-Math.floor(x);};
+const store={get(k){try{return localStorage.getItem(k)}catch(e){return null}},set(k,v){try{localStorage.setItem(k,v)}catch(e){}}};
+const $=id=>document.getElementById(id);
+const INK='#26253a',PAPER='#fff6e6',REC='#e5432f',SUN='#ffc93c',BAND='#35b08a';
+const FONT='"Chiron GoRound TC","PingFang TC","Microsoft JhengHei",sans-serif',NUM='"Fredoka","Chiron GoRound TC",sans-serif';
+function rrect(c,x,y,w,h,r){c.beginPath();c.moveTo(x+r,y);c.arcTo(x+w,y,x+w,y+h,r);c.arcTo(x+w,y+h,x,y+h,r);c.arcTo(x,y+h,x,y,r);c.arcTo(x,y,x+w,y,r);c.closePath();}
+
+/* ───────── 規則 ─────────
+   畫面是跟在後面拍的（像賽車遊戲那樣往前騎），看得到前面的路。一開始他停在路邊，喊「Go back, go back.」叫同學坐上後座，
+   同學坐好就起步、開始唸報告，起步之後馬上就是第一個彎；
+   之後是「彎 → 直線 → 彎 → 直線…」，每個彎唸一句。
+   唯一的操作：按住＝往彎裡壓車（角度一直增加），放開＝回正。
+   每個彎有兩條線：至少要壓到 req（壓不夠會往外飄，飄滿就衝出彎道），不能超過 lim（輪胎抓不住，超過就滑倒）。
+   在這兩條線之間，壓得越靠近 lim 分數（帥度）漲得越快；最上面那一小段會磨出火花，分數再乘 2.5。
+   彎裡偶爾有砂石、水窪、貓：先預告，然後 lim 掉下來一下，要趕快放一點。
+   唸完整份報告＝過關，看帥度給成績；摔車＝這次 NG，改算「這支影片有多少人看」 */
+const VW=360,VH=640,HOR=226,BX=180,BY=508;
+// UP 按住時每秒壓幾度（越低越壓不下去，UP_FALL 是到 60 度時慢掉的比例），DOWN 放開時每秒回幾度，ST_CAP 直線上最多歪幾度
+const UP=74,UP_FALL=.55,DOWN=90,TH_MAX=70,ST_CAP=13;
+// RATE 壓到 lim 時每秒幾分；SPARK_U 以上磨火花，分數乘 SPARK_X；WIDE_T 完全沒壓的話幾秒衝出去；OVER_T 超過 lim 多久才算摔；IN_T/OUT_T 進彎、出彎時 req 漸變的時間
+const RATE=40,SPARK_U=.84,SPARK_X=2.5,WIDE_T=.95,OVER_T=.1,IN_T=.55,OUT_T=.4;
+// 開場：先停 GO_AT 秒，再花 GO_UP 秒加速，加速完就進第一個彎
+const GO_AT=1.9,GO_UP=.75,MATE_AT=1.5,OPENING='Go back, go back.';
+const EV={gravel:{n:'砂石',col:'#b9a98a'},puddle:{n:'水窪',col:'#7fc4e8'},cat:{n:'貓',col:'#3a3d52'},manhole:{n:'水溝蓋',col:'#8d909c'}};
+// 一份作業一關。corners 幾個彎；grip 輪胎抓得住的最大角度；sharp 彎有多急（0~1）；dur 一個彎幾秒；speed 車速；
+// ev 彎裡出狀況的機率和 lim 掉幾度；rain 抓地力忽高忽低；night 看不到紅線；pass 後座多揹一大包，反應變慢；wind 陣風一次吹歪幾度
+const LEVELS=[
+ {n:'自我介紹',c:'晴天，車少',sky:'day',corners:5,grip:55,sharp:[.12,.4],dur:[2.6,3.2],speed:1,
+  lines:['Hello everyone. I am a student.','Today I will introduce myself.','I am twenty years old.','My hobby is riding scooter.','I ride very safe. Trust me.','That is all. Thank you.']},
+ {n:'My Hometown',c:'路上有砂石',sky:'sunset',corners:6,grip:55,sharp:[.25,.55],dur:[2.8,3.6],speed:1.08,ev:{types:['gravel'],p:.6,drop:[9,13]},
+  lines:['Today I want to introduce my hometown.','My hometown is very hot.','There are many scooters here.','The harbor is very beautiful.','We like to drink bubble tea.','You should come to visit.','Thank you for your listening.']},
+ {n:'My Hobby',c:'下雨，路很滑',sky:'rain',corners:6,grip:49,sharp:[.2,.5],dur:[2.8,3.6],speed:1.05,rain:2,ev:{types:['puddle','manhole'],p:.5,drop:[7,11]},
+  lines:['It is raining, but the report is due today.','My hobby is watching the rain.','Rain makes the road very slippery.','But I am not afraid.','Because I have a raincoat.','The raincoat cannot save me.','Thank you, teacher.']},
+ {n:'My Family',c:'晚上，看不到極限在哪',sky:'night',corners:7,grip:54,sharp:[.25,.55],dur:[2.8,3.6],speed:1.1,night:true,ev:{types:['cat'],p:.5,drop:[9,13]},
+  lines:['Good evening, everyone.','This is my family.','My mother says: do not ride at night.','My father says: listen to your mother.','My sister says nothing. She is sleeping.','My cat is on the road. Why.','I love my family.','Good night. Thank you.']},
+ {n:'My Dream',c:'山路，都是髮夾彎',sky:'hill',corners:6,grip:56,sharp:[.6,.9],dur:[4.4,5.8],speed:1.12,ev:{types:['gravel'],p:.45,drop:[8,12]},
+  lines:['Today I will talk about my dream.','My dream is to be a racer.',"My teacher's dream is that I graduate.",'This mountain road has many curves.','Curves make a man grow up.','I can see my future. It is a guardrail.','Thank you.']},
+ {n:'期中報告',c:'同學揹著全組的道具，車變很鈍',sky:'day',corners:7,grip:54,sharp:[.3,.6],dur:[3,3.8],speed:1.12,pass:true,ev:{types:['gravel','manhole'],p:.5,drop:[8,12]},
+  lines:['This is our midterm report.','This is my classmate. Say hi.','He did not do anything in this report.','But he is heavy.','Teamwork is very important.','He is leaning the wrong way.','We are good partners.','Thank you for your attention.']},
+ {n:'小組報告',c:'颱風天，有陣風',sky:'rain',corners:7,grip:53,sharp:[.3,.6],dur:[3,3.8],speed:1.15,wind:7,
+  lines:['Today is a typhoon day.','School is closed, but the deadline is not.','My group members are all missing.','So I do this report alone.','The wind is my only teammate.','The wind is not a good teammate.','I will remember this.','Thank you.']},
+ {n:'期末報告',c:'晚上、下雨、砂石、陣風',sky:'night',corners:10,grip:53,sharp:[.3,.7],dur:[3,4.4],speed:1.2,rain:1.8,night:true,wind:4,ev:{types:['gravel','puddle','cat','manhole'],p:.45,drop:[7,11]},
+  lines:['This is my final report.','The topic is: road safety.','Rule one: slow down.','Rule two: do not film while riding.','Rule three: do not lean too much.','I am breaking all of them now.','Please do not do this at home.','Or outside.','Ten accidents, nine are from speed.','One is from English report.','Thank you. Please let me pass.']},
+ {n:'延畢',c:'沒有終點，越來越難',sky:'sunset',corners:Infinity,endless:true,grip:55,sharp:[.2,.5],dur:[2.8,3.8],speed:1.1,ev:{types:['gravel','puddle','cat','manhole'],p:.45,drop:[8,12]},
+  lines:['I am still here.','Another semester.','My classmates all graduated.','The teacher knows my scooter now.','Next year, for sure.','I have done this report nine times.','The topic is still my hometown.','My hometown did not change. Me neither.','Please, professor.','I can do this all day.','Actually, I have to.','Thank you. See you next year.']}];
+// 成績看「帥度 ÷ 這份作業的標準分」。標準分＝每個彎都剛好壓在極限上、但沒磨出火花能拿到的分數，所以要拿 S 一定得磨火花
+const GRADES=[[.85,'S','英文還是很破，但我看得熱血沸騰。'],[.42,'A','很精彩。下次可以不用騎車，真的。'],[.16,'B','內容普通，過彎也普通。'],[0,'C','有交就好。']];
+const VIEWS=[[1e6,'百萬人朝聖'],[2e5,'新聞台來要授權'],[3e4,'上了熱門看板'],[3e3,'在系上傳開了'],[0,'只有同學群組看到']];
+
+/* ───────── 聲音 ───────── */
+const Snd={ctx:null,on:store.get('bg.mute')!=='1',eng:null,
+  init(){if(this.ctx){if(this.ctx.state==='suspended'&&!paused)this.ctx.resume();return;}
+    try{const C=window.AudioContext||window.webkitAudioContext,c=this.ctx=new C();this.master=c.createGain();this.master.gain.value=this.on?1:0;this.master.connect(c.destination);
+      const buf=c.createBuffer(1,c.sampleRate,c.sampleRate),d=buf.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=Math.random()*2-1;this.noise=buf;}catch(e){this.ctx=null;}},
+  blip(f0,f1,dur,type,vol,delay){if(!this.ctx)return;const c=this.ctx,t=c.currentTime+(delay||0),o=c.createOscillator(),g=c.createGain();
+    o.type=type||'sine';o.frequency.setValueAtTime(f0,t);o.frequency.exponentialRampToValueAtTime(Math.max(30,f1),t+dur);
+    g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(vol||.1,t+.012);g.gain.exponentialRampToValueAtTime(.0008,t+dur);o.connect(g);g.connect(this.master);o.start(t);o.stop(t+dur+.03);},
+  burst(dur,freq,vol,type){if(!this.ctx)return;const c=this.ctx,t=c.currentTime,n=c.createBufferSource(),f=c.createBiquadFilter(),g=c.createGain();n.buffer=this.noise;n.loop=true;f.type=type||'lowpass';f.frequency.value=freq;
+    g.gain.setValueAtTime(vol,t);g.gain.exponentialRampToValueAtTime(.001,t+dur);n.connect(f);f.connect(g);g.connect(this.master);n.start(t);n.stop(t+dur+.05);},
+  // 引擎聲（兩個振盪器）、輪胎的尖叫聲、腳架磨地的聲音：騎的時候一直開著，每一格調音量和音高
+  engine(on){if(!this.ctx)return;if(!on){if(this.eng){const e=this.eng;this.eng=null;try{e.out.gain.setTargetAtTime(0,this.ctx.currentTime,.05);setTimeout(()=>{try{e.o1.stop();e.o2.stop();e.sq.stop();e.sc.stop();}catch(x){}},300);}catch(x){}}return;}
+    if(this.eng)return;const c=this.ctx,out=c.createGain(),lp=c.createBiquadFilter(),o1=c.createOscillator(),o2=c.createOscillator(),g1=c.createGain(),g2=c.createGain();
+    out.gain.value=0;out.connect(this.master);lp.type='lowpass';lp.frequency.value=520;lp.connect(out);o1.type='sawtooth';o2.type='square';g1.gain.value=.05;g2.gain.value=.025;o1.connect(g1);o2.connect(g2);g1.connect(lp);g2.connect(lp);
+    const mk=(type,f,q)=>{const n=c.createBufferSource(),fl=c.createBiquadFilter(),g=c.createGain();n.buffer=this.noise;n.loop=true;fl.type=type;fl.frequency.value=f;fl.Q.value=q;g.gain.value=0;n.connect(fl);fl.connect(g);g.connect(out);n.start();return{n,g};};
+    const sq=mk('bandpass',1900,9),sc=mk('highpass',4200,.7);o1.start();o2.start();out.gain.setTargetAtTime(1,c.currentTime,.1);this.eng={out,o1,o2,sq:sq.n,sqg:sq.g,sc:sc.n,scg:sc.g};},
+  tune(speed,lean,u,spark){const e=this.eng;if(!e)return;const t=this.ctx.currentTime,f=74+speed*26+lean*.35;e.o1.frequency.setTargetAtTime(f,t,.05);e.o2.frequency.setTargetAtTime(f*2.01,t,.05);
+    e.sqg.gain.setTargetAtTime(clamp((u-.55)/.45,0,1)*.07,t,.04);e.scg.gain.setTargetAtTime(spark?.11:0,t,.03);},
+  warn(){this.blip(880,880,.09,'square',.07);this.blip(880,880,.09,'square',.07,.14);},
+  wind(){this.burst(.9,700,.22,'bandpass');},
+  crash(){this.burst(.7,900,.5);this.blip(160,40,.4,'sawtooth',.2);this.burst(1.2,3000,.18,'highpass');},
+  setOn(v){this.on=v;store.set('bg.mute',v?'0':'1');if(this.ctx)this.master.gain.setTargetAtTime(v?1:0,this.ctx.currentTime,.02);if(!v)Voice.stop();}
+};
+// 報告是用裝置內建的英文語音唸的；沒有英文語音的環境就只有字幕
+const Voice={ok:'speechSynthesis' in window&&'SpeechSynthesisUtterance' in window,v:null,warm:false,
+  pick(){if(!this.ok)return;let vs=[];try{vs=speechSynthesis.getVoices()||[];}catch(e){}const L=v=>(v.lang||'').replace('_','-').toLowerCase();
+    this.v=vs.find(v=>L(v)==='en-us')||vs.find(v=>L(v).startsWith('en'))||null;},
+  unlock(){if(!this.ok)return;this.stop();if(this.warm)return;this.warm=true;try{this.pick();const u=new SpeechSynthesisUtterance(' ');u.volume=0;speechSynthesis.speak(u);}catch(e){}},
+  say(text){if(!this.ok||!Snd.on)return;try{if(!this.v)this.pick();if(!this.v)return;speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(text);u.voice=this.v;u.lang=this.v.lang;u.rate=1.04;u.pitch=1.05;u.volume=1;speechSynthesis.speak(u);}catch(e){}},
+  stop(){if(this.ok)try{speechSynthesis.cancel();}catch(e){}}};
+if(Voice.ok){Voice.pick();try{speechSynthesis.addEventListener('voiceschanged',()=>Voice.pick());}catch(e){}}
+
+/* ───────── 進度 ───────── */
+let unlocked=clamp(parseInt(store.get('bg.un')||'0',10)||0,0,LEVELS.length-1),takes=parseInt(store.get('bg.takes')||'0',10)||0,bestViews=parseInt(store.get('bg.views')||'0',10)||0,grades={};
+try{const g=JSON.parse(store.get('bg.gr')||'{}');if(g&&typeof g==='object')for(const k in g)if(LEVELS[k]&&'SABC'.includes(g[k]))grades[k]=g[k];}catch(e){}
+
+/* ───────── 狀態 ───────── */
+let mode='title',time=0,li=0,lv=LEVELS[0],seg=null,cornersDone=0,lastDir=1,th=0,hold=false,wide=0,over=0,score=0,par=0,streak=0,mult=1,clock=0,lineIdx=0,lineAt=0,capFull='',capShown=-1;
+let reqNow=0,limNow=ST_CAP,uNow=0,sparkOn=false,evWarn=null,evNow=null,gustT=3,gustWarn=false,gustDir=1,gustRem=0,doneT=0,crash=null,views=0,grade='',curve=0,bgX=0,roadT=0,meterSide=1,shake=0,flash=0,talk=0,lastWon=false,spd=1,curveFar=0;
+const pops=[],parts=[];
+function mkCorner(i){
+  const L=lv,dif=L.endless?Math.min(1,i/22):0,sharp=clamp(rnd(L.sharp[0],L.sharp[1])+dif*.35,0,1),dur=rnd(L.dur[0],L.dur[1]),dir=i?(Math.random()<.72?-lastDir:lastDir):pick([-1,1]);
+  const lim=L.grip-rnd(0,3)-dif*5,req=Math.min(15+24*sharp+(L.speed-1)*12+dif*4,lim-16),ev=[];
+  const room=lim-(L.rain||0)-req-8;
+  if(L.ev&&room>=4&&dur>IN_T+OUT_T+1.5&&Math.random()<L.ev.p+dif*.25)ev.push({t:rnd(IN_T+.55,dur-OUT_T-.95),dur:rnd(.6,.9),drop:Math.min(rnd(L.ev.drop[0],L.ev.drop[1]),room),type:pick(L.ev.types),warned:false});
+  return{type:'corner',dir,sharp,dur,req,lim,ev,t:0,sum:0,spark:0,uSum:0};
+}
+function say(text){const L=lv.lines,t=text||(lv.endless?L[lineIdx%L.length]:L[Math.min(lineIdx,L.length-1)]);capFull=t;lineAt=time;capShown=-1;Voice.say(t);}
+function pop(text,col,o){pops.push(Object.assign({x:BX,y:300,text,col:col||PAPER,life:1,dur:1,size:26},o));}
+function startRide(i){
+  Snd.init();Voice.unlock();li=i;lv=LEVELS[i];mode='ride';paused=false;$('pause').hidden=true;cornersDone=0;lastDir=pick([-1,1]);th=0;hold=false;ids.clear();wide=over=0;score=par=0;streak=0;mult=1;clock=0;lineIdx=0;
+  reqNow=0;limNow=ST_CAP;uNow=0;sparkOn=false;evWarn=evNow=null;gustT=rnd(2,3.4);gustWarn=false;gustRem=0;crash=null;curve=curveFar=0;shake=flash=0;pops.length=parts.length=0;
+  seg={type:'start',t:0,dur:GO_AT+GO_UP,next:mkCorner(0)};spd=0;meterSide=-seg.next.dir;takes++;store.set('bg.takes',String(takes));
+  el.title.hidden=true;el.over.hidden=true;el.hud.hidden=false;$('take').textContent='Take '+takes;lastNum=lastClock=-1;lastStreak='';say(OPENING);Snd.engine(true);Snd.blip(520,780,.14,'triangle',.1);
+  pop(lv.n,SUN,{y:224,size:24,life:1.2,dur:1.2});pop(lv.c,PAPER,{y:248,size:14,life:1.2,dur:1.2});
+}
+function endCorner(){
+  const c=seg,avg=c.uSum/Math.max(.1,c.dur-IN_T-OUT_T);cornersDone++;
+  if(c.spark>=.5){streak++;}else streak=0;mult=1+Math.min(streak,5)*.1;
+  pop((avg>.85?'帥到發光':avg>.6?'很帥':avg>.3?'還行':'太保守')+'　+'+Math.round(c.sum),avg>.6?SUN:PAPER,{y:330,size:22});Snd.blip(660,990,.1,'triangle',.08);if(avg>.6)Snd.blip(990,1480,.12,'triangle',.07,.09);
+  lineIdx++;const more=cornersDone<lv.corners;seg={type:'straight',t:0,dur:(more?rnd(1.7,2.2):2.4)/lv.speed,next:more?mkCorner(cornersDone):null};if(seg.next)meterSide=-seg.next.dir;say();
+}
+function nextSeg(){
+  if(!seg.next){mode='done';doneT=0;hold=false;Snd.engine(false);pop('報告完成！',SUN,{y:260,size:34,life:1.6,dur:1.6});Snd.blip(523,523,.12,'triangle',.1);Snd.blip(659,659,.12,'triangle',.1,.12);Snd.blip(784,784,.12,'triangle',.1,.24);Snd.blip(1047,1047,.3,'triangle',.1,.36);return;}
+  seg=seg.next;lastDir=seg.dir;par+=(seg.dur-IN_T-OUT_T)*RATE;wide=0;over=0;
+}
+function crashNow(type){
+  mode='crash';crash={type,t:0,lean:th,dir:seg.dir,u:uNow,x:0};hold=false;Voice.stop();Snd.engine(false);Snd.crash();shake=16;flash=.5;
+  const shown=Math.max(3,Math.min(capFull.length,Math.floor((time-lineAt)*24)));capFull=capFull.slice(0,shown).replace(/[\s.,]+$/,'')+'— AHHH!';capShown=-1;lineAt=time-9;
+  for(let i=0;i<26;i++)parts.push({x:bikeX()+seg.dir*rnd(0,40),y:BY-rnd(0,30),vx:rnd(-260,260),vy:rnd(-340,-60),r:rnd(1.5,3.5),col:type==='low'?pick([SUN,'#fff3b0',REC]):pick(['#4f9a6e','#6bb886','#8a6a48']),life:rnd(.4,.9)});
+}
+const bikeX=()=>BX-(seg&&seg.type==='corner'?seg.dir:lastDir)*(Math.sin(th*RAD)*52+wide*92);
+function tick(dt){
+  time+=dt;shake=Math.max(0,shake-dt*26);flash=Math.max(0,flash-dt*2.5);
+  for(let i=pops.length-1;i>=0;i--)if((pops[i].life-=dt)<=0)pops.splice(i,1);
+  for(let i=parts.length-1;i>=0;i--){const p=parts[i];p.x+=p.vx*dt;p.y+=p.vy*dt;p.vy+=700*dt;if((p.life-=dt)<=0)parts.splice(i,1);}
+  if(mode==='crash'){crash.t+=dt;if(crash.t>2.2)showCard(false);return;}
+  if(mode==='done'){doneT+=dt;roadT+=dt*lv.speed*(1-clamp(doneT/1.2,0,1));if(doneT>1.7)showCard(true);return;}
+  if(mode!=='ride')return;
+  clock+=dt;seg.t+=dt;const L=lv,inC=seg.type==='corner';
+  if(seg.type==='start'){if(seg.t>=MATE_AT&&seg.t-dt<MATE_AT){Snd.blip(300,200,.08,'sine',.1);shake=Math.max(shake,3);}spd=clamp((seg.t-GO_AT)/GO_UP,0,1);if(seg.t>=GO_AT&&seg.t-dt<GO_AT){pop('起步！',SUN,{y:330,size:28,life:.8,dur:.8});Snd.blip(90,240,.5,'sawtooth',.12);say();}}else spd=Math.min(1,spd+dt*2);
+  roadT+=dt*lv.speed*spd;
+  // 壓車：按住角度增加（越低越慢），放開回正。直線上壓不下去
+  {const up=UP*(L.pass?.66:1)*(1-UP_FALL*clamp(th/60,0,1)),down=DOWN*(L.pass?.58:1);if(hold)th=Math.min(TH_MAX,th+up*dt);else th=Math.max(0,th-down*dt);if(!inC&&th>ST_CAP)th=Math.max(ST_CAP,th-170*dt);}
+  // 陣風：只在彎裡吹，先預告，然後一下子把車吹歪（可能更倒，也可能扶正）
+  if(L.wind){gustT-=dt;if(gustT<.65&&!gustWarn&&inC&&seg.t>IN_T&&seg.dur-seg.t>1.2){gustWarn=true;gustDir=pick([-1,1,1]);pop(gustDir>0?'風！會更倒':'風！會被扶正',PAPER,{y:214,size:20,life:.9,dur:.9});Snd.wind();}
+    if(gustT<=0){if(gustWarn)gustRem=gustDir*L.wind;gustT=rnd(1.7,3);gustWarn=false;}
+    if(gustRem){const d=Math.sign(gustRem)*Math.min(Math.abs(gustRem),L.wind/.2*dt);th=clamp(th+d,0,TH_MAX);gustRem-=d;}}
+  curve+=((inC?seg.dir*(.35+.65*seg.sharp)*Math.min(1,seg.t/IN_T,Math.max(0,(seg.dur-seg.t)/OUT_T)):0)-curve)*Math.min(1,dt*7);bgX+=curve*dt*120*L.speed*spd;
+  // 前面的路會比車子早一步開始彎（看得到下一個彎要來了），出彎前也會先看到路變直
+  {const nx=!inC&&seg.next?seg.next:null,left=seg.dur-seg.t,tf=inC?(left>.6?seg.dir*(.35+.65*seg.sharp):0):nx&&left<1?nx.dir*(.35+.65*nx.sharp)*(1-left):0;curveFar+=(tf-curveFar)*Math.min(1,dt*6);}
+  if(inC){const c=seg,ramp=Math.min(1,c.t/IN_T,Math.max(0,(c.dur-c.t)/OUT_T));let lim=c.lim;if(L.rain)lim+=Math.sin(time*2.6)*L.rain;evWarn=evNow=null;
+    for(const e of c.ev){if(!e.warned&&c.t>=e.t-.75){e.warned=true;pop(EV[e.type].n+'！',REC,{y:214,size:26,life:.9,dur:.9});Snd.warn();}
+      if(c.t>=e.t-.75&&c.t<e.t)evWarn=e;if(c.t>=e.t&&c.t<e.t+e.dur){lim-=e.drop;evNow=e;}}
+    reqNow=c.req*ramp;limNow=lim;const u=clamp((th-reqNow)/(lim-reqNow),0,1.3);uNow=u;
+    if(th>=reqNow-1&&ramp>=1){const sp=u>=SPARK_U&&u<=1,r=RATE*Math.min(u,1)*Math.min(u,1)*(sp?SPARK_X:1)*mult*dt;score+=r;c.sum+=r;c.uSum+=Math.min(u,1)*dt;
+      if(sp){if(!sparkOn)pop('帥！',SUN,{x:bikeX(),y:BY-250,size:24,life:.5,dur:.5});c.spark+=dt;if(Math.random()<dt*70)parts.push({x:bikeX()+c.dir*34,y:BY-4,vx:-c.dir*rnd(60,300),vy:rnd(-220,-30),r:rnd(1.4,2.8),col:pick([SUN,'#fff3b0','#ff9d3c']),life:rnd(.2,.45)});}sparkOn=sp;}else sparkOn=false;
+    if(ramp>=1&&th<reqNow-1)wide+=dt/WIDE_T*clamp((reqNow-th)/reqNow,.3,1);else wide=Math.max(0,wide-dt*1.3);
+    if(wide>=1)return crashNow('wide');
+    if(th>lim){over+=dt;if(over>OVER_T)return crashNow('low');}else over=0;
+    if(c.t>=c.dur)endCorner();
+  }else{reqNow=0;limNow=ST_CAP+8;uNow=0;sparkOn=false;evWarn=evNow=null;wide=Math.max(0,wide-dt*1.3);over=0;if(seg.t>=seg.dur)nextSeg();}
+}
+
+/* ───────── 結算 ───────── */
+function showCard(won){
+  mode='over';lastWon=won;paused=false;$('pause').hidden=true;Snd.engine(false);el.hud.hidden=true;const s=Math.round(score);
+  if(won){const ratio=par>0?score/par:0;grade=GRADES.find(g=>ratio>=g[0])[1];views=Math.round(40+Math.random()*260);
+    if(!grades[li]||'SABC'.indexOf(grade)<'SABC'.indexOf(grades[li])){grades[li]=grade;store.set('bg.gr',JSON.stringify(grades));}
+    if(li>=unlocked&&li<LEVELS.length-1){unlocked=li+1;store.set('bg.un',String(unlocked));}
+  }else{views=Math.round((2000+score*90)*(.6+Math.pow(crash.lean/45,2))*(crash.type==='low'?1.6:1)*(1+li*.22)*rnd(.85,1.25));}
+  if(views>bestViews){bestViews=views;store.set('bg.views',String(views));}
+  $('ovTitle').innerHTML=won?'報告<span class="n">完成</span>！':crash.type==='low'?'<span class="n">NG</span>！壓過頭，滑出去了':'<span class="n">NG</span>！壓不夠，衝出彎道';
+  $('ovBig').textContent=won?grade:views.toLocaleString('en-US');$('ovBigL').textContent=won?'這份作業的成績':'這支影片的觀看次數';
+  $('ovLv').textContent=lv.n;$('ovProg').textContent=lv.endless?`過了 ${cornersDone} 個彎`:won?`${lv.lines.length} 句都唸完了`:`唸到第 ${Math.min(lineIdx+1,lv.lines.length)} / ${lv.lines.length} 句`;$('ovScore').textContent=s.toLocaleString('en-US');
+  $('ovXL').textContent=won?'觀看次數':'摔的時候壓到';$('ovX').textContent=won?views+'（沒人想看正常的報告）':Math.round(crash.lean)+'°';
+  $('ovNoteL').textContent=won?'老師的評語':'這支影片';$('ovNote').textContent=won?GRADES.find(g=>g[1]===grade)[2]:VIEWS.find(v=>views>=v[0])[1]+'。十次車禍九次快，一次英文報告。';
+  const nextOk=won&&li<LEVELS.length-1;$('again').textContent=nextOk?'下一份作業':'重拍';$('again').dataset.go=nextOk?li+1:li;$('copied').textContent='';el.over.hidden=false;
+}
+function openTitle(){
+  mode='title';paused=false;$('pause').hidden=true;Snd.engine(false);Voice.stop();el.hud.hidden=true;el.over.hidden=true;el.title.hidden=false;
+  $('levels').innerHTML=LEVELS.map((L,i)=>`<button class="lv${i===unlocked&&!grades[i]?' next':''}" type="button" data-i="${i}"${i>unlocked?' disabled':''}><b>${i<8?i+1+'. ':''}${L.n}</b><small>${i>unlocked?'做完上一份才開':L.c}</small><span class="g">${grades[i]||(i>unlocked?'':'–')}</span></button>`).join('');
+  el.best.textContent=(takes?`拍了 ${takes} 次`:'')+(bestViews?`　最高觀看 ${bestViews.toLocaleString('en-US')}`:'');
+}
+
+/* ───────── 畫面 ───────── */
+const gameEl=$('game'),cv=$('c'),g=cv.getContext('2d');
+const reduced=window.matchMedia&&matchMedia('(prefers-reduced-motion:reduce)').matches;
+let cw=1,ch=1,dpr=1,scale=1,ox=0,oy=0,wx0=0,wx1=VW,wy0=0,wy1=VH;
+function resize(){
+  const b=gameEl.getBoundingClientRect();cw=Math.max(1,b.width);ch=Math.max(1,b.height);dpr=Math.min(window.devicePixelRatio||1,2);
+  cv.width=Math.round(cw*dpr);cv.height=Math.round(ch*dpr);scale=Math.min(cw/VW,ch/VH);ox=(cw-VW*scale)/2;oy=(ch-VH*scale)/2;
+  wx0=-ox/scale;wx1=(cw-ox)/scale;wy0=-oy/scale;wy1=(ch-oy)/scale;
+}
+const SKY={day:['#7fcdf2','#dff3fb','#8fbf7a','#6f7482'],sunset:['#f59a5c','#ffe1a8','#a9a26a','#6a6470'],rain:['#7d8794','#b9c2c9','#6f8a72','#565a66'],night:['#14152b','#2a2d55','#28344a','#3b3d4d'],hill:['#8fd1e8','#e6f5ec','#5f9a5a','#6b6f7c']};
+// 路在畫面上的樣子：p=1 是畫面最下面（離鏡頭最近），p=0 是地平線。鏡頭跟在車後面，看到的是前面的路：
+// 地上的東西迎面過來；過彎時路往他壓車的那一邊彎，而且遠的那一端先彎
+const roadY=p=>HOR+(VH+30-HOR)*p*p,roadC=p=>BX+lerp(curve,curveFar,1-p)*150*(1-p)*(1-p),roadW=p=>16+290*p*p;
+function drawScene(){
+  const S=SKY[lv.sky],W=wx1-wx0;
+  let gr=g.createLinearGradient(0,wy0,0,HOR);gr.addColorStop(0,S[0]);gr.addColorStop(1,S[1]);g.fillStyle=gr;g.fillRect(wx0,wy0,W,HOR-wy0+2);
+  if(lv.sky==='night'){g.fillStyle='rgba(255,255,255,.8)';for(let i=0;i<40;i++){const x=wx0+((hash(i,1)*900-bgX*.05)%W+W)%W,y=wy0+hash(i,2)*(HOR-wy0-30);g.fillRect(x,y,1.6,1.6);}}
+  else if(lv.sky!=='rain'){g.fillStyle=lv.sky==='sunset'?'#fff1b8':'#fffbe6';g.beginPath();g.arc(BX+96-curve*30,lv.sky==='sunset'?HOR-34:86,lv.sky==='sunset'?34:24,0,TAU);g.fill();}
+  // 遠山、近一點的房子和椰子樹：彎的時候往旁邊捲
+  const band=(k,amp,base,col,step)=>{g.fillStyle=col;g.beginPath();g.moveTo(wx0,HOR+2);for(let x=wx0-step;x<=wx1+step;x+=step){const wxx=x+bgX*k,i=Math.floor(wxx/step),f=wxx/step-i,h=lerp(hash(i,7),hash(i+1,7),f*f*(3-2*f));g.lineTo(x,HOR-base-h*amp);}g.lineTo(wx1,HOR+2);g.closePath();g.fill();};
+  band(.12,lv.sky==='hill'?90:46,10,lv.sky==='night'?'#1d2140':lv.sky==='rain'?'#8a949c':'#9bbfae',70);
+  if(lv.sky!=='hill'){const col=lv.sky==='night'?'#262a4a':lv.sky==='rain'?'#77808a':'#b7c2c9';for(let i=-2;i<12;i++){const k=Math.floor(bgX*.3/46)+i,x=k*46-bgX*.3+wx0,h=18+hash(k,3)*46;g.fillStyle=col;g.fillRect(x,HOR-h,38,h+2);
+      if(lv.sky==='day'||lv.sky==='sunset'){g.fillStyle='rgba(38,37,58,.16)';for(let q=0;q<3;q++)for(let w=0;w<Math.floor(h/13);w++)g.fillRect(x+5+q*11,HOR-h+6+w*13,7,7);if(hash(k,5)<.4){g.fillStyle='#3a3d6a';g.fillRect(x+30,HOR-h+4,8,Math.min(34,h-6));g.fillStyle='rgba(255,246,230,.8)';for(let w=0;w<3;w++)g.fillRect(x+32,HOR-h+8+w*9,4,5);}}
+      if(lv.sky==='night'){g.fillStyle='rgba(255,220,130,.75)';for(let q=0;q<3;q++)if(hash(k,q+9)<.55)g.fillRect(x+6+q*10,HOR-h+8+hash(k,q)*14,5,6);}}}
+  else band(.3,60,4,'#6fa56a',52);
+  // 地面和路
+  g.fillStyle=S[2];g.fillRect(wx0,HOR,W,wy1-HOR);
+  const N=22;g.fillStyle=S[3];g.beginPath();for(let i=0;i<=N;i++){const p=i/N;g.lineTo(roadC(p)-roadW(p),roadY(p));}for(let i=N;i>=0;i--){const p=i/N;g.lineTo(roadC(p)+roadW(p),roadY(p));}g.closePath();g.fill();
+  // 路邊的白線、中間的黃虛線（往遠處退，看起來在往前騎）
+  g.strokeStyle='rgba(255,246,230,.9)';for(const sd of[-1,1]){g.beginPath();for(let i=0;i<=N;i++){const p=i/N;g.lineWidth=1+5*p;g.lineTo(roadC(p)+sd*roadW(p)*.9,roadY(p));}g.lineWidth=3;g.stroke();}
+  g.fillStyle=SUN;for(let k=0;k<9;k++){const z=((k/9-roadT*.5)%1+1)%1,p0=Math.pow(1-z,2.2),p1=Math.pow(Math.max(0,1-z-.05),2.2);if(p0<.01)continue;const w0=1+7*p0,w1=1+7*p1;
+    g.beginPath();g.moveTo(roadC(p0)-w0,roadY(p0));g.lineTo(roadC(p0)+w0,roadY(p0));g.lineTo(roadC(p1)+w1,roadY(p1));g.lineTo(roadC(p1)-w1,roadY(p1));g.closePath();g.fill();}
+  // 路邊的椰子樹、路燈：一棵一棵往後退
+  const objs=[];for(let k=0;k<8;k++){const z=((k/8-roadT*.5)%1+1)%1;objs.push([Math.pow(1-z,2.2),k]);}objs.sort((a,b)=>a[0]-b[0]);
+  for(const[p,k]of objs){if(p<.012||p>.8)continue;const sd=k%2?1:-1,x=roadC(p)+sd*(roadW(p)+14+46*p),y=roadY(p),s=.18+p*1.5;g.save();g.translate(x,y);g.scale(s,s);g.lineJoin='round';g.lineCap='round';
+    if(lv.sky==='night'||lv.sky==='rain'){g.strokeStyle='#3b3d4d';g.lineWidth=5;g.beginPath();g.moveTo(0,0);g.lineTo(0,-120);g.lineTo(-sd*26,-128);g.stroke();g.fillStyle=lv.sky==='night'?'#ffe9a6':'#e8e2c8';g.beginPath();g.ellipse(-sd*30,-126,10,5,0,0,TAU);g.fill();
+      if(lv.sky==='night'){g.fillStyle='rgba(255,233,166,.14)';g.beginPath();g.moveTo(-sd*30,-124);g.lineTo(-sd*86,0);g.lineTo(sd*20,0);g.closePath();g.fill();}}
+    else if(lv.sky!=='hill'&&k%3===1){g.strokeStyle='#8d909c';g.lineWidth=5;g.beginPath();g.moveTo(0,0);g.lineTo(0,-132);g.stroke();g.fillStyle='#4a86c9';g.strokeStyle=INK;g.lineWidth=2.5;rrect(g,-sd*4-11,-118,22,28,3);g.fill();g.stroke();g.fillStyle=PAPER;g.font='900 16px '+NUM;g.textAlign='center';g.textBaseline='middle';g.fillText('P',-sd*4,-103);g.textAlign='left';g.textBaseline='alphabetic';}
+    else if(lv.sky!=='hill'&&k%3===2){for(let q=0;q<2;q++){const x0=sd*(6+q*30);g.strokeStyle=INK;g.lineWidth=2.5;g.fillStyle=INK;g.beginPath();g.arc(x0-9,-5,5.5,0,TAU);g.arc(x0+9,-5,5.5,0,TAU);g.fill();g.fillStyle=['#c9ced6','#3a3d52','#e4572e','#5c7fb8'][(k+q)%4];rrect(g,x0-12,-22,24,13,5);g.fill();g.stroke();g.beginPath();g.moveTo(x0-sd*9,-22);g.lineTo(x0-sd*11,-33);g.stroke();}}
+    else{g.strokeStyle='#8a6a48';g.lineWidth=7;g.beginPath();g.moveTo(0,0);g.quadraticCurveTo(sd*8,-60,sd*2,-112);g.stroke();g.strokeStyle=lv.sky==='hill'?'#3f7d4a':'#4f9a6e';g.lineWidth=6;for(let q=0;q<6;q++){const a=q/6*TAU+k;g.beginPath();g.moveTo(sd*2,-112);g.quadraticCurveTo(sd*2+Math.cos(a)*26,-128+Math.sin(a)*10,sd*2+Math.cos(a)*44,-104+Math.sin(a)*18);g.stroke();}}
+    g.restore();}
+  // 彎裡的狀況：從前面遠遠地過來，到車子底下的那一刻生效
+  if(seg&&seg.type==='corner')for(const e of seg.ev){const dt=e.t-seg.t;if(dt>.8||dt<-.3)continue;const pp=clamp(.9-dt*.95,0,1.3);if(pp<.04)continue;const x=roadC(pp)+(bikeX()-BX)*pp*pp,y=roadY(pp),s=.2+pp*1.15;
+    g.save();g.translate(x,y);g.scale(s,s*.45);g.fillStyle=EV[e.type].col;g.strokeStyle=INK;g.lineWidth=3;
+    if(e.type==='gravel'){for(let q=0;q<22;q++){g.beginPath();g.arc((hash(q,1)-.5)*110,(hash(q,2)-.5)*60,3+hash(q,3)*5,0,TAU);g.fill();}}
+    else if(e.type==='puddle'){g.globalAlpha=.8;g.beginPath();g.ellipse(0,0,62,30,0,0,TAU);g.fill();g.globalAlpha=1;}
+    else if(e.type==='manhole'){g.beginPath();g.ellipse(0,0,44,40,0,0,TAU);g.fill();g.stroke();g.beginPath();for(let q=-2;q<=2;q++){g.moveTo(-36,q*14);g.lineTo(36,q*14);}g.stroke();}
+    else{g.scale(1,1/.45);g.beginPath();g.ellipse(0,-12,22,12,0,0,TAU);g.fill();g.beginPath();g.arc(-20,-22,10,0,TAU);g.fill();g.beginPath();g.moveTo(-28,-28);g.lineTo(-26,-38);g.lineTo(-20,-30);g.moveTo(-16,-30);g.lineTo(-12,-38);g.lineTo(-12,-27);g.fill();g.lineWidth=5;g.strokeStyle=EV.cat.col;g.beginPath();g.moveTo(20,-14);g.quadraticCurveTo(36,-24,30,-38);g.stroke();g.fillStyle=SUN;g.fillRect(-25,-25,3,3);g.fillRect(-18,-25,3,3);}
+    g.restore();}
+}
+// 機車和人，從後面看。原點是後輪著地的地方，整台繞著它倒。
+// o：stand 停著、兩腳撐地；mate 同學已經坐在後座；pack 同學揹著一大包東西；knee 膝蓋往哪邊開；night 尾燈亮
+function drawBike(x,y,lean,o){
+  g.fillStyle='rgba(22,21,31,.28)';g.beginPath();g.ellipse(x+Math.sin(lean)*30,y+3,48,9,0,0,TAU);g.fill();
+  g.save();g.translate(x,y);g.rotate(lean);g.scale(.84,.84);g.lineJoin='round';g.lineCap='round';g.strokeStyle=INK;g.lineWidth=3;
+  const hair='#1c1b22',skin='#f1c9a5',jeans='#4a5a8a';
+  // 龍頭和後照鏡（在最前面，被人擋住大半）
+  g.lineWidth=7;g.beginPath();g.moveTo(-56,-156);g.lineTo(56,-156);g.stroke();g.lineWidth=3;
+  for(const sd of[-1,1]){g.beginPath();g.moveTo(sd*42,-156);g.lineTo(sd*56,-184);g.stroke();g.fillStyle='#3a3d52';g.beginPath();g.ellipse(sd*60,-190,11,8,sd*.3,0,TAU);g.fill();g.stroke();g.fillStyle=skin;g.beginPath();g.arc(sd*50,-156,7,0,TAU);g.fill();g.stroke();}
+  // 騎車的人：黑外套、黑色鍋蓋頭（後腦勺）
+  for(const sd of[-1,1]){g.strokeStyle=INK;g.lineWidth=15;g.beginPath();g.moveTo(sd*24,-214);g.lineTo(sd*44,-186);g.lineTo(sd*48,-160);g.stroke();g.strokeStyle='#3a3a46';g.lineWidth=10;g.beginPath();g.moveTo(sd*24,-214);g.lineTo(sd*44,-186);g.lineTo(sd*48,-162);g.stroke();}
+  g.strokeStyle=INK;g.lineWidth=3;g.fillStyle='#3a3a46';rrect(g,-28,-226,56,80,16);g.fill();g.stroke();
+  g.fillStyle=skin;for(const sd of[-1,1]){g.beginPath();g.ellipse(sd*25,-252,5,7,0,0,TAU);g.fill();g.stroke();}rrect(g,-9,-236,18,14,5);g.fill();g.stroke();
+  g.fillStyle=hair;g.beginPath();g.arc(0,-256,26,0,TAU);g.fill();g.stroke();g.fillStyle=skin;g.beginPath();g.moveTo(-17,-238);g.quadraticCurveTo(0,-230,17,-238);g.quadraticCurveTo(0,-243,-17,-238);g.closePath();g.fill();
+  // 腿：停著的時候兩腳撐地；騎的時候踩在踏板上，壓車那一邊的膝蓋往外開
+  if(o.stand)for(const sd of[-1,1]){g.strokeStyle=INK;g.lineWidth=17;g.beginPath();g.moveTo(sd*16,-128);g.lineTo(sd*34,-66);g.lineTo(sd*38,-8);g.stroke();g.strokeStyle=jeans;g.lineWidth=12;g.beginPath();g.moveTo(sd*16,-128);g.lineTo(sd*34,-66);g.lineTo(sd*38,-10);g.stroke();g.fillStyle='#fff6e6';g.strokeStyle=INK;g.lineWidth=3;rrect(g,sd*38-10,-11,20,11,5);g.fill();g.stroke();}
+  else for(const sd of[-1,1]){const k=o.knee===sd?1:0;g.strokeStyle=INK;g.lineWidth=17;g.beginPath();g.moveTo(sd*16,-128);g.lineTo(sd*(34+k*18),-98+k*8);g.lineTo(sd*(30+k*8),-70);g.stroke();g.strokeStyle=jeans;g.lineWidth=12;g.beginPath();g.moveTo(sd*16,-128);g.lineTo(sd*(34+k*18),-98+k*8);g.lineTo(sd*(30+k*8),-72);g.stroke();g.fillStyle='#fff6e6';g.strokeStyle=INK;g.lineWidth=3;rrect(g,sd*(30+k*8)-9,-76,18,11,5);g.fill();g.stroke();}
+  // 車尾：後輪、土除和車牌、車身、尾燈、方向燈
+  g.fillStyle=INK;rrect(g,-11,-48,22,48,8);g.fill();
+  g.fillStyle='#d9dde3';rrect(g,-14,-66,28,20,5);g.fill();g.stroke();g.fillStyle='#fff6e6';rrect(g,-12,-62,24,12,2);g.fill();g.lineWidth=1.6;g.stroke();g.fillStyle=INK;g.fillRect(-8,-58,16,2);g.fillRect(-8,-54,10,2);g.lineWidth=3;
+  g.fillStyle='#2f9a8c';g.beginPath();g.moveTo(-30,-132);g.lineTo(30,-132);g.lineTo(22,-70);g.lineTo(-22,-70);g.closePath();g.fill();g.stroke();
+  g.fillStyle='#26253a';rrect(g,-24,-140,48,14,6);g.fill();g.stroke();
+  g.fillStyle=o.night?'#ff6a55':REC;rrect(g,-13,-98,26,10,4);g.fill();g.stroke();for(const sd of[-1,1]){g.fillStyle='#ff9d3c';g.beginPath();g.ellipse(sd*22,-106,5,4,0,0,TAU);g.fill();g.stroke();}
+  // 同學：坐在後座（離鏡頭最近），深藍綠色上衣，抱著前面的人
+  if(o.mate){
+    for(const sd of[-1,1]){g.strokeStyle=INK;g.lineWidth=15;g.beginPath();g.moveTo(sd*26,-196);g.lineTo(sd*36,-176);g.lineTo(sd*24,-166);g.stroke();g.strokeStyle='#1f4f5e';g.lineWidth=10;g.beginPath();g.moveTo(sd*26,-196);g.lineTo(sd*36,-176);g.lineTo(sd*25,-167);g.stroke();}
+    g.strokeStyle=INK;g.lineWidth=3;g.fillStyle='#1f4f5e';rrect(g,-30,-208,60,78,17);g.fill();g.stroke();
+    if(o.pack){g.fillStyle='#e9a23b';rrect(g,-26,-200,52,60,10);g.fill();g.stroke();g.fillStyle='#c47f1e';rrect(g,-16,-176,32,22,5);g.fill();g.stroke();g.beginPath();g.moveTo(-26,-190);g.lineTo(26,-190);g.stroke();}
+    g.fillStyle=skin;for(const sd of[-1,1]){g.beginPath();g.ellipse(sd*25,-230,5,7,0,0,TAU);g.fill();g.stroke();}rrect(g,-9,-216,18,13,5);g.fill();g.stroke();
+    g.fillStyle=hair;g.beginPath();g.arc(0,-234,26,0,TAU);g.fill();g.stroke();g.fillStyle=skin;g.beginPath();g.moveTo(-16,-217);g.quadraticCurveTo(0,-210,16,-217);g.quadraticCurveTo(0,-222,-16,-217);g.closePath();g.fill();
+    g.lineWidth=2.6;for(const sd of[-1,1]){g.beginPath();g.moveTo(sd*26,-236);g.lineTo(sd*33,-240);g.stroke();}}
+  g.restore();
+}
+// 同學（還沒上車的時候）：戴眼鏡、深藍綠色上衣，站在鏡頭左前方，臉朝著騎車的人。e 從 0 到 1：走過去坐上後座
+function drawMate(e){
+  const x=lerp(wx0+58,BX-4,e),y=lerp(VH-150,BY-176,e),sc=lerp(1,.36,e);g.save();g.translate(x,y);g.scale(sc,sc);g.lineJoin='round';g.lineCap='round';g.strokeStyle=INK;g.lineWidth=3.5;
+  g.fillStyle='#1f4f5e';g.beginPath();g.moveTo(-120,190);g.lineTo(-120,96);g.quadraticCurveTo(-60,52,10,70);g.quadraticCurveTo(70,84,84,190);g.closePath();g.fill();g.stroke();   // 肩膀
+  g.fillStyle='#f1c9a5';rrect(g,-24,30,44,50,14);g.fill();g.stroke();                                                                                                    // 脖子
+  g.beginPath();g.arc(0,-8,58,0,TAU);g.fill();g.stroke();g.beginPath();g.arc(58,-2,9,-1.2,1.3);g.fill();g.stroke();                                                    // 頭、鼻子
+  g.fillStyle='#1c1b22';g.beginPath();g.arc(0,-8,60,Math.PI*.98,Math.PI*1.93);g.quadraticCurveTo(30,-44,22,-30);g.quadraticCurveTo(-30,-34,-56,6);g.closePath();g.fill();g.stroke();   // 頭髮
+  g.fillStyle='#e9b892';g.beginPath();g.ellipse(-14,2,9,13,0,0,TAU);g.fill();g.stroke();                                                                                  // 耳朵
+  g.fillStyle='rgba(191,227,238,.55)';rrect(g,24,-22,30,22,6);g.fill();g.stroke();g.beginPath();g.moveTo(24,-12);g.lineTo(-10,-8);g.stroke();                              // 眼鏡
+  g.fillStyle=INK;g.beginPath();g.arc(40,-11,3.2,0,TAU);g.fill();g.lineWidth=3;g.beginPath();g.moveTo(36,24);g.quadraticCurveTo(46,30,52,22);g.stroke();
+  g.restore();
+}
+// 壓車的量表：直的，放在彎的外側。下面灰的＝壓不夠，中間綠的＝可以，最上面金色＝磨火花，紅的＝會摔
+function drawMeter(){
+  const x=meterX,y0=198,y1=438,W=26,Y=t=>y1-(y1-y0)*clamp(t/66,0,1),inC=seg&&seg.type==='corner'&&mode==='ride';
+  g.lineJoin='round';g.fillStyle='rgba(22,21,31,.55)';rrect(g,x-7,y0-26,W+14,y1-y0+52,12);g.fill();
+  g.fillStyle='rgba(255,246,230,.2)';rrect(g,x,y0,W,y1-y0,6);g.fill();
+  if(inC){const yr=Y(reqNow),yl=Y(limNow),ys=Y(reqNow+(limNow-reqNow)*SPARK_U),dark=lv.night&&th<limNow-13;
+    g.fillStyle=BAND;g.fillRect(x,ys,W,yr-ys);g.fillStyle=SUN;g.fillRect(x,yl,W,ys-yl);
+    if(!dark){g.fillStyle=REC;g.fillRect(x,y0,W,yl-y0);g.strokeStyle='rgba(255,246,230,.55)';g.lineWidth=2;g.beginPath();for(let q=y0+4;q<yl;q+=9){g.moveTo(x,q+6);g.lineTo(x+W,q);}g.stroke();}
+    else{g.fillStyle='rgba(22,21,31,.82)';g.fillRect(x,y0,W,ys-y0+((ys-yl)*.0));g.fillStyle=PAPER;g.font='900 15px '+FONT;g.textAlign='center';g.textBaseline='middle';g.fillText('？',x+W/2,(y0+ys)/2);}
+    if(evWarn&&Math.sin(time*26)>-.2){const yw=Y(limNow-evWarn.drop);g.strokeStyle=REC;g.lineWidth=3;g.setLineDash([6,4]);g.beginPath();g.moveTo(x-6,yw);g.lineTo(x+W+6,yw);g.stroke();g.setLineDash([]);g.fillStyle='rgba(229,67,47,.35)';g.fillRect(x,Y(limNow),W,yw-Y(limNow));}
+    g.fillStyle=PAPER;g.fillRect(x-4,yr-1.5,W+8,3);}
+  g.strokeStyle=INK;g.lineWidth=2.5;rrect(g,x,y0,W,y1-y0,6);g.stroke();
+  const ym=Y(th),left=meterSide<0;g.fillStyle=sparkOn?SUN:inC&&th>limNow?REC:PAPER;g.strokeStyle=INK;g.lineWidth=2.5;g.beginPath();
+  if(left){g.moveTo(x+W+16,ym-9);g.lineTo(x+W+16,ym+9);g.lineTo(x+W-1,ym);}else{g.moveTo(x-16,ym-9);g.lineTo(x-16,ym+9);g.lineTo(x+1,ym);}g.closePath();g.fill();g.stroke();g.fillRect(x,ym-2,W,4);
+  g.fillStyle=PAPER;g.font='700 13px '+NUM;g.textAlign='center';g.textBaseline='middle';g.fillText(Math.round(th)+'°',x+W/2,y1+13);g.font='900 11px '+FONT;g.fillText('壓車',x+W/2,y0-13);g.textAlign='left';g.textBaseline='alphabetic';
+}
+let meterX=320;
+function render(){
+  const W=cv.width,H=cv.height,k=dpr*scale;let sx=0,sy=0;if(shake>0&&!reduced){sx=(Math.random()-.5)*shake;sy=(Math.random()-.5)*shake;}
+  g.setTransform(1,0,0,1,0,0);g.fillStyle='#16151f';g.fillRect(0,0,W,H);g.setTransform(k,0,0,k,(ox+sx)*dpr,(oy+sy)*dpr);
+  drawScene();
+  const ct=mode==='crash'?crash.t:0,dir=seg&&seg.type==='corner'?seg.dir:lastDir,night=!!lv.night;let bx=bikeX(),by=BY,lean=th*RAD*dir,sc=1;
+  // 開場：同學從鏡頭旁邊走過去、坐上後座（MATE_AT 之後算坐好），坐好才起步
+  const onStart=mode==='ride'&&seg.type==='start',me=onStart?clamp((seg.t-.55)/(MATE_AT-.55),0,1):1,seated=mode!=='title'&&me>=1;
+  // 摔車：壓過頭是整台倒下去、往彎的方向滑出去；壓不夠是直直衝出路外
+  if(mode==='crash'){if(crash.type==='low'){lean=dir*lerp(crash.lean*RAD,1.5,clamp(ct/.2,0,1));bx+=dir*Math.min(170,ct*260)-dir*ct*20;by-=Math.min(90,ct*120);sc=Math.max(.55,1-ct*.3);}
+    else{bx-=dir*ct*240;by-=Math.min(150,ct*200);lean=-dir*Math.min(.5,ct*1.2);sc=Math.max(.35,1-ct*.5);}}
+  if(night&&mode!=='over'){g.fillStyle='rgba(255,243,176,.16)';g.beginPath();g.moveTo(bx-16,by-120);g.lineTo(roadC(.2)-70,roadY(.2));g.lineTo(roadC(.2)+70,roadY(.2));g.lineTo(bx+16,by-120);g.closePath();g.fill();}
+  g.save();g.translate(bx,by);g.scale(sc,sc);g.translate(-bx,-by);
+  if(!(mode==='over'&&!lastWon))drawBike(bx,by,lean,{stand:onStart&&seg.t<GO_AT+.15,mate:seated,pack:lv.pass,knee:mode==='ride'&&th>26?dir:0,night});g.restore();
+  for(const p of parts){g.globalAlpha=clamp(p.life*3,0,1);g.fillStyle=p.col;g.beginPath();g.arc(p.x,p.y,p.r,0,TAU);g.fill();}g.globalAlpha=1;
+  if(mode==='title')drawMate(0);else if(onStart&&me<1)drawMate(me*me*(3-2*me));
+  // 天氣
+  if(lv.rain){g.fillStyle='rgba(70,90,130,.18)';g.fillRect(wx0,wy0,wx1-wx0,wy1-wy0);g.strokeStyle='rgba(220,235,255,.5)';g.lineWidth=1.4;g.beginPath();
+    for(let i=0;i<50;i++){const x=wx0+hash(i,1)*(wx1-wx0+80)-40,y=wy0+((hash(i,2)*700+time*(560+hash(i,3)*260))%(wy1-wy0+60))-30;g.moveTo(x,y);g.lineTo(x-6,y+18);}g.stroke();}
+  if(lv.wind&&(gustWarn||gustRem)){g.strokeStyle='rgba(255,246,230,.75)';g.lineWidth=2;g.beginPath();for(let i=0;i<14;i++){const y=wy0+hash(i,5)*(wy1-wy0),x=wx0+((hash(i,6)*500+time*900)%(wx1-wx0+140))-70;g.moveTo(x,y);g.lineTo(x+44,y+2);}g.stroke();}
+  if(lv.night){const gr=g.createRadialGradient(bx,by-90,40,bx,by-90,330);gr.addColorStop(0,'rgba(10,10,30,0)');gr.addColorStop(1,'rgba(10,10,30,.62)');g.fillStyle=gr;g.fillRect(wx0,wy0,wx1-wx0,wy1-wy0);
+    g.fillStyle='rgba(255,90,70,.3)';g.beginPath();g.ellipse(bx+Math.sin(lean)*76,by-76*Math.cos(lean),22,16,0,0,TAU);g.fill();}
+  if(mode!=='title'){meterX+=((meterSide<0?wx0+16:wx1-42)-meterX)*.18;drawMeter();}
+  // 下一個彎的預告牌
+  if(mode==='ride'&&seg.type!=='corner'&&seg.next){const n=seg.next,left=seg.dur-seg.t,a=clamp(seg.t*4,0,1)*clamp(left*5,0,1);g.globalAlpha=a;g.fillStyle=SUN;g.strokeStyle=INK;g.lineWidth=3;rrect(g,BX-74,150,148,46,10);g.fill();g.stroke();
+    g.fillStyle=INK;g.font='900 19px '+FONT;g.textAlign='center';g.textBaseline='middle';const arrows=n.sharp>.6?3:n.sharp>.35?2:1,ar=(n.dir>0?'▶':'◀').repeat(arrows);g.fillText(n.dir>0?(n.sharp>.6?'髮夾彎 ':n.sharp>.35?'急彎 ':'彎 ')+ar:ar+(n.sharp>.6?' 髮夾彎':n.sharp>.35?' 急彎':' 彎'),BX,168);
+    g.fillStyle=REC;g.fillRect(BX-64,184,128*clamp(left/seg.dur,0,1),5);g.globalAlpha=1;}
+  if(mode==='ride'&&wide>.3){g.globalAlpha=clamp((wide-.3)*2.2,0,1)*(.6+.4*Math.sin(time*18));g.fillStyle=REC;g.font='900 24px '+FONT;g.textAlign='center';g.lineWidth=6;g.strokeStyle=INK;g.strokeText('走大了！快壓！',BX,236);g.fillText('走大了！快壓！',BX,236);g.globalAlpha=1;}
+  g.textAlign='center';g.textBaseline='middle';g.lineJoin='round';
+  for(const p of pops){const e=1-p.life/p.dur,pp=1+.45*Math.pow(clamp(1-e*6,0,1),2);g.font='900 '+p.size+'px '+FONT;g.globalAlpha=clamp(p.life*4,0,1);g.save();g.translate(clamp(p.x,wx0+70,wx1-70),p.y-e*20);g.scale(pp,pp);g.lineWidth=6;g.strokeStyle=INK;g.strokeText(p.text,0,0);g.fillStyle=p.col;g.fillText(p.text,0,0);g.restore();}
+  g.globalAlpha=1;g.textBaseline='alphabetic';g.textAlign='left';
+  // 取景框的四個角
+  g.setTransform(k,0,0,k,ox*dpr,oy*dpr);g.strokeStyle='rgba(255,255,255,.8)';g.lineWidth=2.5;for(const[cx,cy,dx,dy]of[[wx0+10,wy0+10,1,1],[wx1-10,wy0+10,-1,1],[wx0+10,wy1-10,1,-1],[wx1-10,wy1-10,-1,-1]]){g.beginPath();g.moveTo(cx+dx*22,cy);g.lineTo(cx,cy);g.lineTo(cx,cy+dy*22);g.stroke();}
+  g.setTransform(1,0,0,1,0,0);
+  if(flash>0){g.fillStyle='#fff';g.globalAlpha=flash*.7;g.fillRect(0,0,W,H);g.globalAlpha=1;}
+  if(mode==='crash'&&ct>1.25){g.fillStyle='#000';g.globalAlpha=clamp((ct-1.25)*2.2,0,1);g.fillRect(0,0,W,H);g.globalAlpha=1;}
+}
+
+/* ───────── HUD 與流程 ───────── */
+const el={hud:$('hud'),num:$('num'),cap:$('cap'),hint:$('hint'),title:$('title'),over:$('over'),best:$('best'),mute:$('mute')};
+let lastHint=null,lastNum=-1,lastClock=-1,lastStreak='',paused=false;
+function muteIcon(){el.mute.innerHTML=Snd.on
+  ?'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9.5v5h3.5L12 18.5v-13L7.5 9.5z" fill="currentColor"/><path d="M15.5 9a4.2 4.2 0 0 1 0 6M18 6.5a8 8 0 0 1 0 11"/></svg>'
+  :'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9.5v5h3.5L12 18.5v-13L7.5 9.5z" fill="currentColor"/><path d="M16 9.5l5 5M21 9.5l-5 5"/></svg>';
+  el.mute.setAttribute('aria-pressed',String(!Snd.on));}
+function hud(){
+  if(mode!=='ride'&&mode!=='crash'&&mode!=='done')return;
+  const n=Math.round(score);if(n!==lastNum){lastNum=n;el.num.textContent=n.toLocaleString('en-US');}
+  const c=Math.floor(clock);if(c!==lastClock){lastClock=c;$('clock').textContent=String(Math.floor(c/60)).padStart(2,'0')+':'+String(c%60).padStart(2,'0');}
+  const st=streak>0?`連帥 ×${mult.toFixed(1)}`:'';if(st!==lastStreak){lastStreak=st;$('streak').textContent=st;}
+  const shown=Math.min(capFull.length,Math.floor((time-lineAt)*24));if(shown!==capShown){capShown=shown;el.cap.textContent=capFull.slice(0,shown);}
+  const inC=seg&&seg.type==='corner';
+  const h=mode!=='ride'?'':evWarn?`${EV[evWarn.type].n}！先放一點`:evNow?'撐住…':inC&&wide>.3?'':sparkOn?'磨到火花了，分數 ×2.5':inC&&th<reqNow-1&&seg.t>IN_T?'壓不夠，按住！':inC&&li===0&&cornersDone<2?'越靠近紅線分數越高，碰到紅線就摔':!inC&&cornersDone===0&&seg.type==='start'?(li===0?(seg.t<MATE_AT?'「Go back」：叫同學坐上後座':'起步之後馬上就是彎。按住畫面壓車，放開回正'):'同學上車，起步就過彎'):'';
+  if(h!==lastHint){lastHint=h;el.hint.textContent=h;}
+  Snd.tune(lv.speed*(.35+.65*spd),th,uNow,sparkOn);
+}
+const H=1/120;let acc=0,last=0,holdLoop=false;
+function setPaused(p){if(p&&(paused||mode!=='ride'))return;if(!p&&!paused)return;paused=p;$('pause').hidden=!p;last=0;acc=0;hold=false;ids.clear();if(p)Voice.stop();if(Snd.ctx){try{p?Snd.ctx.suspend():Snd.ctx.resume();}catch(e){}}if(p)$('resume').focus({preventScroll:true});}
+function frame(now){
+  const dt=Math.min(.05,(now-(last||now))/1000);last=now;
+  if(!paused&&!holdLoop){acc+=dt;let n=0;while(acc>=H&&n++<10){tick(H);acc-=H;}if(n>=10)acc=0;hud();}
+  render();requestAnimationFrame(frame);
+}
+
+/* ───────── 輸入：按住＝壓車，放開＝回正 ───────── */
+const ids=new Set();
+gameEl.addEventListener('pointerdown',e=>{if(e.target.closest('button,a,.card,.levels'))return;e.preventDefault();Snd.init();ids.add(e.pointerId);if(mode==='ride'&&!paused)hold=true;});
+const upEnd=e=>{ids.delete(e.pointerId);if(!ids.size)hold=false;};
+window.addEventListener('pointerup',upEnd);window.addEventListener('pointercancel',upEnd);
+gameEl.addEventListener('contextmenu',e=>e.preventDefault());
+// App 內建瀏覽器會把滑動當成「關掉這一頁」，所以遊戲畫面上的觸控不交給瀏覽器（清單和卡片可以捲的地方除外）
+for(const t of['touchstart','touchmove'])gameEl.addEventListener(t,e=>{if(e.cancelable&&!(e.target.closest&&e.target.closest('button,a,.card,.levels')))e.preventDefault();},{passive:false});
+let lastTouchEnd=0;
+document.addEventListener('touchend',e=>{const now=Date.now(),btn=e.target&&e.target.closest&&e.target.closest('button,a');if(now-lastTouchEnd<=350&&!btn&&e.cancelable)e.preventDefault();lastTouchEnd=now;},{passive:false});
+for(const t of['gesturestart','gesturechange','gestureend'])document.addEventListener(t,e=>e.preventDefault(),{passive:false});
+document.addEventListener('dblclick',e=>e.preventDefault());
+document.addEventListener('visibilitychange',()=>{last=0;if(document.hidden)setPaused(true);});
+window.addEventListener('blur',()=>setPaused(true));
+window.addEventListener('pagehide',()=>setPaused(true));
+window.addEventListener('keydown',e=>{if(e.code==='Escape'||e.code==='KeyP'){if(!e.repeat)setPaused(!paused);return;}
+  if(e.code!=='Space'&&e.code!=='Enter'&&e.code!=='ArrowDown')return;if(e.target.closest&&e.target.closest('button,a'))return;e.preventDefault();if(paused||e.repeat)return;Snd.init();
+  if(mode==='ride')hold=true;else if(mode==='over')startRide(+$('again').dataset.go);else if(mode==='title')startRide(grades[unlocked]?unlocked:unlocked);});
+window.addEventListener('keyup',e=>{if(e.code==='Space'||e.code==='Enter'||e.code==='ArrowDown'){if(!ids.size)hold=false;}});
+$('levels').addEventListener('click',e=>{const b=e.target.closest('.lv');if(!b||b.disabled)return;startRide(+b.dataset.i);});
+$('again').addEventListener('click',()=>startRide(+$('again').dataset.go));
+$('toList').addEventListener('click',openTitle);$('quit').addEventListener('click',openTitle);
+$('pauseBtn').addEventListener('click',()=>setPaused(true));
+$('resume').addEventListener('click',()=>setPaused(false));
+el.mute.addEventListener('click',()=>{Snd.init();Snd.setOn(!Snd.on);muteIcon();});
+$('share').addEventListener('click',async()=>{
+  const link=document.querySelector('link[rel=canonical]'),out=$('copied');
+  const text=(lastWon?`我用生命做完了英文報告「${lv.n}」，成績 ${grade}，帥度 ${Math.round(score)}。`:`我用生命做英文報告「${lv.n}」，壓到 ${Math.round(crash.lean)}° 摔車，影片 ${views.toLocaleString('en-US')} 人觀看。`)+'十次車禍九次快，一次英文報告。'+(link?' '+link.href:'');
+  try{await navigator.clipboard.writeText(text);out.textContent='已複製，貼到脆上炫耀吧';}
+  catch(e){out.textContent=text;const r=document.createRange();r.selectNodeContents(out);const s=getSelection();s.removeAllRanges();s.addRange(r);}
+});
+window.addEventListener('resize',resize);
+if(window.ResizeObserver)new ResizeObserver(resize).observe(gameEl);
+
+muteIcon();resize();openTitle();requestAnimationFrame(frame);
+window.__bg={LEVELS,SPARK_U,get mode(){return mode},get th(){return th},get req(){return reqNow},get lim(){return limNow},get u(){return uNow},get score(){return score},get par(){return par},get seg(){return seg},get wide(){return wide},
+  get cornersDone(){return cornersDone},get grade(){return grade},get views(){return views},get crash(){return crash},get evWarn(){return evWarn},get evNow(){return evNow},get unlocked(){return unlocked},set unlocked(v){unlocked=v;},get grades(){return grades},get spark(){return sparkOn},get gust(){return gustWarn?gustDir:0},
+  get hold(){return hold},set hold(v){hold=v;},set loopHold(v){holdLoop=v;},start:startRide,tick,openTitle};
+})();
+</script>
+<!--/PAGE-->
+</body>
+</html>
