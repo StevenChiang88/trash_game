@@ -173,7 +173,7 @@ body{background:var(--sky);color:var(--ink);font-family:var(--body);font-weight:
     <p class="tag">卡在遮雨棚上的那條棉被，今天掉了嗎？</p>
     <div class="gap"></div>
     <ul class="how">
-      <li><b>連點</b> 頂住風、爬回牆邊</li>
+      <li><b>連點</b> 爬回牆邊</li>
       <li><b>圈圈出現</b> 縮圈貼上再點</li>
       <li><b>看到就點</b> 鴿子、阿伯、水滴、垃圾</li>
     </ul>
@@ -266,7 +266,7 @@ class Sim{
       for(let i=0;i<n;i++){let x,y,k=0;do{x=this.u(52,308);y=this.u(175,495);}while(k++<60&&(Math.hypot(px-x,py-y)<110||Math.hypot(qx-x,qy-y)<72));
         notes.push({x,y,at,score:null});qx=px;qy=py;px=x;py=y;at+=this.u(.4,.82)*f;}}
     this.qte={kind,t:0,n,A,notes,dur:notes[n-1].at+QTE_GOOD};this.gust=null;this.v=0;this.events.push({type:'qteStart',kind,n});}   // 事件一開始被被就縮緊不動，風也先停
-  trashPos(it){const k=this.kid,u=clamp(it.t/k.fly,0,1),a=Math.min(S0+this.s+70,AW_LEN-6),tx=WALL_X+UX*a,ty=AW_Y0+UY*a-2*R,sx=KID.x-14,sy=KID.y-34;   // 垃圾飛的弧線：從小孩手上丟向被被中段
+  trashPos(it){const k=this.kid,u=clamp(it.t/k.fly,0,1),a=clamp(S0+this.s+70+it.off,S0+8,AW_LEN-6),tx=WALL_X+UX*a,ty=AW_Y0+UY*a-2*R,sx=KID.x-14,sy=KID.y-34;   // 垃圾飛的弧線：從小孩手上丟向被被中段
     const cx=(sx+tx)/2+it.bend*34,cy=ty-78,v=1-u;return{x:v*v*sx+2*v*u*cx+u*u*tx,y:v*v*sy+2*v*u*cy+u*u*ty};}
   dripPos(){const a=this.ac;if(!a||a.phase==='wait')return null;const f=a.phase==='form';   // 水滴現在在哪、多大
     return{x:AC_X,y:f?AC_Y+4*a.t/AC_FORM:AC_Y+4+Math.pow(a.t/AC_FALL,2)*(AC_LAND-AC_Y-4),r:f?2+5*a.t/AC_FORM:7};}
@@ -382,14 +382,16 @@ class Sim{
 
     // 一樓的小屁孩：先喊一聲，再一個接一個往上丟垃圾；垃圾砸到被被之前點掉，不然每砸中一次被被就往外彈一下
     if(this.kidAt>0&&this.t>=this.kidAt&&!this.qte&&!warn){this.kidAt=-1;
-      this.kid={t:-.7,n:2+Math.floor(this.day/10),next:0,gap:Math.max(.42,.8-.006*this.day),fly:Math.max(.75,1.05-.005*this.day),items:[]};this.events.push({type:'kid'});}
+      const n=3+Math.floor(this.day/8),burst=this.day>=20?3:2,rest=Math.max(.5,.9-.006*this.day),times=[];   // 連丟：一口氣丟 2～3 個，喘一下再來
+      for(let i=0,tt=0;i<n;i++){times.push(tt);tt+=(i+1)%burst===0?rest:.17;}
+      this.kid={t:-.7,n,next:0,times,fly:Math.max(.78,1.1-.005*this.day),items:[]};this.events.push({type:'kid'});}
     const kd=this.kid;
     if(kd&&!this.qte){kd.t+=dt;
-      if(kd.next<kd.n&&kd.t>=kd.next*kd.gap){kd.items.push({i:kd.next,t:0,kind:Math.floor(this.rng()*4),bend:this.u(-1,1),done:false});kd.next++;this.events.push({type:'throw'});}
+      if(kd.next<kd.n&&kd.t>=kd.times[kd.next]){kd.items.push({i:kd.next,t:0,kind:Math.floor(this.rng()*5),bend:this.u(-1,1),off:this.u(-38,38),done:false});kd.next++;this.events.push({type:'throw'});}   // 每個瞄的地方不太一樣，才不會疊在一起
       for(const it of kd.items){if(it.done)continue;it.t+=dt;
         if(inp.trash&&inp.trash.includes(it.i)){it.done=true;this.events.push({type:'trashPop',i:it.i});}
         else if(it.t>=kd.fly){it.done=true;const on=this.s<95;if(on){this.shove+=TRASH_PUSH;this.shoveCause='trash';this.shoveT=1.2;}this.events.push({type:'trashHit',i:it.i,on});}}
-      if(kd.next>=kd.n&&kd.items.every(it=>it.done)&&kd.t>=(kd.n-1)*kd.gap+kd.fly+.5)this.kid=null;}
+      if(kd.next>=kd.n&&kd.items.every(it=>it.done)&&kd.t>=kd.times[kd.n-1]+kd.fly+.5)this.kid=null;}
     // 樓上冷氣滴水：水滴先在排水管口越積越大，再掉下來；沒被點掉就會落在被被上把它弄濕
     if(this.acAt>0&&this.t>=this.acAt&&!this.qte&&!warn){this.acAt=-1;
       this.ac={left:Math.min(9,4+Math.floor(this.day/12)),t:0,phase:'form',gap:Math.max(.2,.42-.004*this.day)};this.events.push({type:'acStart'});}
@@ -662,7 +664,7 @@ function drawNote(c,x,y,kind,d,A,ring){
 }
 // 一樓的小屁孩和他丟上來的垃圾（寶特瓶、紙團、手搖杯、香蕉皮）
 function drawKid(c){
-  const k=sim.kid,endT=(k.n-1)*k.gap+k.fly,up=clamp((k.t+.7)/.3,0,1)*clamp((endT+.5-k.t)/.3,0,1),x=KID.x,y=KID.y+(1-up)*70;
+  const k=sim.kid,endT=k.times[k.n-1]+k.fly,up=clamp((k.t+.7)/.3,0,1)*clamp((endT+.5-k.t)/.3,0,1),x=KID.x,y=KID.y+(1-up)*70;
   const sw=k.items.length&&k.items[k.items.length-1].t<.22?1-k.items[k.items.length-1].t/.22:0;   // 剛丟出去的那一下手往前甩
   c.save();c.lineJoin='round';c.lineCap='round';c.strokeStyle=INK;c.lineWidth=2.2;
   c.fillStyle='#f6c453';rr(c,x-13,y-6,26,60,7);c.fill();c.stroke();                                // 黃 T 恤
@@ -674,12 +676,37 @@ function drawKid(c){
   if(k.t<.3){c.font='900 15px "Chiron GoRound TC","PingFang TC",sans-serif';c.textAlign='right';c.lineWidth=4.5;c.strokeStyle=INK;c.fillStyle='#fffdf5';c.strokeText('嘿嘿～',x-26,y-34);c.fillText('嘿嘿～',x-26,y-34);c.textAlign='left';}
   c.restore();
   for(const it of k.items){if(it.done)continue;const p=sim.trashPos(it);
-    c.globalAlpha=.7;c.lineWidth=2;c.strokeStyle='#fffdf5';c.beginPath();c.arc(p.x,p.y,19+2*Math.sin(time*10+it.i),0,TAU);c.stroke();c.globalAlpha=1;
-    c.save();c.translate(p.x,p.y);c.rotate(it.t*8*(it.i%2?1:-1));c.strokeStyle=INK;c.lineWidth=2;c.lineJoin='round';
-    if(it.kind===0){c.fillStyle='#bfe3f7';rr(c,-5,-10,10,20,3.5);c.fill();c.stroke();c.fillStyle='#3a78b4';c.fillRect(-3.5,-13.5,7,4);c.strokeRect(-3.5,-13.5,7,4);c.fillStyle='#fffdf5';c.fillRect(-5,-2,10,6);}   // 寶特瓶
-    else if(it.kind===1){c.fillStyle='#fffdf5';c.beginPath();for(let q=0;q<9;q++){const a=q*TAU/9,r=q%2?10:7.5;c.lineTo(Math.cos(a)*r,Math.sin(a)*r);}c.closePath();c.fill();c.stroke();c.lineWidth=1.2;c.beginPath();c.moveTo(-4,-2);c.lineTo(1,1);c.lineTo(-1,5);c.moveTo(2,-5);c.lineTo(4,0);c.stroke();}   // 紙團
-    else if(it.kind===2){c.fillStyle='#c98f5a';c.beginPath();c.moveTo(-7,-9);c.lineTo(7,-9);c.lineTo(5,11);c.lineTo(-5,11);c.closePath();c.fill();c.stroke();c.fillStyle='#fffdf5';c.fillRect(-8,-11,16,3.5);c.strokeRect(-8,-11,16,3.5);c.strokeStyle='#e0533d';c.lineWidth=2.4;c.beginPath();c.moveTo(2,-11);c.lineTo(5,-18);c.stroke();c.fillStyle=INK;c.beginPath();c.arc(-2,7,1.4,0,TAU);c.arc(2,5,1.4,0,TAU);c.arc(0,9,1.4,0,TAU);c.fill();}   // 手搖杯
-    else{c.fillStyle='#ffd35c';c.beginPath();c.moveTo(0,-9);c.quadraticCurveTo(11,-2,9,10);c.quadraticCurveTo(3,3,0,1);c.quadraticCurveTo(-3,3,-9,10);c.quadraticCurveTo(-11,-2,0,-9);c.fill();c.stroke();c.fillStyle='#8a6a3a';c.fillRect(-1.5,-12,3,4);}   // 香蕉皮
+    c.globalAlpha=.7;c.lineWidth=2;c.strokeStyle='#fffdf5';c.beginPath();c.arc(p.x,p.y,24+2*Math.sin(time*10+it.i),0,TAU);c.stroke();c.globalAlpha=1;
+    // 臭氣和蒼蠅（不跟著垃圾轉）
+    c.lineCap='round';c.lineWidth=2;c.strokeStyle='rgba(126,170,92,.85)';c.beginPath();
+    for(const dx of[-7,5]){const w=Math.sin(time*7+it.i+dx)*2.5;c.moveTo(p.x+dx,p.y-18);c.quadraticCurveTo(p.x+dx+4+w,p.y-23,p.x+dx,p.y-28);c.quadraticCurveTo(p.x+dx-4-w,p.y-33,p.x+dx,p.y-37);}
+    c.stroke();
+    {const fa=time*11+it.i*2,fx=p.x+Math.cos(fa)*19,fy=p.y-6+Math.sin(fa*1.3)*11;c.fillStyle=INK;c.beginPath();c.arc(fx,fy,1.9,0,TAU);c.fill();c.fillStyle='rgba(255,255,255,.8)';c.beginPath();c.ellipse(fx-1.5,fy-2,2.2,1.1,-.6,0,TAU);c.ellipse(fx+1.5,fy-2,2.2,1.1,.6,0,TAU);c.fill();}
+    c.save();c.translate(p.x,p.y);c.rotate(it.t*6*(it.i%2?1:-1));c.scale(1.35,1.35);c.strokeStyle=INK;c.lineWidth=1.7;c.lineJoin='round';c.lineCap='round';
+    if(it.kind===0){   // 魚骨頭
+      c.fillStyle='#f4efe2';c.beginPath();c.moveTo(-13,0);c.quadraticCurveTo(-8,-7,-3,-4);c.lineTo(-3,4);c.quadraticCurveTo(-8,7,-13,0);c.fill();c.stroke();
+      c.fillStyle=INK;c.beginPath();c.arc(-8,-1.2,1.2,0,TAU);c.fill();
+      c.lineWidth=2.2;c.beginPath();c.moveTo(-3,0);c.lineTo(9,0);for(const q of[0,3.6,7.2]){c.moveTo(q,-5.5);c.lineTo(q,5.5);}c.stroke();
+      c.lineWidth=1.7;c.fillStyle='#f4efe2';c.beginPath();c.moveTo(9,0);c.lineTo(14,-6);c.lineTo(12.5,0);c.lineTo(14,6);c.closePath();c.fill();c.stroke();}
+    else if(it.kind===1){   // 蘋果核
+      c.fillStyle='#e0533d';c.beginPath();c.ellipse(0,-8,8,4.2,0,0,TAU);c.fill();c.stroke();c.beginPath();c.ellipse(0,8,7,3.8,0,0,TAU);c.fill();c.stroke();
+      c.fillStyle='#fbf1cf';c.beginPath();c.moveTo(-5,-7);c.quadraticCurveTo(-1,0,-4.5,7);c.lineTo(4.5,7);c.quadraticCurveTo(1,0,5,-7);c.closePath();c.fill();c.stroke();
+      c.fillStyle='#6b4a2a';c.beginPath();c.ellipse(-.3,-.8,1,1.7,.2,0,TAU);c.ellipse(.8,2.4,.9,1.5,-.3,0,TAU);c.fill();
+      c.strokeStyle='#6b4a2a';c.lineWidth=2;c.beginPath();c.moveTo(0,-11);c.quadraticCurveTo(1,-15,4,-16);c.stroke();}
+    else if(it.kind===2){   // 香蕉皮
+      c.fillStyle='#ffd35c';c.beginPath();c.moveTo(0,-11);c.quadraticCurveTo(13,-3,11,11);c.quadraticCurveTo(5,4,1,2);c.quadraticCurveTo(0,8,-1,13);c.quadraticCurveTo(-4,6,-2,2);c.quadraticCurveTo(-6,4,-12,10);c.quadraticCurveTo(-13,-3,0,-11);c.fill();c.stroke();
+      c.fillStyle='#8a6a3a';c.fillRect(-1.6,-14,3.2,4);c.beginPath();c.arc(5,1,1.1,0,TAU);c.arc(-6,3,1,0,TAU);c.arc(7,7,.9,0,TAU);c.fill();
+      c.fillStyle='#fff3c4';c.beginPath();c.moveTo(0,-7);c.quadraticCurveTo(2.5,-2,1,1);c.quadraticCurveTo(-2,-2,0,-7);c.fill();}
+    else if(it.kind===3){   // 壓扁的鋁罐
+      c.fillStyle='#d9dde2';c.beginPath();c.moveTo(-6,-10);c.lineTo(6,-10);c.lineTo(4,-3);c.lineTo(7,2);c.lineTo(5,10);c.lineTo(-5,10);c.lineTo(-7,3);c.lineTo(-4,-2);c.closePath();c.fill();c.stroke();
+      c.fillStyle='#e0533d';c.beginPath();c.moveTo(-4.6,-3.5);c.lineTo(4.4,-3.5);c.lineTo(6.6,2);c.lineTo(5.8,5);c.lineTo(-6.2,5);c.lineTo(-6.6,3);c.closePath();c.fill();
+      c.fillStyle='#9aa3ad';c.beginPath();c.ellipse(0,-10,6,2,0,0,TAU);c.fill();c.stroke();c.fillStyle=INK;c.beginPath();c.ellipse(1,-10,2,.9,0,0,TAU);c.fill();
+      c.strokeStyle='rgba(255,255,255,.8)';c.lineWidth=1.4;c.beginPath();c.moveTo(-4,-7.5);c.lineTo(-3,-5);c.stroke();}
+    else{   // 綁起來的紅白塑膠袋
+      c.fillStyle='#fffdf5';c.beginPath();c.moveTo(-3,-6);c.quadraticCurveTo(-12,-3,-10,6);c.quadraticCurveTo(-8,13,0,12);c.quadraticCurveTo(9,13,10,6);c.quadraticCurveTo(12,-3,3,-6);c.closePath();c.fill();
+      c.save();c.clip();c.fillStyle='#e0533d';for(let q=-12;q<14;q+=5.2)c.fillRect(q,-8,2.4,22);c.restore();c.stroke();
+      c.fillStyle='#fffdf5';c.beginPath();c.moveTo(-3,-6);c.lineTo(-8,-14);c.lineTo(-3.5,-11.5);c.lineTo(0,-8.5);c.lineTo(3.5,-11.5);c.lineTo(8,-14);c.lineTo(3,-6);c.closePath();c.fill();c.stroke();
+      c.fillStyle=INK;c.fillRect(-3.4,-7.6,6.8,2.4);}
     c.restore();}
 }
 function drawUncle(c){
