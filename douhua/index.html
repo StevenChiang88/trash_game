@@ -341,10 +341,10 @@ function drawGirl(c,x,y,o){
 function drawRowBg(c,r,row,y,L,R){
   const top=y-RH/2,t=row.t;
   if(t==='walk'){c.fillStyle='#ddd0b8';c.fillRect(L,top,R-L,RH);c.strokeStyle='rgba(43,42,58,.12)';c.lineWidth=1.5;c.beginPath();for(let x=Math.floor(L/40)*40+(r%2?20:0);x<R;x+=40){c.moveTo(x,top);c.lineTo(x,top+RH);}c.moveTo(L,top);c.lineTo(R,top);c.stroke();
-    // 路邊的東西：行道樹、停著的機車、變電箱
+    // 路邊的東西：行道樹、長椅、變電箱（不放機車，免得看起來像有車開上人行道）
     for(let i=-3;i<8;i++){const x=i*74+hash(r,i)*30,k=hash(r*3+i,5);if(Math.abs(x-CX)<122||(row.goal&&x>CX+84))continue;c.strokeStyle=INK;c.lineWidth=2.4;
       if(k<.3){c.fillStyle='#8a6a48';c.fillRect(x-3,y-4,6,14);c.fillStyle='#4f9a6e';c.beginPath();c.arc(x,y-10,15,0,TAU);c.fill();c.stroke();c.fillStyle='#6bb886';c.beginPath();c.arc(x-4,y-14,6,0,TAU);c.fill();}
-      else if(k<.5)drawParked(c,x,y+2,SCOOT_COL[(r+i+60)%6]);
+      else if(k<.42){c.fillStyle='rgba(43,42,58,.16)';rrect(c,x-17,y-3,36,16,4);c.fill();c.fillStyle='#b98a5a';rrect(c,x-18,y-8,36,15,4);c.fill();c.stroke();c.lineWidth=1.6;c.beginPath();c.moveTo(x-18,y-3);c.lineTo(x+18,y-3);c.moveTo(x-18,y+2);c.lineTo(x+18,y+2);c.stroke();c.lineWidth=2.4;}   // 長椅
       else if(k<.58){c.fillStyle='#5aa67e';rrect(c,x-11,y-14,22,26,3);c.fill();c.stroke();}}
     if(row.goal)drawStall(c,CX+148,y+6,.52);}
   else if(t==='median'){c.fillStyle=ROAD;c.fillRect(L,top,R-L,RH);c.fillStyle='#c9ced6';c.fillRect(L,top+9,R-L,RH-18);c.fillStyle='#6bb886';c.fillRect(L,top+14,R-L,RH-28);
