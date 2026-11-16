@@ -47,7 +47,7 @@
   --body:"Chiron GoRound TC","PingFang TC","Noto Sans TC","Microsoft JhengHei",sans-serif;
   --sticker:-2px -2px 0 var(--ink),2px -2px 0 var(--ink),-2px 2px 0 var(--ink),2px 2px 0 var(--ink),0 -2.5px 0 var(--ink),0 2.5px 0 var(--ink),-2.5px 0 0 var(--ink),2.5px 0 0 var(--ink);
 }
-html,body{height:100%;touch-action:manipulation}
+html,body{height:100%;touch-action:none;overscroll-behavior:none}
 button{touch-action:manipulation}
 body{background:var(--road);color:var(--ink);font-family:var(--body);font-weight:500;overflow:hidden;overscroll-behavior:none;display:grid;place-items:center}
 #game{position:relative;height:100%;aspect-ratio:9/16;max-width:100%;overflow:hidden;touch-action:none;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent}
@@ -59,6 +59,12 @@ body{background:var(--road);color:var(--ink);font-family:var(--body);font-weight
 .count{display:flex;align-items:baseline;gap:5px;font-family:var(--display);color:var(--paper);text-shadow:var(--sticker);line-height:1}
 .count small{font-family:var(--body);font-weight:900;font-size:15px}
 .count b{font-size:40px;font-weight:700;font-variant-numeric:tabular-nums}
+/* 零錢：湊滿 30 塊會亮起來，過完這條朋友就去多買一碗 */
+.wallet{display:flex;align-items:center;gap:6px;font-weight:900;font-size:16px;color:var(--paper);text-shadow:var(--sticker);line-height:1}
+.wallet .coin{display:grid;place-items:center;width:20px;height:20px;border:2.5px solid var(--ink);border-radius:50%;background:var(--sun);color:var(--ink);font-family:var(--display);font-size:12px;text-shadow:none}
+.wallet b{font-family:var(--display);font-size:20px;font-variant-numeric:tabular-nums}
+.wallet.full b{color:var(--sun)}
+.wallet .spare{font-size:12px;padding:3px 8px;border:2.5px solid var(--ink);border-radius:999px;background:var(--paper);color:var(--ink);text-shadow:none}
 /* 豆花晃動：越滿越危險，滿了就掉。變紅表示快掉了 */
 .pat{display:flex;flex-direction:column;gap:3px;width:150px}
 .pat span{font-weight:900;font-size:12px;color:var(--paper);text-shadow:var(--sticker);line-height:1}
@@ -108,7 +114,8 @@ body{background:var(--road);color:var(--ink);font-family:var(--body);font-weight
   <div class="hud" id="hud" hidden>
     <div class="top">
       <div class="left">
-        <div class="count"><small>保住</small><b id="num">$0</b></div>
+        <div class="count"><small>過了</small><b id="num">0</b><small>條</small></div>
+        <div class="wallet" id="wallet"><span class="coin" aria-hidden="true">$</span><b id="money">$0</b><span class="spare" id="spare" hidden>朋友手上還有一碗</span></div>
         <div class="pat"><span>豆花晃動</span><div class="timer" id="timer"><i id="timerFill"></i></div></div>
       </div>
       <div class="side">
@@ -123,9 +130,11 @@ body{background:var(--road);color:var(--ink);font-family:var(--body);font-weight
     <h1 class="logo">我的豆花<span>30塊</span></h1>
     <p class="tag">提著一碗豆花過馬路。<br>車要閃，豆花也不能晃過頭。</p>
     <ul class="how">
-      <li><b>點一下</b> 往前走一步</li>
+      <li><b>點一下</b> 往前走</li>
+      <li><b>左右滑</b> 橫著閃</li>
+      <li><b>往下滑</b> 退一步</li>
       <li><b>走太急</b> 豆花會晃</li>
-      <li><b>過一條馬路</b> 保住 30 塊</li>
+      <li><b>撿滿 30 塊</b> 朋友再買一碗</li>
     </ul>
     <div class="gap"></div>
     <button class="btn" id="start" type="button">買好了，過馬路</button>
@@ -139,7 +148,7 @@ body{background:var(--road);color:var(--ink);font-family:var(--body);font-weight
       <dl class="stats">
         <div><dt>過了幾條馬路</dt><dd id="ovN">0 條</dd></div>
         <div><dt>最佳紀錄</dt><dd id="ovBest">0 條</dd></div>
-        <div><dt>掉之前保住了</dt><dd id="ovSave">$0</dd></div>
+        <div><dt>撿到的零錢</dt><dd id="ovSave">$0</dd></div>
         <div><dt>封號</dt><dd id="ovRank"></dd></div>
         <div class="wide"><dt>怎麼掉的</dt><dd id="ovMiss"></dd></div>
       </dl>
@@ -174,9 +183,14 @@ function rrect(c,x,y,w,h,r){c.beginPath();c.moveTo(x+r,y);c.arcTo(x+w,y,x+w,y+h,
 
 /* ───────── 規則 ─────────
    馬路從上往下看：一條車道是一列（row），她站在斑馬線上，點一下往上走一列。
-   手上那袋豆花像鐘擺：每走一步推它一下，連走太急就越晃越大；被喇叭嚇到、踩到水窪也會晃。晃過頭就掉 */
+   手上那袋豆花像鐘擺：每走一步推它一下，連走太急就越晃越大；被喇叭嚇到、踩到水窪也會晃。晃過頭就掉。
+   斑馬線有三個直排（col -1/0/1），可以橫著走、也可以退一步。朋友一開始也買了一碗：自己的掉了就換她那碗繼續走，
+   她手上也沒有才真的結束。路上有零錢，湊滿 30 塊，過完那條馬路她會在路邊那攤再買一碗 */
 const VW=360,VH=640,CX=180,RH=58,FEET=470;
-const W0=6.6,ZETA=.15,STEP_J=3.7,HONK_J=2.3,PUD_J=3.2,LIMIT=1.05,STEP_T=.15,PRICE=30;
+const W0=6.6,ZETA=.15,STEP_J=3.7,HONK_J=2.3,PUD_J=3.2,LIMIT=1.05,STEP_T=.15,PRICE=30,COLW=58,NEAR_T=.34,NEAR_V=5;
+const PX=c=>CX+c*COLW;
+// 豆花掉的時候要放的錄音檔（放在同一個資料夾，例如 'voice.mp3'）。留空就用裝置內建的語音唸
+const VOICE_FILE='';
 // 車：len 車長、w 車寬、n 被撞到時怎麼稱呼
 const KIND={scoot:{len:34,w:20,n:'機車'},car:{len:62,w:32,n:'汽車'},taxi:{len:62,w:32,n:'計程車'},truck:{len:84,w:34,n:'小貨車'},bus:{len:132,w:38,n:'公車'}};
 const CAR_COL=['#e4572e','#5c7fb8','#fff8ea','#3a3d52','#3a9a94','#c9ced6'],SCOOT_COL=['#e4572e','#ffc94a','#5c7fb8','#fff8ea','#3a9a94','#f08fb0'];
@@ -194,17 +208,31 @@ const Snd={ctx:null,on:store.get('dh.mute')!=='1',
     g.gain.setValueAtTime(.4,t);g.gain.exponentialRampToValueAtTime(.001,t+.25);s.connect(f);f.connect(g);g.connect(this.master);s.start(t);s.stop(t+.3);},
   // 「啊——」：一聲拉長往上飄再掉下來的尖叫，帶一點抖音
   scream(){if(!this.ctx)return;const c=this.ctx,t=c.currentTime+.12,o=c.createOscillator(),l=c.createOscillator(),lg=c.createGain(),f=c.createBiquadFilter(),g=c.createGain();
-    o.type='sawtooth';o.frequency.setValueAtTime(620,t);o.frequency.linearRampToValueAtTime(980,t+.25);o.frequency.linearRampToValueAtTime(900,t+.8);o.frequency.exponentialRampToValueAtTime(420,t+1.15);
+    o.type='sawtooth';o.frequency.setValueAtTime(620,t);o.frequency.linearRampToValueAtTime(980,t+.25);o.frequency.linearRampToValueAtTime(900,t+.42);o.frequency.exponentialRampToValueAtTime(420,t+.62);
     l.frequency.value=9;lg.gain.value=26;l.connect(lg);lg.connect(o.frequency);f.type='bandpass';f.frequency.value=1500;f.Q.value=1.1;
-    g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(.2,t+.05);g.gain.setValueAtTime(.2,t+.85);g.gain.exponentialRampToValueAtTime(.001,t+1.2);
-    o.connect(f);f.connect(g);g.connect(this.master);o.start(t);l.start(t);o.stop(t+1.25);l.stop(t+1.25);},
+    g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(.2,t+.05);g.gain.setValueAtTime(.2,t+.42);g.gain.exponentialRampToValueAtTime(.001,t+.64);
+    o.connect(f);f.connect(g);g.connect(this.master);o.start(t);l.start(t);o.stop(t+.7);l.stop(t+.7);},
   setOn(v){this.on=v;store.set('dh.mute',v?'0':'1');if(this.ctx)this.master.gain.setTargetAtTime(v?1:0,this.ctx.currentTime,.02);}
 };
 
+// 那句話用裝置內建的中文語音喊出來，調高、調快一點。沒有中文語音的裝置（例如部分 App 內建瀏覽器）就只有尖叫聲
+const Voice={ok:'speechSynthesis' in window&&'SpeechSynthesisUtterance' in window,v:null,warm:false,clip:null,
+  load(){if(!VOICE_FILE)return;try{const a=new Audio();a.preload='auto';a.addEventListener('canplaythrough',()=>{this.clip=a;},{once:true});a.src=VOICE_FILE;}catch(e){}},
+  pick(){if(!this.ok)return;let vs=[];try{vs=speechSynthesis.getVoices()||[];}catch(e){}const L=v=>(v.lang||'').replace('_','-').toLowerCase();
+    this.v=vs.find(v=>L(v)==='zh-tw')||vs.find(v=>L(v).startsWith('zh-tw'))||vs.find(v=>/^(zh-cn|zh-hans|zh-hant|cmn|zh$)/.test(L(v)))||null;},
+  // iOS 要先在點擊的當下講過一次（這裡講一句聽不到的），之後才能在別的時間點出聲
+  unlock(){const a=this.clip;if(a){try{a.pause();a.currentTime=0;if(!this.clipWarm){this.clipWarm=true;a.muted=true;const p=a.play();if(p&&p.then)p.then(()=>{a.pause();a.currentTime=0;a.muted=false;}).catch(()=>{a.muted=false;});}}catch(e){}}
+    if(!this.ok)return;try{speechSynthesis.cancel();if(this.warm)return;this.warm=true;this.pick();const u=new SpeechSynthesisUtterance(' ');u.volume=0;speechSynthesis.speak(u);}catch(e){}},
+  say(text){if(!Snd.on)return;if(this.clip){try{this.clip.currentTime=0;this.clip.muted=false;const p=this.clip.play();if(p&&p.catch)p.catch(()=>{});}catch(e){}return;}
+    if(!this.ok)return;try{if(!this.v)this.pick();if(!this.v)return;speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(text);u.voice=this.v;u.lang=this.v.lang;u.pitch=1.8;u.rate=1.15;u.volume=1;speechSynthesis.speak(u);}catch(e){}},
+  stop(){if(this.clip)try{this.clip.pause();}catch(e){}if(this.ok)try{speechSynthesis.cancel();}catch(e){}}};
+Voice.load();
+if(Voice.ok){Voice.pick();try{speechSynthesis.addEventListener('voiceschanged',()=>Voice.pick());}catch(e){}}
+
 /* ───────── 狀態 ───────── */
-let mode='title',time=0,rows=[],gen=0,pr=1,from=1,camR=1,stepT=0,buf=false,th=0,om=0,foot=1,streets=0,best=parseInt(store.get('dh.best')||'0',10)||0;
+let mode='title',time=0,rows=[],gen=0,pr=1,from=1,col=0,fromCol=0,minR=1,camR=1,stepT=0,buf=null,th=0,om=0,foot=1,streets=0,money=0,earned=0,spare=0,rescue=false,idle=0,best=parseInt(store.get('dh.best')||'0',10)||0;
 let cause='',lastShock='step',dropT=0,dropX=CX,dropY=0,shake=0,flash=0,friendR=0,friendFrom=0,friendT=0,friendD=.15;
-const pops=[],splash=[];
+const pops=[],splash=[],nm={r:0,x:0,t:0};
 
 // 排一條馬路：一段一段的車道，段跟段之間有分隔島可以站。越後面段越多、車越快越密，更後面才有連三線
 // （手機上只看得到車子開到前一秒多，連三線又不能連踩，所以前面最多連兩線）
@@ -215,9 +243,10 @@ function genStreet(){
     if(g)rows.push({t:'median',street:k,veh:[]});
     for(let j=0;j<m;j++,i++){
       const dir=G.length>1?(g?-1:1):(j?-1:1),edge=i===0||i===n-1,sp=(edge?96:80)+rnd(0,24)+Math.min(k,20)*4.5+(edge?10:0),pud=k>=2&&!lastPud&&Math.random()<.17;lastPud=pud;   // 靠右行駛：近的這半邊車從左邊來
-      const row={t:'lane',street:k,dir,sp,edge,t0:lerp(1.3,.86,D),t1:lerp(2.8,1.75,D),pud,veh:[],gap:0,first:j===0,flip:G.length===1&&j===1};
+      const row={t:'lane',street:k,dir,sp,edge,t0:lerp(1.3,.86,D),t1:lerp(2.8,1.75,D),pud,pudC:(Math.random()*3|0)-1,coins:[],veh:[],gap:0,first:j===0,flip:G.length===1&&j===1};
+      if(Math.random()<.62){let c=pick([-1,-1,0,1,1]);if(pud&&c===row.pudC)c=c?-c:1;row.coins.push({c,v:k>=3&&Math.random()<.08?50:Math.random()<.3?10:5,got:false});}
       for(let x=-170;x<540;){const v=mkVeh(row);x+=v.len/2;v.x=dir>0?x:360-x;row.veh.push(v);x+=v.len/2+row.sp*rnd(row.t0,row.t1);}   // 先把整條車道排滿，不要一開始是空的
-      row.veh=row.veh.filter(v=>Math.abs(v.x-CX)>70||k>1);row.gap=row.sp*rnd(.2,row.t1);rows.push(row);}});
+      row.veh=row.veh.filter(v=>Math.abs(v.x-CX)>130||k>1);row.gap=row.sp*rnd(.2,row.t1);rows.push(row);}});
   rows.push({t:'walk',street:k,goal:true,veh:[]});rows.push({t:'walk',street:k,veh:[]});
 }
 function mkVeh(row){const r=Math.random(),k=row.edge?(r<.72?'scoot':r<.9?'car':'taxi'):(r<.3?'scoot':r<.62?'car':r<.75?'taxi':r<.9?'truck':'bus'),K=KIND[k];
@@ -307,19 +336,46 @@ function drawRowBg(c,r,row,y,L,R){
   const top=y-RH/2,t=row.t;
   if(t==='walk'){c.fillStyle='#ddd0b8';c.fillRect(L,top,R-L,RH);c.strokeStyle='rgba(43,42,58,.12)';c.lineWidth=1.5;c.beginPath();for(let x=Math.floor(L/40)*40+(r%2?20:0);x<R;x+=40){c.moveTo(x,top);c.lineTo(x,top+RH);}c.moveTo(L,top);c.lineTo(R,top);c.stroke();
     // 路邊的東西：行道樹、停著的機車、變電箱
-    for(let i=-3;i<8;i++){const x=i*74+hash(r,i)*30,k=hash(r*3+i,5);if(Math.abs(x-CX)<56)continue;c.strokeStyle=INK;c.lineWidth=2.4;
+    for(let i=-3;i<8;i++){const x=i*74+hash(r,i)*30,k=hash(r*3+i,5);if(Math.abs(x-CX)<104||(row.goal&&x>CX+70))continue;c.strokeStyle=INK;c.lineWidth=2.4;
       if(k<.3){c.fillStyle='#8a6a48';c.fillRect(x-3,y-4,6,14);c.fillStyle='#4f9a6e';c.beginPath();c.arc(x,y-10,15,0,TAU);c.fill();c.stroke();c.fillStyle='#6bb886';c.beginPath();c.arc(x-4,y-14,6,0,TAU);c.fill();}
-      else if(k<.5){c.save();c.translate(x,y+4);c.rotate(-Math.PI/2);drawVeh(c,{k:'scoot',len:34,w:20,x:0,col:SCOOT_COL[(r+i+60)%6],hel:'#3a3d52'},1);c.restore();}
-      else if(k<.58){c.fillStyle='#5aa67e';rrect(c,x-11,y-14,22,26,3);c.fill();c.stroke();}}}
+      else if(k<.5)drawParked(c,x,y+2,SCOOT_COL[(r+i+60)%6]);
+      else if(k<.58){c.fillStyle='#5aa67e';rrect(c,x-11,y-14,22,26,3);c.fill();c.stroke();}}
+    if(row.goal)drawStall(c,CX+134,y+7,.6);}
   else if(t==='median'){c.fillStyle=ROAD;c.fillRect(L,top,R-L,RH);c.fillStyle='#c9ced6';c.fillRect(L,top+9,R-L,RH-18);c.fillStyle='#6bb886';c.fillRect(L,top+14,R-L,RH-28);
-    c.fillStyle='#4f9a6e';for(let x=Math.floor(L/34)*34;x<R;x+=34){if(Math.abs(x-CX)<40)continue;c.beginPath();c.arc(x+hash(r,x)*8,y,10,0,TAU);c.fill();}
-    c.fillStyle='#c9ced6';c.fillRect(CX-34,top+9,68,RH-18);}   // 行人穿越的缺口
+    c.fillStyle='#4f9a6e';for(let x=Math.floor(L/34)*34;x<R;x+=34){if(Math.abs(x-CX)<100)continue;c.beginPath();c.arc(x+hash(r,x)*8,y,10,0,TAU);c.fill();}
+    c.fillStyle='#c9ced6';c.fillRect(CX-92,top+9,184,RH-18);}   // 行人穿越的缺口
   else{c.fillStyle=ROAD;c.fillRect(L,top,R-L,RH);
     // 車道線：同方向的是白虛線，對向之間是雙黃線
     if(row.flip){c.fillStyle='#ffc94a';c.fillRect(L,top+RH-4,R-L,2.4);c.fillRect(L,top+RH+1,R-L,2.4);}
     else if(!row.first){c.fillStyle='rgba(255,248,234,.8)';for(let x=Math.floor(L/44)*44;x<R;x+=44)c.fillRect(x,top+RH-1.5,24,3);}
-    c.fillStyle='rgba(255,248,234,.9)';for(const q of[-18,0,18])c.fillRect(CX-32,y+q-5,64,10);   // 斑馬線
-    if(row.pud){c.fillStyle='rgba(143,220,247,.75)';c.beginPath();c.ellipse(CX,y+4,25,11,0,0,TAU);c.fill();c.strokeStyle='rgba(255,255,255,.8)';c.lineWidth=1.6;c.beginPath();c.ellipse(CX-4,y+2,12,4,0,.3,2.6);c.stroke();}}
+    c.fillStyle='rgba(255,248,234,.9)';for(const q of[-18,0,18])c.fillRect(CX-88,y+q-5,176,10);   // 斑馬線（三個直排寬）
+    if(row.pud){const px=PX(row.pudC);c.fillStyle='rgba(143,220,247,.8)';c.beginPath();c.ellipse(px,y+4,24,11,0,0,TAU);c.fill();c.strokeStyle='rgba(255,255,255,.8)';c.lineWidth=1.6;c.beginPath();c.ellipse(px-4,y+2,12,4,0,.3,2.6);c.stroke();}
+    for(const q of row.coins)if(!q.got)drawCoin(c,PX(q.c),y+3+Math.sin(time*4+r)*1.5,q.v);}
+}
+// 路上的零錢：5 塊銅色、10 塊銀色、50 塊金色
+function drawCoin(c,x,y,v){
+  c.fillStyle='rgba(43,42,58,.22)';c.beginPath();c.ellipse(x+1.5,y+3,10,8,0,0,TAU);c.fill();
+  c.fillStyle=v>=50?SUN:v>=10?'#e3e6ec':'#d6935a';c.strokeStyle=INK;c.lineWidth=2.2;c.beginPath();c.ellipse(x,y,10,8.5,0,0,TAU);c.fill();c.stroke();
+  c.fillStyle=INK;c.font='900 '+(v>=10?9.5:11)+'px '+FONT;c.textAlign='center';c.textBaseline='middle';c.fillText(v,x,y+.5);c.textAlign='left';c.textBaseline='alphabetic';
+}
+// 停在人行道上的機車（沒有人騎）：車頭朝上，看得到龍頭、後照鏡、坐墊和前後輪
+function drawParked(c,x,y,col){
+  c.lineJoin='round';c.lineCap='round';c.strokeStyle=INK;
+  c.fillStyle='rgba(43,42,58,.18)';rrect(c,x-6,y-15,19,38,7);c.fill();
+  c.fillStyle=INK;rrect(c,x-4,y-22,8,10,3);c.fill();rrect(c,x-4,y+12,8,10,3);c.fill();
+  c.lineWidth=2.4;c.fillStyle=col;rrect(c,x-8,y-15,16,30,7);c.fill();c.stroke();
+  c.fillStyle='#3a3d52';rrect(c,x-5.5,y-1,11,14,4);c.fill();
+  c.fillStyle=PAPER;rrect(c,x-4,y-13,8,5,2);c.fill();
+  c.lineWidth=3.2;c.beginPath();c.moveTo(x-12,y-9);c.lineTo(x+12,y-9);c.stroke();
+  c.fillStyle=INK;c.beginPath();c.arc(x-13,y-12,2.6,0,TAU);c.arc(x+13,y-12,2.6,0,TAU);c.fill();c.lineWidth=2.4;
+}
+// 豆花攤：一台小推車，上面三碗，招牌寫價錢。x,y 是推車中心，s 是大小
+function drawStall(c,x,y,s){
+  c.save();c.translate(x,y);c.scale(s,s);c.lineJoin='round';c.strokeStyle=INK;c.lineWidth=2.6/Math.sqrt(s);
+  c.fillStyle='#b98a5a';rrect(c,-54,-20,108,46,6);c.fill();c.stroke();c.fillStyle=PAPER;for(const q of[-36,-6,24]){c.beginPath();c.ellipse(q,2,11,7,0,0,TAU);c.fill();c.stroke();c.fillStyle=SYRUP;c.beginPath();c.ellipse(q,1,7,3.5,0,0,TAU);c.fill();c.fillStyle=PAPER;}
+  c.fillStyle=SUN;rrect(c,-60,-52,120,30,7);c.fill();c.stroke();c.fillStyle=ALERT;for(const q of[-60,-20,20])c.fillRect(q+2,-50.5,18,27);c.fillStyle=SUN;rrect(c,-46,-48,92,22,5);c.fill();
+  c.fillStyle=INK;c.font='900 17px '+FONT;c.textAlign='center';c.textBaseline='middle';c.fillText('豆花 30 元',0,-36.5);c.textBaseline='alphabetic';c.textAlign='left';
+  c.restore();
 }
 const ease=t=>t*t*(3-2*t);
 function render(){
@@ -328,21 +384,18 @@ function render(){
   g.setTransform(k,0,0,k,(ox+sx)*dpr,(oy+sy)*dpr);
   const L=wx0-12,R=wx1+12,r0=Math.floor(camR-(wy1-FEET)/RH-2),r1=Math.ceil(camR+(FEET-wy0)/RH+2),WALK={t:'walk',veh:[]};need(r1);
   for(let r=r1;r>=r0;r--)drawRowBg(g,r,rows[r]||WALK,rowY(r),L,R);
-  if(r0<=0){const y=rowY(-1)+4;g.lineJoin='round';g.strokeStyle=INK;g.lineWidth=2.6;   // 剛剛買豆花的那一攤
-    g.fillStyle='#b98a5a';rrect(g,CX+44,y-20,108,46,6);g.fill();g.stroke();g.fillStyle=PAPER;for(const q of[62,92,122]){g.beginPath();g.ellipse(CX+q,y+2,11,7,0,0,TAU);g.fill();g.stroke();g.fillStyle=SYRUP;g.beginPath();g.ellipse(CX+q,y+1,7,3.5,0,0,TAU);g.fill();g.fillStyle=PAPER;}
-    g.fillStyle=SUN;rrect(g,CX+38,y-52,120,30,7);g.fill();g.stroke();g.fillStyle=ALERT;for(const q of[38,78,118]){g.fillRect(CX+q+2,y-50.5,18,27);}g.fillStyle=SUN;rrect(g,CX+52,y-48,92,22,5);g.fill();
-    g.fillStyle=INK;g.font='900 17px '+FONT;g.textAlign='center';g.textBaseline='middle';g.fillText('豆花 30 元',CX+98,y-36.5);g.textBaseline='alphabetic';g.textAlign='left';}
-  const sp=stepT>0?1-stepT/STEP_T:0,pRow=stepT>0?from+ease(sp):pr,fsp=friendT>0?1-friendT/friendD:0,fRow=friendT>0?friendFrom+ease(fsp):friendR,drop=mode==='drop'||mode==='over';
+  if(r0<=0)drawStall(g,CX+98,rowY(-1)+4,1);   // 剛剛買豆花的那一攤
+  const sp=stepT>0?1-stepT/STEP_T:0,pRow=stepT>0?from+ease(sp):pr,fsp=friendT>0?1-friendT/friendD:0,fRow=friendT>0?friendFrom+ease(fsp):friendR,drop=mode==='drop'||mode==='over',pX=plX();
   for(let r=r1;r>=r0;r--){const row=rows[r]||WALK,y=rowY(r);
     if(row.t==='lane')for(const v of row.veh){if(v.x<L-90||v.x>R+90)continue;g.save();g.translate(0,y+2);drawVeh(g,v,row.dir);g.restore();}
     // 朋友：跟在左後方，慢半拍
-    if(Math.round(fRow)===r)drawGirl(g,CX-27,rowY(fRow)+14,{back:!drop,hair:'bob',hairCol:'#4a362c',pack:'#e4572e',step:fsp,foot:1,bag:null,laugh:drop&&dropT>.5});
+    if(Math.round(fRow)===r)drawGirl(g,CX-27,rowY(fRow)+14,{back:!drop,hair:'bob',hairCol:'#4a362c',pack:'#e4572e',step:fsp,foot:1,bag:spare?Math.sin(time*2.2)*.07:null,laugh:drop&&dropT>.5});
     if(Math.round(pRow)===r){
       if(drop){const e=clamp(dropT/.28,0,1);   // 豆花掉在地上：一攤白的和糖水
         g.fillStyle='rgba(201,119,46,.7)';g.beginPath();g.ellipse(dropX,dropY+4,30*e,11*e,0,0,TAU);g.fill();g.fillStyle=PAPER;g.strokeStyle=INK;g.lineWidth=2;
         for(const[qx,qy,qr]of[[-12,2,7],[4,-2,9],[15,5,6],[-2,7,6],[22,-2,4]]){g.beginPath();g.ellipse(dropX+qx*e,dropY+qy,qr*e,qr*.6*e,0,0,TAU);g.fill();g.stroke();}
         g.save();g.translate(dropX-20,dropY+2);g.rotate(1.2);g.fillStyle='rgba(255,255,255,.6)';rrect(g,-9,-7,18,22,5);g.fill();g.stroke();g.restore();}
-      drawGirl(g,CX,rowY(pRow)+14,{back:!drop,hair:'pony',hairCol:'#2b2a3a',pack:'#5c7fb8',step:sp,foot,bag:drop?null:th});}
+      drawGirl(g,pX,rowY(pRow)+14,{back:!drop,hair:'pony',hairCol:'#2b2a3a',pack:'#5c7fb8',step:sp,foot,bag:drop?null:th});}
   }
   for(const s of splash){g.globalAlpha=clamp(s.life*2.5,0,1);g.fillStyle=s.col;g.beginPath();g.arc(s.x,s.y,s.r,0,TAU);g.fill();}
   g.globalAlpha=1;g.textAlign='center';g.textBaseline='middle';g.lineJoin='round';
@@ -355,7 +408,7 @@ function render(){
 /* ───────── HUD 與流程 ───────── */
 const el={hud:$('hud'),num:$('num'),timer:$('timer'),fill:$('timerFill'),hint:$('hint'),title:$('title'),over:$('over'),best:$('best'),mute:$('mute')};
 const RANKS=[[40,'豆花守護神'],[26,'斑馬線上的職人'],[16,'穩得像端湯'],[9,'過馬路有練過'],[4,'還算小心'],[1,'至少過了一條'],[0,'剛買就掉了']];
-let lastHint='',lastNum=-1,lastFill=-1,paused=false;
+let lastHint='',lastNum=-1,lastFill=-1,lastMoney=-1,lastSpare=-1,paused=false;
 function setHint(t){if(t!==lastHint){lastHint=t;el.hint.textContent=t;}}
 function muteIcon(){el.mute.innerHTML=Snd.on
   ?'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9.5v5h3.5L12 18.5v-13L7.5 9.5z" fill="currentColor"/><path d="M15.5 9a4.2 4.2 0 0 1 0 6M18 6.5a8 8 0 0 1 0 11"/></svg>'
@@ -363,28 +416,44 @@ function muteIcon(){el.mute.innerHTML=Snd.on
   el.mute.setAttribute('aria-pressed',String(!Snd.on));}
 function showBest(){el.best.textContent=best>0?`最佳紀錄　過了 ${best} 條馬路`:'';}
 function pop(x,y,text,col,big,o){pops.push(Object.assign({x,y,text,col,life:big?1:.7,dur:big?1:.7,big},o));}
-function reset(){rows=[];gen=0;rows.push({t:'walk',veh:[]},{t:'walk',veh:[]});need(2);pr=from=1;camR=1;stepT=0;buf=false;th=om=0;streets=0;friendR=friendFrom=0;friendT=0;cause='';lastShock='step';pops.length=splash.length=0;shake=flash=0;}
-function start(){Snd.init();Snd.blip(520,780,.14,'triangle',.1);paused=false;$('pause').hidden=true;reset();mode='play';lastNum=lastFill=-1;el.title.hidden=true;el.over.hidden=true;el.hud.hidden=false;}
+function reset(){rows=[];gen=0;rows.push({t:'walk',veh:[]},{t:'walk',veh:[]});need(2);pr=from=1;col=fromCol=0;minR=1;camR=1;stepT=0;buf=null;th=om=0;streets=0;money=earned=0;spare=1;rescue=false;idle=0;nm.t=0;friendR=friendFrom=0;friendT=0;cause='';lastShock='step';pops.length=splash.length=0;shake=flash=0;}
+function start(){Snd.init();Voice.unlock();Snd.blip(520,780,.14,'triangle',.1);paused=false;$('pause').hidden=true;reset();mode='play';lastNum=lastFill=lastMoney=lastSpare=-1;el.title.hidden=true;el.over.hidden=true;el.hud.hidden=false;}
 function shock(j,why){om+=(Math.random()<.5?-1:1)*j;lastShock=why;}
-// 走一步。還在走的時候再點，會記住、落地後接著走
-function step(){
-  if(mode!=='play'||paused)return;if(stepT>0){buf=true;return;}
-  from=pr;pr++;stepT=STEP_T;foot=-foot;om+=STEP_J;lastShock='step';need(pr);Snd.blip(260,330,.05,'sine',.07);
+// 她現在在畫面上的 x（橫著走到一半時在兩個直排之間）
+const plX=()=>stepT>0?lerp(PX(fromCol),PX(col),ease(1-stepT/STEP_T)):PX(col);
+function gain(v,x,y,text){money+=v;earned+=v;pop(x,y,text||`+${v}`,SUN);Snd.blip(880,1320,.07,'triangle',.08);Snd.blip(1320,1760,.09,'triangle',.06,.06);}
+function friendSay(t){pop(CX-27,rowY(friendR)-76,t,PAPER);}
+// 走一步：dr 前（1）後（-1）、dc 左（-1）右（1）。還在走的時候再下指令，會記住、落地後接著走
+function move(dr,dc){
+  if(mode!=='play'||paused)return;if(stepT>0){buf=[dr,dc];return;}
+  const nr=pr+dr,nc=col+dc;if(nr<minR||nc<-1||nc>1){Snd.blip(170,130,.06,'square',.035);return;}
+  if(rows[pr].t==='lane'){nm.r=pr;nm.x=PX(col);nm.t=NEAR_T;}
+  from=pr;fromCol=col;pr=nr;col=nc;stepT=STEP_T;foot=-foot;om+=dr?dr*STEP_J:dc*STEP_J*.8;lastShock='step';idle=0;need(pr);Snd.blip(260,330,.05,'sine',.07);
 }
+const step=()=>move(1,0);
 function land(){
-  const row=rows[pr];let fr=pr-1;while(fr>0&&rows[fr].t==='lane')fr--;
-  if(fr!==friendR){friendFrom=friendR;friendR=fr;friendD=friendT=Math.min(.34,.13+.07*(fr-friendFrom));}
-  if(row.pud){shock(PUD_J,'puddle');pop(CX,rowY(pr)-70,'滑！',PAPER);Snd.splat();for(let i=0;i<8;i++)splash.push({x:CX+rnd(-16,16),y:rowY(pr)+6,vx:rnd(-90,90),vy:rnd(-140,-50),r:rnd(2,4),col:'#8fdcf7',life:rnd(.3,.55)});}
-  if(row.goal&&!row.done){row.done=true;streets++;pop(CX,rowY(pr)-86,`保住 ${PRICE} 塊！`,SUN,true);Snd.blip(660,990,.12,'triangle',.09);Snd.blip(990,1320,.14,'triangle',.07,.1);}
-  if(buf){buf=false;step();}
+  const row=rows[pr],x=PX(col);let fr=pr-1;while(fr>0&&rows[fr].t==='lane')fr--;
+  if(fr>friendR){friendFrom=friendR;friendR=fr;friendD=friendT=Math.min(.34,.13+.07*(fr-friendFrom));}
+  for(const c of row.coins||[])if(!c.got&&c.c===col){c.got=true;gain(c.v,x,rowY(pr)-64);}
+  if(row.pud&&row.pudC===col){shock(PUD_J,'puddle');pop(x,rowY(pr)-70,'滑！',PAPER);Snd.splat();for(let i=0;i<8;i++)splash.push({x:x+rnd(-16,16),y:rowY(pr)+6,vx:rnd(-90,90),vy:rnd(-140,-50),r:rnd(2,4),col:'#8fdcf7',life:rnd(.3,.55)});}
+  if(row.goal){
+    if(!row.done){row.done=true;streets++;minR=pr;pop(CX,rowY(pr)-92,`第 ${streets} 條，過！`,SUN,true);Snd.blip(660,990,.12,'triangle',.09);Snd.blip(990,1320,.14,'triangle',.07,.1);}
+    // 路邊那攤：零錢湊滿 30 塊，朋友就多買一碗帶著
+    if(!spare&&money>=PRICE){money-=PRICE;spare=1;pop(CX,rowY(pr)-52,`朋友也買了一碗　−$${PRICE}`,PAPER,false,{life:1.4,dur:1.4});Snd.blip(520,780,.1,'triangle',.08,.18);Snd.blip(780,1040,.12,'triangle',.07,.28);}}
+  if(buf){const b=buf;buf=null;move(b[0],b[1]);}
+}
+// 她的豆花掉了，但朋友手上還有一碗：退回朋友站的地方，接過來繼續走
+function revive(){
+  spare=0;rescue=false;mode='play';th=om=0;stepT=0;buf=null;pr=from=friendR;col=fromCol=0;lastShock='step';nm.t=0;idle=0;
+  pop(CX,rowY(pr)-122,'拿去啦，你欠我 30！',SUN,true,{life:1.3,dur:1.3});Snd.blip(520,780,.14,'triangle',.1);
 }
 function drop(why){
-  if(mode!=='play')return;mode='drop';dropT=0;cause=why;dropX=CX+26+clamp(th,-1,1)*18;dropY=rowY(stepT>0?from+(1-stepT/STEP_T):pr)+12;shake=14;flash=.7;Snd.splat();Snd.scream();
+  if(mode!=='play')return;mode='drop';dropT=0;cause=why;rescue=spare>0;dropX=plX()+26+clamp(th,-1,1)*18;dropY=rowY(stepT>0?from+(1-stepT/STEP_T):pr)+12;shake=14;flash=.7;Snd.splat();Snd.scream();
   pop(CX,220,'啊————',PAPER,true,{huge:true,life:1.1,dur:1.1});
 }
 function gameOver(){
   mode='over';paused=false;$('pause').hidden=true;if(streets>best){best=streets;store.set('dh.best',String(streets));}
-  $('ovN').textContent=streets+' 條';$('ovBest').textContent=best+' 條';$('ovSave').textContent='$'+streets*PRICE;$('ovRank').textContent=RANKS.find(r=>streets>=r[0])[1];$('ovMiss').textContent=cause;
+  $('ovN').textContent=streets+' 條';$('ovBest').textContent=best+' 條';$('ovSave').textContent='$'+earned;$('ovRank').textContent=RANKS.find(r=>streets>=r[0])[1];$('ovMiss').textContent=cause;
   $('copied').textContent='';el.hud.hidden=true;el.over.hidden=false;showBest();
 }
 function tick(dt){
@@ -399,23 +468,30 @@ function tick(dt){
     if((row.gap-=row.sp*dt)<=0){const v=mkVeh(row);v.x=row.dir>0?-200-v.len/2:560+v.len/2;row.veh.push(v);row.gap=v.len+row.sp*rnd(row.t0,row.t1);}}
   camR+=((stepT>0?from+(1-stepT/STEP_T):pr)-camR)*Math.min(1,dt*10);
   if(friendT>0)friendT=Math.max(0,friendT-dt);
-  if(mode==='drop'){dropT+=dt;if(dropT>.55&&dropT-dt<=.55)pop(CX,270,'我的豆花！30塊！',SUN,true,{huge:true,life:1.4,dur:1.4,rot:-.05});if(dropT>2.1)gameOver();return;}
+  if(mode==='drop'){dropT+=dt;if(dropT>.55&&dropT-dt<=.55){pop(CX,270,'我的豆花！30塊！',SUN,true,{huge:true,life:1.4,dur:1.4,rot:-.05});Voice.say('我的豆花！三十塊！');}
+    if(rescue&&dropT>1.75){revive();return;}if(dropT>2.1)gameOver();return;}
   if(mode!=='play')return;
   if(stepT>0&&(stepT-=dt)<=0){stepT=0;land();}
   // 豆花的擺動
   om+=(-W0*W0*th-2*ZETA*W0*om)*dt;th+=om*dt;
   if(Math.abs(th)>LIMIT)return drop(lastShock==='honk'?'被喇叭嚇到，手一抖就掉了':lastShock==='puddle'?'踩到水窪滑了一下':'走太急，晃到掉出來');
   // 被撞、被叭：只看她現在站的那一列
-  const cur=stepT>STEP_T*.55?from:pr,row=rows[cur];
-  if(row.t==='lane')for(const v of row.veh){const dx=(CX-v.x)*row.dir,half=v.len/2;   // dx>0：車還沒到她這裡
-    if(Math.abs(v.x-CX)<half+10)return drop(`被${KIND[v.k].n}撞到`);
+  const cur=stepT>STEP_T*.55?from:pr,row=rows[cur],x=plX();
+  // 好險：剛離開的位置馬上有車開過去，賺一點
+  if(nm.t>0){nm.t-=dt;const nr=rows[nm.r];if(nr&&(nm.r!==cur||Math.abs(nm.x-x)>COLW*.6))for(const v of nr.veh)if(Math.abs(v.x-nm.x)<v.len/2+6){nm.t=0;gain(NEAR_V,nm.x,rowY(nm.r)-40,`好險！+${NEAR_V}`);break;}}
+  // 站在安全的地方發呆太久，朋友會催
+  if(row.t!=='lane'&&(idle+=dt)>4.5){idle=-4;friendSay(pick(['快啦','走啊','豆花要涼了啦','你在等綠燈喔','我腳好痠']));}
+  if(row.t==='lane')for(const v of row.veh){const dx=(x-v.x)*row.dir,half=v.len/2;   // dx>0：車還沒到她這裡
+    if(Math.abs(v.x-x)<half+10)return drop(`被${KIND[v.k].n}撞到`);
     if(!v.honk&&dx>half&&dx<half+96){v.honk=true;shock(HONK_J,'honk');Snd.honk();pop(v.x+row.dir*half,rowY(cur)-30,'叭！',ALERT);}}
 }
 function hud(){
   if(mode!=='play'&&mode!=='drop')return;
-  if(streets!==lastNum){lastNum=streets;el.num.textContent='$'+streets*PRICE;}
+  if(streets!==lastNum){lastNum=streets;el.num.textContent=streets;}
+  if(money!==lastMoney){lastMoney=money;$('money').textContent='$'+money;$('wallet').classList.toggle('full',money>=PRICE);}
+  if(spare!==lastSpare){lastSpare=spare;$('spare').hidden=!spare;}
   const a=clamp(Math.abs(th)/LIMIT,0,1),f=Math.round(a*100);if(f!==lastFill){lastFill=f;el.fill.style.transform=`scaleX(${a.toFixed(2)})`;el.timer.classList.toggle('low',a>.72);}
-  setHint(mode!=='play'?'':streets===0&&pr<=1?'點一下往前走一步。看準沒車再走':streets===0?'連走太急豆花會越晃越大，站在車道上會被叭':rows[pr+1]&&rows[pr+1].pud&&streets<6?'前面有水窪，踩上去會滑':'');
+  setHint(mode!=='play'?'':streets===0&&pr<=1?'點一下往前走。左右滑橫著走，往下滑退一步':streets===0?'連走太急豆花會越晃越大，站在車道上會被叭':!spare&&money<PRICE&&streets<8?'撿零錢，湊滿 30 塊朋友會再買一碗':!spare&&streets<8?'夠 30 塊了，過完這條朋友就去買':streets===1?'朋友手上也有一碗。你的掉了，她那碗給你':'');
 }
 const H=1/120;let acc=0,last=0,hold=false;
 function setPaused(p){if(p&&(paused||mode!=='play'))return;if(!p&&!paused)return;paused=p;$('pause').hidden=!p;last=0;acc=0;if(Snd.ctx){try{p?Snd.ctx.suspend():Snd.ctx.resume();}catch(e){}}if(p)$('resume').focus({preventScroll:true});}
@@ -425,8 +501,15 @@ function frame(now){
   render();requestAnimationFrame(frame);
 }
 
-/* ───────── 輸入：整個畫面點哪裡都是往前走一步 ───────── */
-gameEl.addEventListener('pointerdown',e=>{if(e.target.closest('button,a'))return;e.preventDefault();Snd.init();step();});
+/* ───────── 輸入：點一下往前走一步；滑動就往那個方向走（上＝前、下＝退、左右＝橫著走） ───────── */
+let tp=null;const SWIPE=18;
+gameEl.addEventListener('pointerdown',e=>{if(e.target.closest('button,a'))return;e.preventDefault();Snd.init();tp={id:e.pointerId,x:e.clientX,y:e.clientY,done:false};});
+gameEl.addEventListener('pointermove',e=>{if(!tp||tp.done||e.pointerId!==tp.id)return;const dx=e.clientX-tp.x,dy=e.clientY-tp.y;if(Math.hypot(dx,dy)<SWIPE)return;
+  tp.done=true;if(Math.abs(dx)>Math.abs(dy))move(0,dx>0?1:-1);else move(dy<0?1:-1,0);});
+const tpEnd=e=>{if(!tp||e.pointerId!==tp.id)return;if(!tp.done&&e.type==='pointerup')move(1,0);tp=null;};
+gameEl.addEventListener('pointerup',tpEnd);gameEl.addEventListener('pointercancel',tpEnd);
+// App 內建瀏覽器（脆、IG、LINE）會把滑動當成「關掉這一頁」或「上一頁」，所以遊戲畫面上的觸控一律不交給瀏覽器
+for(const t of['touchstart','touchmove'])gameEl.addEventListener(t,e=>{if(e.cancelable&&!(e.target.closest&&e.target.closest('button,a')))e.preventDefault();},{passive:false});
 gameEl.addEventListener('contextmenu',e=>e.preventDefault());
 /* iOS Safari：快速點兩下會被當成「點兩下放大」，而且放大後縮不回來，所以把雙擊縮放、雙指縮放都擋掉 */
 let lastTouchEnd=0;
@@ -437,13 +520,14 @@ document.addEventListener('visibilitychange',()=>{last=0;if(document.hidden)setP
 window.addEventListener('blur',()=>setPaused(true));
 window.addEventListener('pagehide',()=>setPaused(true));
 window.addEventListener('keydown',e=>{if(e.code==='Escape'||e.code==='KeyP'){if(!e.repeat)setPaused(!paused);return;}
-  if(paused||e.repeat||(e.code!=='Space'&&e.code!=='Enter'&&e.code!=='ArrowUp'))return;if(e.target.closest&&e.target.closest('button,a'))return;e.preventDefault();Snd.init();
-  if(mode==='play')step();else if(mode==='title'||mode==='over')start();});
+  const K={Space:[1,0],Enter:[1,0],ArrowUp:[1,0],KeyW:[1,0],ArrowDown:[-1,0],KeyS:[-1,0],ArrowLeft:[0,-1],KeyA:[0,-1],ArrowRight:[0,1],KeyD:[0,1]}[e.code];
+  if(paused||e.repeat||!K)return;if(e.target.closest&&e.target.closest('button,a'))return;e.preventDefault();Snd.init();
+  if(mode==='play')move(K[0],K[1]);else if((mode==='title'||mode==='over')&&K[0]===1)start();});
 $('start').addEventListener('click',start);
 $('again').addEventListener('click',start);
 $('pauseBtn').addEventListener('click',()=>setPaused(true));
 $('resume').addEventListener('click',()=>setPaused(false));
-el.mute.addEventListener('click',()=>{Snd.init();Snd.setOn(!Snd.on);muteIcon();});
+el.mute.addEventListener('click',()=>{Snd.init();Snd.setOn(!Snd.on);if(!Snd.on)Voice.stop();muteIcon();});
 $('share').addEventListener('click',async()=>{
   const link=document.querySelector('link[rel=canonical]'),out=$('copied');
   const text=`我提著豆花過了 ${streets} 條馬路才掉（${cause}）。我的豆花，30塊！封號「${$('ovRank').textContent}」。你能過幾條？`+(link?' '+link.href:'');
@@ -455,7 +539,8 @@ if(window.ResizeObserver)new ResizeObserver(resize).observe(gameEl);
 
 reset();muteIcon();showBest();resize();requestAnimationFrame(frame);
 window.__dh={KIND,LIMIT,W0,ZETA,STEP_J,STEP_T,CX,get rows(){return rows},get mode(){return mode},get pr(){return pr},get th(){return th},get om(){return om},set th(v){th=v;},set om(v){om=v;},get stepT(){return stepT},get streets(){return streets},get cause(){return cause},get paused(){return paused},
-  step,start,tick,set hold(v){hold=v;},set pr(v){pr=from=v;camR=v;need(v);}};
+  get col(){return col},get money(){return money},set money(v){money=v;},get spare(){return spare},set spare(v){spare=v;},get friendR(){return friendR},PX,
+  step,move,start,tick,set hold(v){hold=v;},set pr(v){pr=from=v;camR=v;need(v);}};
 })();
 </script>
 <!--/PAGE-->
