@@ -478,10 +478,10 @@ function render(){
     g.fillStyle='#9b6b4a';rrect(g,26,-6,30,12,2.5);g.fill();g.stroke();                                                                                       // 木頭護木
     g.fillStyle='#3a3d52';g.beginPath();g.moveTo(8,6);g.lineTo(21,6);g.quadraticCurveTo(26,20,35,30);g.lineTo(24,35);g.quadraticCurveTo(13,22,8,6);g.closePath();g.fill();g.stroke();   // 彎彎的彈匣
     g.fillStyle='#9b6b4a';rrect(g,-9,5,10,15,3);g.fill();g.stroke();g.restore();
-    // 短短的手：一隻扶著護木、一隻握著握把
+    // 短短的手：單手握著握把，槍托夾在腰邊
     g.lineWidth=3;g.strokeStyle=INK;
     for(const[lw,col]of[[23,INK],[17,SHIRT]]){g.lineWidth=lw;g.strokeStyle=col;g.beginPath();g.moveTo(NUR.x+30,NUR.y+52);g.lineTo(hx-2,hy+4);g.stroke();}
-    g.lineWidth=3;g.strokeStyle=INK;g.fillStyle='#c98f66';g.beginPath();g.arc(hx-2,hy+6,10.5,0,TAU);g.fill();g.stroke();g.beginPath();g.arc(hx+Math.cos(ang)*40,hy+Math.sin(ang)*40+4,9.5,0,TAU);g.fill();g.stroke();
+    g.lineWidth=3;g.strokeStyle=INK;g.fillStyle='#c98f66';g.beginPath();g.arc(hx-2,hy+6,10.5,0,TAU);g.fill();g.stroke();
   }
   if(nSayT>0&&nSay&&!inRage&&!title)bubble(g,nSay,NUR.x-40,NUR.y-52,clamp(nSayT*4,0,1),NUR.x-6);
   // 最下面：輪椅扶手、銅鈴、阿伯的手
