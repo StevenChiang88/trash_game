@@ -269,7 +269,10 @@ const Snd={ctx:null,on:store.get('dh.mute')!=='1',
 // 那句話用裝置內建的中文語音喊出來，調高、調快一點。沒有中文語音的裝置（例如部分 App 內建瀏覽器）就只有尖叫聲
 const Voice={ok:'speechSynthesis' in window&&'SpeechSynthesisUtterance' in window,v:null,warm:false,raw:null,buf:null,busy:false,src:null,
   // 錄音檔：先把檔案抓下來，等玩家第一次點畫面、聲音系統開起來之後再解碼。跟其他音效走同一條路，所以靜音、暫停都管得到，iOS 也不用另外解鎖
-  load(){if(!VOICE_FILE||!window.fetch)return;fetch(VOICE_FILE).then(r=>r.ok?r.arrayBuffer():Promise.reject()).then(b=>{this.raw=b;this.decode();}).catch(()=>{});},
+  load(){if(!VOICE_FILE)return;
+    // 音檔直接寫在頁面裡的時候（試玩頁）自己解開，不經過網路請求：有些環境會擋掉對 data: 的請求
+    if(VOICE_FILE.slice(0,5)==='data:'){try{const b=atob(VOICE_FILE.slice(VOICE_FILE.indexOf(',')+1)),u=new Uint8Array(b.length);for(let i=0;i<b.length;i++)u[i]=b.charCodeAt(i);this.raw=u.buffer;this.decode();}catch(e){}return;}
+    if(!window.fetch)return;fetch(VOICE_FILE).then(r=>r.ok?r.arrayBuffer():Promise.reject()).then(b=>{this.raw=b;this.decode();}).catch(()=>{});},
   decode(){if(!this.raw||this.buf||this.busy||!Snd.ctx)return;this.busy=true;const done=b=>{this.buf=b;this.raw=null;},fail=()=>{this.raw=null;};
     try{const p=Snd.ctx.decodeAudioData(this.raw.slice(0),done,fail);if(p&&p.catch)p.catch(()=>{});}catch(e){fail();}},
   pick(){if(!this.ok)return;let vs=[];try{vs=speechSynthesis.getVoices()||[];}catch(e){}const L=v=>(v.lang||'').replace('_','-').toLowerCase();
@@ -687,7 +690,7 @@ if(window.ResizeObserver)new ResizeObserver(resize).observe(gameEl);
 
 reset();muteIcon();showBest();resize();requestAnimationFrame(frame);
 window.__dh={KIND,get LIMIT(){return lim},get day(){return day},set day(v){day=v;},get goalN(){return goalN},get bank(){return bank},set bank(v){bank=v;},get ups(){return ups},get mods(){return mods},get dogGap(){return pr-dog.r},get dogOn(){return dog.on},set dogOn(v){dog.on=v;},dayLabel,needOf,W0,ZETA,STEP_J,STEP_T,CX,get rows(){return rows},get mode(){return mode},get pr(){return pr},get th(){return th},get om(){return om},set th(v){th=v;},set om(v){om=v;},get stepT(){return stepT},get streets(){return streets},get cause(){return cause},get paused(){return paused},
-  get voiceReady(){return !!Voice.buf},get px(){return px},get tx(){return tx},get col(){return Math.round((px-CX)/COLW)},slide,get money(){return money},set money(v){money=v;},get spare(){return spare},set spare(v){spare=v;},get palX(){return fx},get palRow(){return fr},PX,
+  get voiceReady(){return !!Voice.buf},get voiceLoaded(){return !!(Voice.buf||Voice.raw)},get px(){return px},get tx(){return tx},get col(){return Math.round((px-CX)/COLW)},slide,get money(){return money},set money(v){money=v;},get spare(){return spare},set spare(v){spare=v;},get palX(){return fx},get palRow(){return fr},PX,
   step,move,start,tick,set hold(v){hold=v;},set pr(v){pr=from=v;camR=v;need(v);}};
 })();
 </script>
