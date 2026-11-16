@@ -1,6 +1,5 @@
 # 被被撐住
 
-一款向 Threads 迷因「卡在遮雨棚上的棉被」致敬的小遊戲。
 你是那條被風吹到鄰居鐵皮遮雨棚上的棉被，目標只有一個：今天也不要掉下去。
 
 ## 怎麼玩
@@ -106,7 +105,3 @@
 | `favicon.svg`、`apple-touch-icon.png` | 瀏覽器分頁與手機主畫面的圖示 |
 
 上線網址是 `https://stevenchiang88.github.io/trash_game/beibei/`。`index.html` 開頭的分享預覽標籤（`og:url`、`og:image`、`canonical`）和「複製戰績」附上的連結都寫死這個網址，換資料夾名稱、repo 名稱或自訂網域時要一起改。部署方式見根目錄的 README。
-
-## 說明
-
-這是粉絲向的原創作品，與原觀察帳號無關，沒有使用任何原貼文的照片或內容。
