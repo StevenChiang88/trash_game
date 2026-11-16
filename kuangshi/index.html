@@ -76,8 +76,8 @@ body{background:var(--bench);color:var(--ink);font-family:var(--body);font-weigh
 .news{padding:5px 10px;border-radius:8px;background:var(--ink);color:var(--paper);font-size:13px;font-weight:900;min-height:1.5em;line-height:1.5}
 .news b{color:var(--gold)}
 
-.tabs{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
-.tab{padding:8px 4px;border:2.5px solid var(--ink);border-radius:12px;background:var(--bench-deep);font-weight:900;font-size:15px;cursor:pointer;white-space:nowrap}
+.tabs{display:grid;grid-template-columns:repeat(4,1fr);gap:5px}
+.tab{padding:8px 2px;border:2.5px solid var(--ink);border-radius:12px;background:var(--bench-deep);font-weight:900;font-size:14px;cursor:pointer;white-space:nowrap}
 .tab[aria-selected=true]{background:var(--amethyst);color:var(--paper)}
 .panel{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;touch-action:pan-y;display:flex;flex-direction:column;gap:8px;padding:2px 2px 6px;scrollbar-width:thin}
 .item{display:flex;align-items:center;gap:10px;padding:9px 10px;border:2.5px solid var(--ink);border-radius:14px;background:var(--paper)}
@@ -96,6 +96,16 @@ body{background:var(--bench);color:var(--ink);font-family:var(--body);font-weigh
 .sm:active{transform:translateY(2px);box-shadow:0 1px 0 var(--ink)}
 .sm.alt{background:var(--paper)}
 .sm:disabled,.btn:disabled{opacity:.45;cursor:not-allowed}
+/* 圖鑑：所有礦石排成格子。開過的顯示本尊，沒開過的只有黑影和問號 */
+.dex{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.cell{display:flex;flex-direction:column;align-items:center;gap:1px;min-width:0;padding:6px 2px 7px;border:2.5px solid var(--ink);border-radius:12px;background:var(--paper);font-size:12px;font-weight:900;text-align:center;line-height:1.25}
+.cell svg{width:42px;height:42px;display:block}
+.cell small{font-weight:500;font-size:10.5px;opacity:.7;font-variant-numeric:tabular-nums}
+.cell.u0{box-shadow:inset 0 -5px 0 #dfe2e8}.cell.u1{box-shadow:inset 0 -5px 0 #9fe0b6}.cell.u2{box-shadow:inset 0 -5px 0 #9cc6f7}.cell.u3{box-shadow:inset 0 -5px 0 var(--gold)}.cell.u4{box-shadow:inset 0 -5px 0 #7fd8f5}
+.cell.lock{background:var(--bench-deep);color:rgba(43,42,58,.55)}
+.cell.lock svg{filter:brightness(0);opacity:.2}
+.card.tall{max-height:94%;overflow-y:auto;overscroll-behavior:contain;touch-action:pan-y;width:min(344px,100%)}
+.card.tall .head{padding:0}
 .empty{margin:auto;padding:20px;text-align:center;font-weight:900;font-size:15px;opacity:.7;text-wrap:balance}
 .head{display:flex;justify-content:space-between;align-items:center;gap:8px;font-weight:900;font-size:13px;padding:0 4px}
 .item .pic.who{border:2.5px solid var(--ink);border-radius:50%;background:#bcd9e6;overflow:hidden}
@@ -119,6 +129,7 @@ body{background:var(--bench);color:var(--ink);font-family:var(--body);font-weigh
 .how b{font-weight:900;color:var(--gold-deep)}
 .best{font-weight:900;font-size:14px;color:var(--paper);text-shadow:var(--sticker);min-height:1.4em}
 .home{font-weight:900;font-size:14px;color:var(--paper);text-shadow:var(--sticker);text-underline-offset:4px}
+button.home{background:none;border:0;padding:0;cursor:pointer;text-decoration:underline}
 
 #modal,#over{justify-content:center;background:rgba(28,27,41,.6)}
 .card{width:min(330px,100%);display:flex;flex-direction:column;gap:12px;padding:18px;border:3px solid var(--ink);border-radius:22px;background:var(--paper);box-shadow:0 7px 0 var(--ink);text-align:left;animation:pop .3s cubic-bezier(.3,1.5,.5,1)}
@@ -185,6 +196,7 @@ body{background:var(--bench);color:var(--ink);font-family:var(--body);font-weigh
       <button class="tab" role="tab" data-tab="open" type="button">開礦石</button>
       <button class="tab" role="tab" data-tab="shelf" type="button">展示櫃</button>
       <button class="tab" role="tab" data-tab="board" type="button">買賣</button>
+      <button class="tab" role="tab" data-tab="dex" type="button">圖鑑</button>
     </nav>
     <main class="panel" id="panel"></main>
     <footer class="foot"><button class="btn" id="next" type="button"></button></footer>
@@ -201,6 +213,7 @@ body{background:var(--bench);color:var(--ink);font-family:var(--body);font-weigh
     </ul>
     <button class="btn" id="start" type="button">開始收藏</button>
     <div class="best" id="best"></div>
+    <button class="home" id="dexBtn" type="button"></button>
     <a class="home" href="../">其他遊戲</a>
   </div>
 
@@ -335,6 +348,15 @@ const Snd={ctx:null,on:store.get('ks.mute')!=='1',
 
 /* ───────── 狀態 ───────── */
 let G=null,tab='open',best=parseInt(store.get('ks.best')||'0',10)||0,modal=null;
+// 圖鑑：每種礦石到手過幾次。存在瀏覽器裡，破產重來也不會消失
+let dex={};try{dex=JSON.parse(store.get('ks.dex')||'{}')||{};}catch(e){dex={};}
+function unlock(id,n){const fresh=!(id in dex);dex[id]=(dex[id]||0)+(n||1);store.set('ks.dex',JSON.stringify(dex));return fresh;}
+const dexCount=()=>M.filter(m=>m.id in dex).length;
+function dexHtml(){
+  return[0,1,2,3,4].map(r=>{const list=M.filter(m=>m.r===r),got=list.filter(m=>m.id in dex).length;
+    return`<div class="head"><span>${r===4?'彩蛋':RAR[r]}</span><span>${got} / ${list.length}</span></div><div class="dex">${list.map(m=>m.id in dex?`<div class="cell u${r}">${gem(m)}<span>${m.n}</span><small>${r===4?'行情亂':$$(m.v)}・${dex[m.id]} 顆</small></div>`:`<div class="cell lock">${gem(m)}<span>？？？</span><small>還沒到手</small></div>`).join('')}</div>`;}).join('');
+}
+function showDex(){modal={t:'dex'};renderModal();}
 const price=id=>Math.max(1,Math.round(BY[id].v*G.mult[id]));
 const invValue=()=>Object.keys(G.inv).reduce((s,id)=>s+G.inv[id]*price(id),0);
 const invCount=()=>Object.values(G.inv).reduce((s,n)=>s+n,0);
@@ -361,7 +383,7 @@ function addOrder(){
 }
 function fulfil(i){const o=G.orders[i];if(!o||(G.inv[o.id]||0)<o.n)return;take(o.id,o.n);G.cash+=o.pay;G.orders.splice(i,1);Snd.coin();Snd.found(1);say(`訂單完成，+${$$(o.pay)}。這才叫內行人。`,'happy');bump();checkOver();render();}
 function say(t,mood){G.say=t;G.mood=mood||'ok';}
-function add(id,n){G.inv[id]=(G.inv[id]||0)+(n||1);G.seen[id]=1;}
+function add(id,n,known){G.inv[id]=(G.inv[id]||0)+(n||1);G.seen[id]=1;if(!known)unlock(id,n||1);}   // known：敲出來的在敲開當下就記進圖鑑了，不要再算一次
 function take(id,n){G.inv[id]-=n;if(G.inv[id]<=0)delete G.inv[id];}
 function roll(cr){let r=Math.random()*100,k=0;for(;k<3;k++){if((r-=cr.odds[k])<0)break;}return pick(M.filter(m=>m.r===k));}
 // 交流板：每天三則別人要賣的礦石，價錢有高有低，撿到便宜的可以放到行情好再賣
@@ -413,14 +435,15 @@ const level=id=>{const m=G.mult[id];return m>=1.25?'<span class="chg up">行情�
 function render(){
   el.day.textContent=G.day;el.cash.textContent=$$(G.cash);el.cash.classList.toggle('neg',G.cash<0);el.worth.textContent='身價 '+$$(G.cash+invValue())+(G.gi<GOALS.length?'　目標 '+$$(GOALS[G.gi][0]):'');
   el.ava.innerHTML=face(Object.assign({},HANK,{mood:G.mood}));el.say.textContent=G.say;el.news.innerHTML=G.news;
-  document.querySelectorAll('.tab').forEach(b=>{const on=b.dataset.tab===tab;b.setAttribute('aria-selected',on);if(b.dataset.tab==='shelf')b.textContent=`展示櫃${invCount()?' '+invCount():''}`;if(b.dataset.tab==='board'){const k=G.orders.filter(o=>(G.inv[o.id]||0)>=o.n).length;b.textContent=k?`買賣 ●${k}`:'買賣';}});
+  document.querySelectorAll('.tab').forEach(b=>{const on=b.dataset.tab===tab;b.setAttribute('aria-selected',on);if(b.dataset.tab==='shelf')b.textContent=`展示櫃${invCount()?' '+invCount():''}`;if(b.dataset.tab==='dex')b.textContent=`圖鑑 ${dexCount()}`;if(b.dataset.tab==='board'){const k=G.orders.filter(o=>(G.inv[o.id]||0)>=o.n).length;b.textContent=k?`買賣 ●${k}`:'買賣';}});
   let h='';
   if(tab==='open'){h=`<div class="head"><span>${G.left>0?`今天還能敲 ${G.left} 顆`:'今天敲不動了，手痠'}</span><span>${G.sale?'礦石展：全部八折':'敲得準，有機會升一級'}</span></div>`+CRATES.map(c=>{const p=cratePrice(c),o=c.odds;return`<div class="item"><div class="pic">${rock(c,0)}</div><div class="txt"><div class="nm">${c.n}</div><div class="sub">${c.d}</div><div class="sub">${[0,1,2,3].filter(k=>o[k]).map(k=>RAR[k]+' '+o[k]+'%').join('・')}</div></div>
       <div class="ops"><button class="sm" data-act="crate" data-id="${c.id}" ${G.cash<p||G.left<=0?'disabled':''}>${$$(p)}</button></div></div>`;}).join('');}
   else if(tab==='shelf'){const ids=Object.keys(G.inv).sort((a,b)=>price(b)-price(a));
     const hi=ids.filter(id=>G.mult[id]>=1.25);
-    h=`<div class="head"><span>圖鑑 ${Object.keys(G.seen).filter(k=>BY[k].r<4).length} / ${DEX}　總值 ${$$(invValue())}</span>${hi.length?'<button class="sm alt" data-act="sellhigh">行情高的全賣</button>':''}</div>`+(ids.length?ids.map(id=>{const m=BY[id],n=G.inv[id],p=price(id);return`<div class="item"><div class="pic">${gem(m)}</div><div class="txt"><div class="nm">${m.n}<span class="tagr r${m.r}">${RAR[m.r]}</span></div><div class="sub">× ${n}　<span class="price">${$$(p)}</span>　${chg(id)} ${level(id)}</div></div>
+    h=`<div class="head"><span>礦石總值 ${$$(invValue())}</span>${hi.length?'<button class="sm alt" data-act="sellhigh">行情高的全賣</button>':''}</div>`+(ids.length?ids.map(id=>{const m=BY[id],n=G.inv[id],p=price(id);return`<div class="item"><div class="pic">${gem(m)}</div><div class="txt"><div class="nm">${m.n}<span class="tagr r${m.r}">${RAR[m.r]}</span></div><div class="sub">× ${n}　<span class="price">${$$(p)}</span>　${chg(id)} ${level(id)}</div></div>
       <div class="ops"><button class="sm" data-act="sell" data-id="${id}" data-n="1">賣 1</button>${n>1?`<button class="sm alt" data-act="sell" data-id="${id}" data-n="${n}">全賣</button>`:''}</div></div>`;}).join(''):'<div class="empty">展示櫃是空的。<br>先去開幾顆礦石。</div>');}
+  else if(tab==='dex')h=`<div class="head"><span>開過、拿到過的就會解鎖</span><span>全部 ${dexCount()} / ${M.length}</span></div>`+dexHtml();
   else{h='<div class="head"><span>訂單：熟人指定要的，價錢比行情好</span><span>過期就沒了</span></div>'+(G.orders.length?G.orders.map((o,i)=>{const m=BY[o.id],have=G.inv[o.id]||0,ok=have>=o.n;return`<div class="item"><div class="pic who">${face(WHO[o.who].f)}</div><div class="txt"><div class="nm">${m.n} × ${o.n}<span class="tagr r${m.r}">${RAR[m.r]}</span></div><div class="sub">${WHO[o.who].l}　剩 ${o.d} 天${ok?'':`　<span class="chg down">還差 ${o.n-have} 顆</span>`}</div></div>
       <div class="ops"><button class="sm" data-act="fulfil" data-i="${i}" ${ok?'':'disabled'}>交貨 ${$$(o.pay)}</button></div></div>`;}).join(''):'<div class="item"><div class="txt"><div class="sub">今天沒有訂單，明天再看看。</div></div></div>')
     +'<div class="head"><span>同好今天想脫手的</span><span>每天換一批</span></div>'+G.board.map((b,i)=>{const m=BY[b.id],d=Math.round((b.p/price(b.id)-1)*100);return`<div class="item"><div class="pic">${gem(m)}</div><div class="txt"><div class="nm">${m.n}<span class="tagr r${m.r}">${RAR[m.r]}</span></div><div class="sub">今天行情 ${$$(price(b.id))}　${d<0?`<span class="chg up">便宜 ${-d}%</span>`:d>0?`<span class="chg down">貴 ${d}%</span>`:'跟行情一樣'}</div></div>
@@ -433,7 +456,8 @@ function render(){
 const rows=list=>(list||[]).map(q=>{const m=BY[q.id];return`<div class="item"><div class="pic">${gem(m)}</div><div class="txt"><div class="nm">${m.n}${q.n>1?' × '+q.n:''}<span class="tagr r${m.r}">${RAR[m.r]}</span></div><div class="sub">今天行情 ${$$(price(q.id))}${q.n>1?'　共 '+$$(price(q.id)*q.n):''}　${level(q.id)}</div></div></div>`;}).join('');
 function renderModal(){
   el.modal.hidden=!modal;if(!modal)return;let h='';const c=el.mcard;c.className='card';
-  if(modal.t==='crack'){c.classList.add('center');const cr=modal.cr;
+  if(modal.t==='dex'){c.classList.add('tall');h=`<div class="head"><h2>礦石圖鑑　${dexCount()} / ${M.length}</h2><button class="sm alt" data-act="closedex" type="button">關掉</button></div><p>開過、拿到過的就會解鎖，破產重來也會留著。格子下面是基本行情和到手過幾顆。</p>${dexHtml()}<div class="acts"><button class="btn" data-act="closedex" type="button">關掉</button></div>`;}
+  else if(modal.t==='crack'){c.classList.add('center');const cr=modal.cr;
     if(!modal.res){const gw=cr.g+G.wide;
       h=`<h2>${cr.n}</h2><button class="rock" id="rockBtn" type="button" aria-label="敲原石">${rock(cr,modal.hits.length/cr.taps)}</button>
         <div class="meter"><div class="track"><i class="zr"></i><i class="zr r"></i><i class="zg" style="left:${((.5-gw/2)*100).toFixed(1)}%;width:${(gw*100).toFixed(1)}%"></i></div><b id="mark"></b></div>
@@ -455,7 +479,7 @@ function muteIcon(){el.mute.innerHTML=Snd.on
   ?'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9.5v5h3.5L12 18.5v-13L7.5 9.5z" fill="currentColor"/><path d="M15.5 9a4.2 4.2 0 0 1 0 6M18 6.5a8 8 0 0 1 0 11"/></svg>'
   :'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9.5v5h3.5L12 18.5v-13L7.5 9.5z" fill="currentColor"/><path d="M16 9.5l5 5M21 9.5l-5 5"/></svg>';
   el.mute.setAttribute('aria-pressed',String(!Snd.on));}
-function showBest(){el.best.textContent=best>0?`最佳紀錄　撐了 ${best} 天`:'';}
+function showBest(){el.best.textContent=best>0?`最佳紀錄　撐了 ${best} 天`:'';$('dexBtn').textContent=`礦石圖鑑　${dexCount()} / ${M.length}`;}
 
 /* ───────── 動作 ───────── */
 const FOUND=[['基本款，但我喜歡。','又一顆。晶型還行。','普通，但它是礦物。'],['喔！這顆不錯。','你看這個顏色。','這顆值得放中間。'],['我的天，看看這個結晶！','老婆！快來看！','這顆我要放玻璃罩。'],['老天爺……','我、我需要坐下。我已經坐著了。','這顆可以付一年家用！']];
@@ -474,9 +498,9 @@ function strike(zone){
   modal.note='';
   if(score>0&&k<3&&Math.random()<UP*score/cr.taps){k++;modal.note='up';}
   else if(score<0&&Math.random()<.6*-score/cr.taps){if(k>0&&!(cr.id==='c'&&k===1)){k--;modal.note='down';}else if(k===0){modal.res={dust:true};G.cash+=5;Snd.blip(180,60,.3,'sawtooth',.08);say('……這顆沒了。','sad');render();return;}}
-  const m=pick(M.filter(q=>q.r===k));modal.res=m;modal.fresh=!G.seen[m.id];G.seen[m.id]=1;Snd.found(m.r);say(modal.note==='up'?'敲得好！你看這品相！':pick(FOUND[m.r]),m.r>=2?'wow':m.r===1?'happy':'ok');render();
+  const m=pick(M.filter(q=>q.r===k));modal.res=m;modal.fresh=unlock(m.id,1);G.seen[m.id]=1;Snd.found(m.r);say(modal.note==='up'?'敲得好！你看這品相！':pick(FOUND[m.r]),m.r>=2?'wow':m.r===1?'happy':'ok');render();
 }
-function closeCrack(sell){const m=modal.res;modal=null;if(m.dust){}else if(sell){G.cash+=price(m.id);Snd.coin();say('…好吧，再見了。');}else add(m.id);bump();checkOver();render();}
+function closeCrack(sell){const m=modal.res;modal=null;if(m.dust){}else if(sell){G.cash+=price(m.id);Snd.coin();say('…好吧，再見了。');}else add(m.id,1,true);bump();checkOver();render();}
 function sellHigh(){let got=0;for(const id of Object.keys(G.inv)){if(G.mult[id]>=1.25){got+=price(id)*G.inv[id];delete G.inv[id];}}if(!got)return;G.cash+=got;Snd.coin();say(`行情高的全出掉，+${$$(got)}。`,'happy');bump();checkOver();render();}
 function sell(id,n){n=Math.min(n,G.inv[id]||0);if(!n)return;const got=price(id)*n;take(id,n);G.cash+=got;Snd.coin();say(G.mult[id]>=1.25?`賣在高點，+${$$(got)}。`:G.mult[id]<=.8?'行情這麼低你也賣…':`+${$$(got)}。它會去更好的地方。`,G.mult[id]>=1.25?'happy':'ok');bump();checkOver();render();}
 function buyBoard(i){const b=G.board[i];if(!b||b.sold||G.cash<b.p)return;G.cash-=b.p;b.sold=true;add(b.id);Snd.coin();say(b.p<price(b.id)?'撿到便宜了。':'貴了點，但我想要。',b.p<price(b.id)?'happy':'ok');render();}
@@ -485,7 +509,7 @@ function closeResult(){modal=null;bump();checkOver();render();}
 function start(){Snd.init();Snd.blip(420,640,.14,'triangle',.1);newGame();tab='open';modal=null;el.title.hidden=true;el.over.hidden=true;el.app.hidden=false;render();}
 function gameOver(){
   const n=G.day;if(n>best){best=n;store.set('ks.best',String(n));}
-  $('ovN').textContent=n;$('ovBest').textContent=best+' 天';$('ovPeak').textContent=$$(G.peak);$('ovDex').textContent=`${Object.keys(G.seen).filter(k=>BY[k].r<4).length} / ${DEX}`;$('ovOpen').textContent=G.opened+' 顆';$('ovRank').textContent=RANKS.find(r=>n>=r[0])[1];
+  $('ovN').textContent=n;$('ovBest').textContent=best+' 天';$('ovPeak').textContent=$$(G.peak);$('ovDex').textContent=`${dexCount()} / ${M.length}`;$('ovOpen').textContent=G.opened+' 顆';$('ovRank').textContent=RANKS.find(r=>n>=r[0])[1];
   $('copied').textContent='';el.over.hidden=false;showBest();Snd.blip(300,80,.6,'sawtooth',.08);
 }
 
@@ -496,10 +520,11 @@ $('game').addEventListener('click',e=>{
   if(b.dataset.tab){tab=b.dataset.tab;el.panel.scrollTop=0;return render();}
   const a=b.dataset.act;if(!a)return;
   if(a==='crate')buyCrate(b.dataset.id);else if(a==='sell')sell(b.dataset.id,+b.dataset.n);else if(a==='buy')buyBoard(+b.dataset.i);
-  else if(a==='keep'||a==='dust')closeCrack(false);else if(a==='sellnow')closeCrack(true);else if(a==='fulfil')fulfil(+b.dataset.i);else if(a==='sellhigh')sellHigh();else if(a==='opt')choose(+b.dataset.i);else if(a==='ok')closeResult();
+  else if(a==='keep'||a==='dust')closeCrack(false);else if(a==='sellnow')closeCrack(true);else if(a==='fulfil')fulfil(+b.dataset.i);else if(a==='sellhigh')sellHigh();else if(a==='closedex'){modal=null;renderModal();}else if(a==='opt')choose(+b.dataset.i);else if(a==='ok')closeResult();
 });
 el.next.addEventListener('click',()=>{if(modal)return;Snd.blip(660,880,.1,'triangle',.07);nextDay();render();});
 $('start').addEventListener('click',start);
+$('dexBtn').addEventListener('click',showDex);
 $('again').addEventListener('click',start);
 el.mute.addEventListener('click',()=>{Snd.init();Snd.setOn(!Snd.on);muteIcon();});
 $('share').addEventListener('click',async()=>{
@@ -510,13 +535,13 @@ $('share').addEventListener('click',async()=>{
 });
 /* iOS Safari：快速點兩下會被當成「點兩下放大」，而且放大後縮不回來，所以把雙擊縮放、雙指縮放都擋掉（按鈕和可捲動的清單本身不會觸發放大，照常運作） */
 let lastTouchEnd=0;
-document.addEventListener('touchend',e=>{const now=Date.now(),btn=e.target&&e.target.closest&&e.target.closest('button,a,.panel');if(now-lastTouchEnd<=350&&!btn&&e.cancelable)e.preventDefault();lastTouchEnd=now;},{passive:false});
+document.addEventListener('touchend',e=>{const now=Date.now(),btn=e.target&&e.target.closest&&e.target.closest('button,a,.panel,.card');if(now-lastTouchEnd<=350&&!btn&&e.cancelable)e.preventDefault();lastTouchEnd=now;},{passive:false});
 for(const t of['gesturestart','gesturechange','gestureend'])document.addEventListener(t,e=>e.preventDefault(),{passive:false});
 document.addEventListener('dblclick',e=>e.preventDefault());
 
 $('hero').innerHTML=face(Object.assign({},HANK,{mood:'happy'}));
 muteIcon();showBest();
-window.__ks={M,BY,CRATES,GOALS,expense,bill:()=>bill(),price:id=>price(id),get G(){return G},get modal(){return modal},start,buyCrate,strike,fulfil,sellHigh,closeCrack,closeResult,sell,buyBoard,choose,cratePrice,invValue:()=>invValue(),invCount:()=>invCount(),
+window.__ks={get dex(){return dex},showDex,M,BY,CRATES,GOALS,expense,bill:()=>bill(),price:id=>price(id),get G(){return G},get modal(){return modal},start,buyCrate,strike,fulfil,sellHigh,closeCrack,closeResult,sell,buyBoard,choose,cratePrice,invValue:()=>invValue(),invCount:()=>invCount(),
   next(){nextDay();render();},get over(){return!el.over.hidden},render,event(id){const e=EVENTS.find(q=>q.id===id);modal=Object.assign({t:'event'},e.make());render();}};
 })();
 </script>
