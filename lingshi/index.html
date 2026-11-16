@@ -259,7 +259,7 @@ const Snd={ctx:null,on:store.get('ls.mute')!=='1',
 const VW=360,VH=640,BOARD={x:26,y:364,w:308,h:178,cy:458},TIO={x:86,y:300},NUR={x:288,y:262},GRACE=.07,RAGE_T=5,RAGE_EVERY=4;
 let mode='title',time=0,phase='spell',pt=0,L=0,pat=100,booms=0,best=parseInt(store.get('ls.best')||'0',10)||0;
 let phrase=null,steps=[],cur=0,used=[],cells=[],ti=0,fi=0,prev=-1,ft=0,T=.55,Tc=.55,pattern='sweep',dir=1,hops=0,stepIn=0,flashCell=-1,flashT=0,flashOk=true,quiz=null,quizHit='',usedQ=[],since=0,fast=0;
-let press=0,wob=0,madT=0,smugT=0,wide=0,nSay='',nSayT=0,nMood='ok',wrongCd=0,rage=0,rageT=0,rageWon=false,shake=0,flash=0,fx=180,fy=420;
+let nAng=0,press=0,wob=0,madT=0,smugT=0,wide=0,nSay='',nSayT=0,nMood='ok',wrongCd=0,rage=0,rageT=0,rageWon=false,shake=0,flash=0,fx=180,fy=420;
 const pops=[],sparks=[];
 
 const dwell=()=>Math.max(.17,.47-.028*L);                                  // 槍口在每一格停多久：越後面越快
@@ -341,7 +341,7 @@ function drawCard(c){
 }
 // 阿伯：禿頭、兩側灰髮、粗眉、瞪大的眼睛、鼻子掛著氧氣管，坐在輪椅上。眼睛會盯著姪子的槍口
 function drawTio(c,x,y,o){
-  const rage=o.mood==='rage',mad=o.mood==='mad'||rage,smug=o.mood==='smug',jx=rage?(Math.random()-.5)*5:mad?Math.sin(time*40)*1.6:0;
+  const rage=o.mood==='rage',mad=o.mood==='mad'||rage,smug=o.mood==='smug',sigh=o.mood==='sigh',jx=rage?(Math.random()-.5)*5:mad?Math.sin(time*40)*1.6:0;
   c.save();c.translate(x+jx,y);c.lineJoin='round';c.lineCap='round';c.strokeStyle=INK;c.lineWidth=3;
   c.fillStyle='#55596e';rrect(c,-76,-14,24,13,6);c.fill();c.stroke();rrect(c,52,-14,24,13,6);c.fill();c.stroke();   // 輪椅把手、椅背
   c.fillStyle='#3a3d52';rrect(c,-60,-8,120,96,10);c.fill();c.stroke();
@@ -357,7 +357,7 @@ function drawTio(c,x,y,o){
   c.lineWidth=1.8;c.strokeStyle='rgba(43,42,58,.4)';c.beginPath();for(const q of[-76,-70]){c.moveTo(-18,q);c.quadraticCurveTo(0,q-3,18,q);}c.moveTo(-26,-24);c.quadraticCurveTo(-18,-18,-10,-21);c.moveTo(26,-24);c.quadraticCurveTo(18,-18,10,-21);c.stroke();   // 皺紋、眼袋
   // 眉毛：平常往中間壓；槍口指到對的注音時會挑起來
   const w=o.wide,br=mad?4:0;c.strokeStyle='#6b6e78';c.lineWidth=6.5;c.beginPath();c.moveTo(-31,-58-w*7+br*.4);c.lineTo(-8,-51-w*9+br);c.moveTo(31,-58-w*7+br*.4);c.lineTo(8,-51-w*9+br);c.stroke();
-  c.strokeStyle=INK;c.lineWidth=2.4;c.fillStyle=PAPER;const ry=7+w*4.5+(rage?3.5:0);for(const sd of[-1,1]){c.beginPath();c.ellipse(sd*17,-38,10,ry,0,0,TAU);c.fill();c.stroke();}
+  c.strokeStyle=INK;c.lineWidth=2.4;c.fillStyle=PAPER;const ry=sigh?4.2:7+w*4.5+(rage?3.5:0);for(const sd of[-1,1]){c.beginPath();c.ellipse(sd*17,-38,10,ry,0,0,TAU);c.fill();c.stroke();}
   c.fillStyle=INK;c.beginPath();c.arc(-17+o.look*4,-38+o.lookY*2.5,rage?3:4.2,0,TAU);c.arc(17+o.look*4,-38+o.lookY*2.5,rage?3:4.2,0,TAU);c.fill();
   c.lineWidth=2.6;c.beginPath();c.moveTo(-3,-27);c.quadraticCurveTo(-9,-16,-7,-14);c.quadraticCurveTo(0,-9,7,-14);c.stroke();   // 鼻子
   c.fillStyle='rgba(120,124,134,.3)';c.beginPath();c.ellipse(0,-2,23,13,0,0,TAU);c.fill();   // 鬍渣
@@ -367,22 +367,27 @@ function drawTio(c,x,y,o){
   if(rage){c.beginPath();c.ellipse(0,0,13,11,0,0,TAU);c.fill();c.fillStyle=PAPER;c.fillRect(-9,-9,18,5);}
   else if(mad){rrect(c,-15,-7,30,13,4);c.fill();c.fillStyle=PAPER;c.fillRect(-11,-6,22,4.5);c.fillRect(-11,1,22,3.5);}
   else if(smug){c.beginPath();c.moveTo(-11,0);c.quadraticCurveTo(3,6,14,-6);c.stroke();}
+  else if(sigh){c.beginPath();c.moveTo(-12,1);c.quadraticCurveTo(-6,-3,0,1);c.quadraticCurveTo(6,5,12,1);c.stroke();   // 被聽錯：無奈地瞇眼、冒一滴汗（生氣的是姪子，不是他）
+    c.lineWidth=2;c.fillStyle='#8fdcf7';c.beginPath();c.ellipse(33,-62+((time*26)%14),3,5,0,0,TAU);c.fill();c.stroke();}
   else{c.beginPath();c.moveTo(-13,3);c.quadraticCurveTo(0,-6,13,3);c.stroke();}
   if(mad&&!reduced){c.fillStyle='rgba(255,248,234,.9)';for(let i=0;i<3;i++){const u=(time*1.6+i/3)%1;c.globalAlpha=1-u;c.beginPath();c.arc((i-1)*26+Math.sin(u*6+i)*4,-96-u*26,5+u*5,0,TAU);c.fill();}c.globalAlpha=1;}   // 氣到冒煙
   c.restore();
 }
 // 姪子：理平頭、山羊鬍、瞪大的眼睛、一口金牙，敞開的襯衫掛著金鍊子，手上拿槍。mood：ok 平常、huh 聽錯了、read 唸出來大笑
-function drawNephew(c,x,y,mood){
-  c.save();c.translate(x,y);c.lineJoin='round';c.lineCap='round';c.strokeStyle=INK;c.lineWidth=3;
+function drawNephew(c,x,y,mood,anger){   // anger 0..1：耐心越少越火大——臉越紅、眉毛越壓、冒煙、發抖
+  c.save();c.translate(x+(anger>.6&&!reduced?Math.sin(time*42)*2.2*(anger-.45):0),y);c.lineJoin='round';c.lineCap='round';c.strokeStyle=INK;c.lineWidth=3;
   c.fillStyle=SHIRT;c.beginPath();c.moveTo(-56,96);c.lineTo(-48,34);c.quadraticCurveTo(-34,12,0,12);c.quadraticCurveTo(34,12,48,34);c.lineTo(56,96);c.closePath();c.fill();c.stroke();
   c.fillStyle='#c98f66';c.beginPath();c.moveTo(-15,12);c.lineTo(-7,58);c.lineTo(7,58);c.lineTo(15,12);c.closePath();c.fill();c.stroke();   // 敞開的領口
   c.strokeStyle=BRASS_D;c.lineWidth=5;c.beginPath();c.moveTo(-11,18);c.quadraticCurveTo(0,44,11,18);c.stroke();c.strokeStyle=BRASS;c.lineWidth=2.4;c.stroke();c.strokeStyle=INK;c.lineWidth=3;
   c.fillStyle=shadeC(SHIRT,.8);for(const sd of[-1,1]){c.beginPath();c.moveTo(sd*15,12);c.lineTo(sd*30,20);c.lineTo(sd*9,50);c.closePath();c.fill();c.stroke();}
   c.fillStyle='#c98f66';for(const sd of[-1,1]){c.beginPath();c.ellipse(sd*31,-20,6,9,0,0,TAU);c.fill();c.stroke();}
   c.beginPath();c.ellipse(0,-22,30,34,0,0,TAU);c.fill();c.stroke();
+  if(anger>.04){c.fillStyle=`rgba(228,87,46,${(anger*.55).toFixed(2)})`;c.beginPath();c.ellipse(0,-22,28.5,32.5,0,0,TAU);c.fill();}
   c.fillStyle='rgba(43,42,58,.5)';c.beginPath();c.arc(0,-26,30,Math.PI*1.06,Math.PI*1.94);c.quadraticCurveTo(0,-44,-28.6,-31.6);c.fill();   // 理到很短的頭髮
   c.fillStyle='#3a2f2a';c.beginPath();c.moveTo(-15,-6);c.quadraticCurveTo(0,-12,15,-6);c.quadraticCurveTo(16,10,0,13);c.quadraticCurveTo(-16,10,-15,-6);c.fill();   // 山羊鬍
-  c.strokeStyle='#3a2f2a';c.lineWidth=5;c.beginPath();const up=mood==='huh'?5:0;c.moveTo(-22,-36-up);c.lineTo(-7,-31+up*.4);c.moveTo(22,-36-up);c.lineTo(7,-31+up*.4);c.stroke();
+  c.strokeStyle='#3a2f2a';c.lineWidth=5;c.beginPath();const up=mood==='huh'?5:0,ag=anger*6;c.moveTo(-22,-36-up-ag*.4);c.lineTo(-7,-31+up*.4+ag*.6);c.moveTo(22,-36-up-ag*.4);c.lineTo(7,-31+up*.4+ag*.6);c.stroke();
+  if(anger>.5&&!reduced){c.fillStyle='rgba(255,248,234,.9)';for(let i=0;i<3;i++){const u=(time*1.7+i/3)%1;c.globalAlpha=(1-u)*Math.min(1,(anger-.5)*4);c.beginPath();c.arc((i-1)*22+Math.sin(u*6+i)*4,-64-u*24,4.5+u*5,0,TAU);c.fill();}c.globalAlpha=1;}   // 氣到冒煙
+  if(anger>.75){c.strokeStyle=ALERT;c.lineWidth=3;c.beginPath();c.moveTo(-27,-50);c.lineTo(-21,-46);c.lineTo(-27,-42);c.moveTo(-17,-50);c.lineTo(-23,-46);c.lineTo(-17,-42);c.stroke();}   // 青筋
   c.strokeStyle=INK;c.lineWidth=2.2;c.fillStyle=PAPER;for(const sd of[-1,1]){c.beginPath();c.ellipse(sd*12,-22,7.5,mood==='huh'?8.5:7,0,0,TAU);c.fill();c.stroke();}
   c.fillStyle=INK;c.beginPath();c.arc(-13,-21,2.6,0,TAU);c.arc(11,-21,2.6,0,TAU);c.fill();
   c.lineWidth=2.4;
@@ -442,8 +447,8 @@ function render(){
   // 療養院的牆、腰線、窗戶
   g.fillStyle='#e9d6b0';g.fillRect(Lx,Ty,Rx-Lx,By-Ty);g.fillStyle='#d9c298';g.fillRect(Lx,300,Rx-Lx,By-300);g.fillStyle='#b98a5a';g.fillRect(Lx,294,Rx-Lx,9);
   g.lineJoin='round';g.strokeStyle=INK;g.lineWidth=3;g.fillStyle='#bfe3ee';g.fillRect(150,204,86,78);g.strokeRect(150,204,86,78);g.lineWidth=2;g.strokeStyle='rgba(43,42,58,.35)';g.beginPath();for(let y=214;y<280;y+=10){g.moveTo(152,y);g.lineTo(234,y);}g.stroke();
-  drawTio(g,TIO.x,TIO.y,{look:clamp((fx-TIO.x)/170,-1,1),lookY:inRage?0:clamp((fy-250)/160,0,1),wide,mood:phase==='rage'&&mode==='play'?'rage':madT>0?'mad':smugT>0?'smug':'idle'});
-  if(!inRage)drawNephew(g,NUR.x,NUR.y,nMood);
+  drawTio(g,TIO.x,TIO.y,{look:clamp((fx-TIO.x)/170,-1,1),lookY:inRage?0:clamp((fy-250)/160,0,1),wide,mood:phase==='rage'&&mode==='play'?'rage':madT>0?'sigh':smugT>0?'smug':'idle'});
+  if(!inRage)drawNephew(g,NUR.x,NUR.y,nMood,nAng);
   const title=mode==='title';if((phrase||quiz)&&!title&&!inRage)drawCard(g);
   if(inRage){   // 仇人坐在對面：狂按鈴把怒氣灌滿
     const e=phase==='rageIn'?clamp(pt/.5,0,1):1,blown=phase==='rageOut'&&rageWon,out=blown?pt:0;
@@ -544,6 +549,7 @@ function tick(dt){
   for(let i=pops.length-1;i>=0;i--)if((pops[i].life-=dt)<=0)pops.splice(i,1);
   const scan=()=>{ft+=dt;if(ft>=Tc){ft-=Tc;prev=fi;fi=nextCell();Tc=T*(fast>0?.62:1)*(L>=8&&Math.random()<.12?1.6:1);if(fast>0)fast--;}};   // 槍口往下一格；後面姪子偶爾會多停一下
   wide+=((cells.length&&isT(fi)&&(mode!=='play'||phase==='spell')?1:0)-wide)*Math.min(1,dt*18);
+  nAng+=((mode==='title'?0:clamp((1-pat/100)*.9+(madT>0?.3:0),0,1))-nAng)*Math.min(1,dt*7);   // 姪子的火氣跟著耐心條走，按錯的瞬間再往上衝一下
   if(mode==='title'){if(!phrase){setPhrase(PHRASES[2].find(q=>q[0][0]==='叮'));setStep();}scan();return;}   // 標題畫面：板子自己跑，當示範
   if(mode!=='play')return;
   pt+=dt;
