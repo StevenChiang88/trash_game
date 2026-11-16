@@ -219,7 +219,7 @@ const VOICE_FILE='voice.mp3',VOICE_GAIN=.9;
    每天要過完 goalN 條馬路走到家。過關就進下一天，每天多一種狀況；第 8 天起每天混兩種。
    路上撿的零錢，結束時（不管有沒有到家）都存起來，可以在結算畫面買升級，升級一直留著 */
 const MODN={dog:'野狗',rain:'下雨',rush:'下班尖峰',night:'天黑',trash:'垃圾車',wind:'颱風'};
-const MODHINT={dog:'野狗聞到豆花了，一路跟在後面。別停太久',rain:'下雨天到處是水窪，繞開，或等袋子靜下來再踩',rush:'下班時間，車特別多',night:'天黑了，只看得到車燈照到的地方',trash:'垃圾車很長。聽到音樂就是它來了',wind:'颱風天。看到「風來了」先站穩'};
+const MODHINT={dog:'野狗就在你後面。站著不動牠會靠過來，往前走才甩得開',rain:'下雨天到處是水窪，繞開，或等袋子靜下來再踩',rush:'下班時間，車特別多',night:'天黑了，只看得到車燈照到的地方',trash:'垃圾車很長。聽到音樂就是它來了',wind:'颱風天。看到「風來了」先站穩'};
 function modsFor(d){
   if(d<=1)return[];const fixed={2:[],3:['rain'],4:['rush'],5:['night'],6:['trash'],7:['wind']}[d];if(fixed)return['dog'].concat(fixed);
   const pool=['rain','rush','night','trash','wind'],a=Math.floor(hash(d,3)*5);let b=Math.floor(hash(d,7)*4);if(b>=a)b++;
@@ -287,8 +287,8 @@ if(Voice.ok){Voice.pick();try{speechSynthesis.addEventListener('voiceschanged',(
 /* ───────── 狀態 ───────── */
 let mode='title',time=0,rows=[],gen=0,pr=1,from=1,px=CX,tx=CX,inPud=false,minR=1,camR=1,stepT=0,buf=null,th=0,om=0,foot=1,streets=0,money=0,earned=0,spare=0,rescue=false,idle=0,lim=LIMIT,goalN=5,mods=[],windT=6,windWarn=false,windFx=0,winT=0,winBonus=0,eliseT=1,lastWon=false,best=parseInt(store.get('dh.best')||'0',10)||0;
 let cause='',lastShock='step',dropT=0,dropX=CX,dropY=0,shake=0,flash=0,fx=CX-30,fr=1;
-const pops=[],splash=[],nm={r:0,x:0,t:0},dog={on:false,r:-5,x:CX,bark:0};
-const has=m=>mods.includes(m),dogSpeed=()=>(.44+.03*Math.min(day,14)+.012*streets)*(1-.12*U('jerky'));
+const pops=[],splash=[],nm={r:0,x:0,t:0},dog={on:false,r:-5,x:CX,bark:0,eat:0};
+const has=m=>mods.includes(m),DOG_GAP=2.7,dogSpeed=()=>Math.min(1.05,.56+.035*Math.min(day,12)+.008*streets)*(1-.12*U('jerky'));
 
 // 排一條馬路：一段一段的車道，段跟段之間有分隔島可以站。難度 lv 看「第幾天」和「今天第幾條」：越高段越多、車越快越密，更高才有連三線
 // （手機上只看得到車子開到前一秒多，連三線又不能連踩，所以前面最多連兩線）。今天的最後一條，對面就是家
@@ -443,7 +443,7 @@ function drawHome(c,y){
 }
 // 野狗：從上往下看，頭朝前（畫面上方），尾巴一直搖
 function drawDog(c,x,y){
-  c.save();c.translate(x,y);c.lineJoin='round';c.lineCap='round';c.strokeStyle=INK;const w=Math.sin(time*18)*4;
+  c.save();c.translate(x,y);c.scale(1.3,1.3);c.lineJoin='round';c.lineCap='round';c.strokeStyle=INK;const w=Math.sin(time*18)*4;
   c.fillStyle='rgba(43,42,58,.2)';c.beginPath();c.ellipse(1,6,13,7,0,0,TAU);c.fill();
   c.lineWidth=3.4;c.beginPath();c.moveTo(0,12);c.quadraticCurveTo(w,19,w*1.5,24);c.stroke();c.lineWidth=2.4;
   c.fillStyle='#b9824d';c.beginPath();c.ellipse(0,2,9,13,0,0,TAU);c.fill();c.stroke();
@@ -498,6 +498,8 @@ function render(){
   g.globalAlpha=1;g.textBaseline='alphabetic';g.textAlign='left';
   g.setTransform(1,0,0,1,0,0);
   if(flash>0){g.fillStyle=PAPER;g.globalAlpha=flash*.6;g.fillRect(0,0,W,H);g.globalAlpha=1;}
+  // 野狗快追上了：畫面邊緣一陣一陣發紅
+  if(dog.on&&mode==='play'){const gap=pr-dog.r;if(gap<1.5){const a=(1-gap/1.5)*(.3+.2*Math.sin(time*12)),gr=g.createRadialGradient(W/2,H/2,Math.min(W,H)*.35,W/2,H/2,Math.max(W,H)*.72);gr.addColorStop(0,'rgba(228,87,46,0)');gr.addColorStop(1,'rgba(228,87,46,'+a.toFixed(3)+')');g.fillStyle=gr;g.fillRect(0,0,W,H);}}
 }
 
 /* ───────── HUD 與流程 ───────── */
@@ -511,7 +513,7 @@ function muteIcon(){el.mute.innerHTML=Snd.on
 // 標題畫面：今天第幾天、今天的狀況、存款
 function showBest(){$('dayTag').textContent=`第 ${day} 天　${dayLabel(day)}`;el.best.textContent=`存款 $${bank}`+(best>0?`　最遠通過 ${best} 天`:'');$('restart').hidden=day<=1;}
 function pop(x,y,text,col,big,o){pops.push(Object.assign({x,y,text,col,life:big?1:.7,dur:big?1:.7,big},o));}
-function reset(){mods=modsFor(day);goalN=needOf(day);lim=LIMIT*(1+.09*U('lid'));windT=rnd(4,7);windWarn=false;windFx=0;winT=0;eliseT=1;rows=[];gen=0;rows.push({t:'walk',veh:[]},{t:'walk',veh:[]});need(2);pr=from=1;px=tx=CX;inPud=false;minR=1;camR=1;stepT=0;buf=null;th=om=0;streets=0;money=earned=0;spare=1+U('pal');rescue=false;idle=0;nm.t=0;fx=CX-30;fr=1;cause='';lastShock='step';pops.length=splash.length=0;shake=flash=0;dog.on=has('dog');dog.r=pr-6;dog.x=CX;dog.bark=0;}
+function reset(){mods=modsFor(day);goalN=needOf(day);lim=LIMIT*(1+.09*U('lid'));windT=rnd(4,7);windWarn=false;windFx=0;winT=0;eliseT=1;rows=[];gen=0;rows.push({t:'walk',veh:[]},{t:'walk',veh:[]});need(2);pr=from=1;px=tx=CX;inPud=false;minR=1;camR=1;stepT=0;buf=null;th=om=0;streets=0;money=earned=0;spare=1+U('pal');rescue=false;idle=0;nm.t=0;fx=CX-30;fr=1;cause='';lastShock='step';pops.length=splash.length=0;shake=flash=0;dog.on=has('dog');dog.r=pr-DOG_GAP;dog.x=CX;dog.bark=0;dog.eat=1.5;}
 function start(){Snd.init();Voice.unlock();Snd.blip(520,780,.14,'triangle',.1);paused=false;$('pause').hidden=true;reset();mode='play';lastNum=lastFill=lastMoney=lastSpare=lastDog=-1;el.title.hidden=true;el.over.hidden=true;el.hud.hidden=false;
   $('dayN').textContent=day;$('goal').textContent=goalN;$('dogm').hidden=!dog.on;
   pop(CX,228,`第 ${day} 天`,SUN,true,{huge:true,life:1.7,dur:1.7});pop(CX,272,mods.length?'今天：'+mods.map(m=>MODN[m]).join('、'):'放學，提豆花回家',PAPER,true,{life:1.7,dur:1.7});}
@@ -541,7 +543,7 @@ function land(){
 // 她的豆花掉了，但朋友手上還有：兩個人退回最近的人行道／分隔島，接過一碗繼續走
 function revive(){
   let r=pr;while(r>minR&&rows[r].t==='lane')r--;
-  spare--;rescue=false;mode='play';th=om=0;stepT=0;buf=null;pr=from=r;tx=px;inPud=false;lastShock='step';nm.t=0;idle=0;dog.r=pr-6.5;windT=Math.max(windT,2.5);windWarn=false;
+  spare--;rescue=false;mode='play';th=om=0;stepT=0;buf=null;pr=from=r;tx=px;inPud=false;lastShock='step';nm.t=0;idle=0;dog.r=pr-DOG_GAP;dog.eat=2.4;windT=Math.max(windT,2.5);windWarn=false;
   pop(CX,rowY(pr)-122,'拿去啦，你欠我 30！',SUN,true,{life:1.3,dur:1.3});Snd.blip(520,780,.14,'triangle',.1);
 }
 function drop(why){
@@ -595,10 +597,10 @@ function tick(dt){
   if(windFx>0)windFx-=dt;
   // 垃圾車：畫面上有垃圾車的時候放音樂
   if(has('trash')&&(eliseT-=dt)<=0){eliseT=3.4;let near=false;for(let r=Math.max(0,pr-3);r<=pr+7&&r<rows.length;r++)for(const v of rows[r].veh)if(v.k==='trash'&&Math.abs(v.x-CX)<230)near=true;if(near)Snd.elise();}
-  // 野狗：一路跟在後面，越後面越快。停太久就被追上
-  if(dog.on){const tr=stepT>0?from+(pr-from)*(1-stepT/STEP_T):pr;if(tr-dog.r>7.5)dog.r=tr-7.5;
-    dog.r+=dogSpeed()*dt;dog.x+=(px-dog.x)*Math.min(1,dt*2.2);const gap=tr-dog.r;
-    if(gap<2.6&&(dog.bark-=dt)<=0){dog.bark=.75;pop(dog.x,rowY(dog.r)-34,'汪！',ALERT);Snd.bark();}
+  // 野狗：永遠貼在後面兩三步。站著不動牠就靠過來，往前走才拉得開；越後面的天數牠越快。剛吃到掉在地上的豆花時會停一下
+  if(dog.on){const tr=stepT>0?from+(pr-from)*(1-stepT/STEP_T):pr;if(tr-dog.r>DOG_GAP)dog.r=tr-DOG_GAP;
+    if(dog.eat>0)dog.eat-=dt;else dog.r+=dogSpeed()*dt;dog.x+=(px-dog.x)*Math.min(1,dt*3);const gap=tr-dog.r;
+    if(gap<1.9&&(dog.bark-=dt)<=0){dog.bark=.28+gap*.3;pop(dog.x,rowY(dog.r)-40,gap<1?'汪！汪！':'汪！',ALERT);Snd.bark();}
     if(gap<.3){dog.r=tr-1;return drop('被野狗撲上來，豆花飛了');}}
   // 橫著移動：往想站的位置滑過去，滑多少就推袋子多少
   {const d=clamp(tx-px,-LAT_V*dt,LAT_V*dt);if(d){px+=d;om+=d*LAT_J;}}
@@ -626,7 +628,7 @@ function hud(){
   if(money!==lastMoney){lastMoney=money;$('money').textContent='$'+money;$('wallet').classList.toggle('full',money>=PRICE);}
   if(spare!==lastSpare){lastSpare=spare;$('spare').hidden=!spare;$('spare').textContent='朋友手上 ×'+spare;}
   const a=clamp(Math.abs(th)/lim,0,1),f=Math.round(a*100);if(f!==lastFill){lastFill=f;el.fill.style.transform=`scaleX(${a.toFixed(2)})`;el.timer.classList.toggle('low',a>.72);}
-  if(dog.on){const gp=clamp((pr-dog.r)/7.5,0,1),f2=Math.round((1-gp)*50);if(f2!==lastDog){lastDog=f2;$('dogFill').style.transform=`scaleX(${(1-gp).toFixed(2)})`;$('dogT').classList.toggle('low',gp<.36);}}
+  if(dog.on){const gp=clamp((pr-dog.r)/DOG_GAP,0,1),f2=Math.round((1-gp)*50);if(f2!==lastDog){lastDog=f2;$('dogFill').style.transform=`scaleX(${(1-gp).toFixed(2)})`;$('dogT').classList.toggle('low',gp<.5);}}
   setHint(mode!=='play'?'':day===1?(streets===0&&pr<=1?'點一下往前走。手指按著左右拖，可以橫著移動':streets===0?'連走太急豆花會越晃越大，站在車道上會被叭':streets===1?'往下滑可以退一步。零錢滿 30 塊，朋友會多買一碗':streets===2?'你的掉了，朋友手上的會給你。走到家就過關':''):streets===0&&mods.length?MODHINT[mods[mods.length-1]]:'');
 }
 const H=1/120;let acc=0,last=0,hold=false;
