@@ -175,8 +175,7 @@ body{background:var(--sky);color:var(--ink);font-family:var(--body);font-weight:
     <ul class="how">
       <li><b>連點</b> 頂住風、爬回牆邊</li>
       <li><b>圈圈出現</b> 縮圈貼上再點</li>
-      <li><b>點鴿子</b> 趕走牠</li>
-      <li><b>點阿伯</b> 別讓他吐痰</li>
+      <li><b>看到就點</b> 鴿子、阿伯、水滴、垃圾</li>
     </ul>
     <div class="skins" id="skins" role="group" aria-label="被被的花色"></div>
     <div class="skin-name" id="skinName"></div>
@@ -239,6 +238,7 @@ const PIGEON_LOAD=[0,.18,.19,.2],PIGEON_HP=[0,1,3,5];   // 鴿子等級 1～3：
 const SPIT_FALL=.55,STICKY=.8;          // 樓上阿伯的痰：落下秒數；黏住時每一下只剩幾成的距離
 const SEASON=30,PLUM=[13,17],COLD=[25,29];   // 每 30 天一輪：第 13～17 天梅雨季，第 25～29 天寒流
 const AC_X=192,AC_Y=270,AC_LAND=318,AC_FORM=.55,AC_FALL=.5,AC_WET=.24;   // 樓上冷氣的排水管口、水滴落點、積水與落下秒數、每滴弄濕多少
+const KID={x:292,y:590},TRASH_PUSH=14;   // 一樓小屁孩站的位置；被垃圾砸到一次往外彈多遠
 const POOP_AT=1.8,DIRT_MAX=4,DIRT_COST=12;
 const ST_MAX=100,ST_REGEN=15,ST_TAP=7;
 
@@ -247,7 +247,7 @@ class Sim{
     this.st=ST_MAX;this.regenWait=0;this.tapCd=0;this.effort=0;
     this.wet=0;this.slick=0;this.sun=0;this.soaked=false;this.wind=0;this.gust=null;this.gustWait=1.6;this.phi=this.rng()*TAU;
     this.quake=0;this.quakeAt=-1;this.quakeWarned=false;this.hadQuake=false;this.qte=null;this.shove=0;this.shoveT=0;this.shoveCause='fall';this.brace=0;
-    this.pigeon=null;this.pigeonAt=-1;this.dirt=0;this.uncle=null;this.uncleAt=-1;this.spit=0;this.ac=null;this.acAt=-1;this.season=null;this.seasonNews=null;
+    this.pigeon=null;this.pigeonAt=-1;this.dirt=0;this.uncle=null;this.uncleAt=-1;this.spit=0;this.ac=null;this.acAt=-1;this.kid=null;this.kidAt=-1;this.kidSeen=false;this.season=null;this.seasonNews=null;
     this.tyStart=9;this.tyLen=2;this.tyN=1;this.doomDone=false;
     this.tor=null;this.torAt=-1;this.hadTor=false;this.cause='fall';
     this.fallen=false;this.events=[];this.weather='sunny';this.setupDay();}
@@ -256,7 +256,7 @@ class Sim{
   get gripping(){return this.effort>0||!!this.qte}             // 剛點過：正在用力
   // 圈圈事件（龍捲風、地震）：像音樂遊戲，圈一個接一個出現，外面的縮圈貼上圈的那一瞬間點下去
   startQte(kind,n){
-    if(n===undefined)n=kind==='tor'?Math.min(8,3+Math.floor(this.day/8)):Math.min(6,3+Math.floor(this.day/12));   // 越後面圈越多
+    if(n===undefined)n=kind==='tor'?3+Math.floor(this.day/8):3+Math.floor(this.day/12);   // 越後面圈越多，沒有上限
     const A=Math.max(.7,.95-.004*this.day),notes=[];let at=A+.15;                                               // A：縮圈從出現到貼上要幾秒
     if(kind==='tor'){   // 龍捲風：沿著螺旋往漏斗雲捲進去，節奏越來越快
       const a0=this.rng()*TAU,dir=this.rng()<.5?1:-1;let beat=Math.max(.46,.64-.003*this.day);
@@ -266,6 +266,8 @@ class Sim{
       for(let i=0;i<n;i++){let x,y,k=0;do{x=this.u(52,308);y=this.u(175,495);}while(k++<60&&(Math.hypot(px-x,py-y)<110||Math.hypot(qx-x,qy-y)<72));
         notes.push({x,y,at,score:null});qx=px;qy=py;px=x;py=y;at+=this.u(.4,.82)*f;}}
     this.qte={kind,t:0,n,A,notes,dur:notes[n-1].at+QTE_GOOD};this.gust=null;this.v=0;this.events.push({type:'qteStart',kind,n});}   // 事件一開始被被就縮緊不動，風也先停
+  trashPos(it){const k=this.kid,u=clamp(it.t/k.fly,0,1),a=Math.min(S0+this.s+70,AW_LEN-6),tx=WALL_X+UX*a,ty=AW_Y0+UY*a-2*R,sx=KID.x-14,sy=KID.y-34;   // 垃圾飛的弧線：從小孩手上丟向被被中段
+    const cx=(sx+tx)/2+it.bend*34,cy=ty-78,v=1-u;return{x:v*v*sx+2*v*u*cx+u*u*tx,y:v*v*sy+2*v*u*cy+u*u*ty};}
   dripPos(){const a=this.ac;if(!a||a.phase==='wait')return null;const f=a.phase==='form';   // 水滴現在在哪、多大
     return{x:AC_X,y:f?AC_Y+4*a.t/AC_FORM:AC_Y+4+Math.pow(a.t/AC_FALL,2)*(AC_LAND-AC_Y-4),r:f?2+5*a.t/AC_FORM:7};}
   qtePos(i){return this.qte.notes[i];}
@@ -287,13 +289,14 @@ class Sim{
     else{const x=r();w=x<.34?'sunny':x<.68?'breezy':'rain';}
     this.weather=w;if(w==='cold'||w==='rain'||w==='typhoon')this.ac=null;   // 變冷或下雨，樓上就把冷氣關了
     const t0=(d-1)*DAY_LEN;
-    this.quakeAt=-1;this.quakeWarned=false;this.pigeonAt=-1;this.torAt=-1;this.uncleAt=-1;this.acAt=-1;
+    this.quakeAt=-1;this.quakeWarned=false;this.pigeonAt=-1;this.torAt=-1;this.uncleAt=-1;this.acAt=-1;this.kidAt=-1;
     if(w!=='doom'){
       const late=Math.max(0,d-10);   // Day 10 之後，各種事件越來越常來
       if(d===7||(d>10&&r()<Math.min(.34,.14+.005*late)))this.quakeAt=t0+this.u(1.6,3);
       if(w!=='typhoon'&&this.quakeAt<0&&(d===6||(d>10&&r()<Math.min(.3,.12+.005*late))))this.torAt=t0+this.u(1.8,2.6);
       if(this.quakeAt<0&&this.torAt<0&&(d===3||(d>7&&r()<Math.min(.55,.22+.008*late))))this.uncleAt=t0+this.u(.8,3.2);   // 阿伯不挑天氣，但不跟圈圈事件同一天
       if(w!=='typhoon'&&this.torAt<0&&(d===5||(d>6&&r()<Math.min(.65,.24+.01*late)*(w==='cold'?.4:1))))this.pigeonAt=t0+this.u(.4,2.6);   // 天冷鴿子比較少出門
+      if((w==='sunny'||w==='breezy')&&((d>=8&&!this.kidSeen)||(d>12&&r()<Math.min(.5,.2+.006*late)))){this.kidSeen=true;this.kidAt=t0+this.u(.6,2.6);}   // 天氣好小屁孩才會出來玩
       if((w==='sunny'||w==='breezy')&&(d===11||(d>17&&r()<Math.min(.5,(w==='sunny'?.3:.18)+.006*late))))this.acAt=t0+this.u(.5,2.4);   // 沒下雨、不冷的日子樓上才會開冷氣
     }
   }
@@ -377,6 +380,16 @@ class Sim{
       else if(pg.phase==='on'&&(pg.t>=5||inp.shoo)){if(inp.shoo)this.events.push({type:'shoo'});pg.phase='out';pg.t=0;}
       else if(pg.phase==='out'&&pg.t>=.8)this.pigeon=null;}
 
+    // 一樓的小屁孩：先喊一聲，再一個接一個往上丟垃圾；垃圾砸到被被之前點掉，不然每砸中一次被被就往外彈一下
+    if(this.kidAt>0&&this.t>=this.kidAt&&!this.qte&&!warn){this.kidAt=-1;
+      this.kid={t:-.7,n:2+Math.floor(this.day/10),next:0,gap:Math.max(.42,.8-.006*this.day),fly:Math.max(.75,1.05-.005*this.day),items:[]};this.events.push({type:'kid'});}
+    const kd=this.kid;
+    if(kd&&!this.qte){kd.t+=dt;
+      if(kd.next<kd.n&&kd.t>=kd.next*kd.gap){kd.items.push({i:kd.next,t:0,kind:Math.floor(this.rng()*4),bend:this.u(-1,1),done:false});kd.next++;this.events.push({type:'throw'});}
+      for(const it of kd.items){if(it.done)continue;it.t+=dt;
+        if(inp.trash&&inp.trash.includes(it.i)){it.done=true;this.events.push({type:'trashPop',i:it.i});}
+        else if(it.t>=kd.fly){it.done=true;const on=this.s<95;if(on){this.shove+=TRASH_PUSH;this.shoveCause='trash';this.shoveT=1.2;}this.events.push({type:'trashHit',i:it.i,on});}}
+      if(kd.next>=kd.n&&kd.items.every(it=>it.done)&&kd.t>=(kd.n-1)*kd.gap+kd.fly+.5)this.kid=null;}
     // 樓上冷氣滴水：水滴先在排水管口越積越大，再掉下來；沒被點掉就會落在被被上把它弄濕
     if(this.acAt>0&&this.t>=this.acAt&&!this.qte&&!warn){this.acAt=-1;
       this.ac={left:Math.min(9,4+Math.floor(this.day/12)),t:0,phase:'form',gap:Math.max(.2,.42-.004*this.day)};this.events.push({type:'acStart'});}
@@ -580,7 +593,7 @@ function skyAt(p,storm){let i=0;while(i<SKY.length-2&&p>SKY[i+1][0])i++;const a=
 
 /* 狀態 */
 let sim=new Sim(1),cloth=new Cloth(),mode='title',time=0,windVis=0,stormVis=0,rainVis=0,shake=0,flash=0,fallT=0,runDay=1,torX=500,torA=0,coldVis=0;
-const inp={tap:false,shoo:false,uncle:false,drip:false,hits:[]},ripples=[];
+const inp={tap:false,shoo:false,uncle:false,drip:false,hits:[],trash:[]},ripples=[];
 let best=parseInt(store.get('bb.best')||'0',10)||0,crawls=0;
 let tiredT=0,peckT=0;const PIGEON_SC=[1,1,1.3,1.6];
 const clouds=[],streaks=[],drops=[],leaves=[],feathers=[],drips=[],steam=[],sparks=[],stains=[],judges=[],bursts=[];let poopedToday=false,spatToday=false;const UNCLE={x:134,y:150};
@@ -646,6 +659,28 @@ function drawNote(c,x,y,kind,d,A,ring){
   if(now){c.lineWidth=3.5;c.strokeStyle='#fffdf5';c.beginPath();c.arc(0,0,R0+2.5,0,TAU);c.stroke();
     c.strokeStyle='#ffc64a';c.lineWidth=3.2;c.beginPath();for(let k=0;k<10;k++){const a=time*2.4+k*TAU/10;c.moveTo(Math.cos(a)*(R0+8),Math.sin(a)*(R0+8));c.lineTo(Math.cos(a)*(R0+14),Math.sin(a)*(R0+14));}c.stroke();}
   c.restore();
+}
+// 一樓的小屁孩和他丟上來的垃圾（寶特瓶、紙團、手搖杯、香蕉皮）
+function drawKid(c){
+  const k=sim.kid,endT=(k.n-1)*k.gap+k.fly,up=clamp((k.t+.7)/.3,0,1)*clamp((endT+.5-k.t)/.3,0,1),x=KID.x,y=KID.y+(1-up)*70;
+  const sw=k.items.length&&k.items[k.items.length-1].t<.22?1-k.items[k.items.length-1].t/.22:0;   // 剛丟出去的那一下手往前甩
+  c.save();c.lineJoin='round';c.lineCap='round';c.strokeStyle=INK;c.lineWidth=2.2;
+  c.fillStyle='#f6c453';rr(c,x-13,y-6,26,60,7);c.fill();c.stroke();                                // 黃 T 恤
+  c.strokeStyle=INK;c.lineWidth=7;c.beginPath();c.moveTo(x-11,y+2);c.lineTo(x-17-sw*4,y-22+sw*16);c.stroke();c.strokeStyle='#f1c9a5';c.lineWidth=3.4;c.beginPath();c.moveTo(x-11,y+2);c.lineTo(x-17-sw*4,y-22+sw*16);c.stroke();   // 舉起來的手
+  c.strokeStyle=INK;c.lineWidth=2.2;c.fillStyle='#f1c9a5';c.beginPath();c.arc(x,y-20,13,0,TAU);c.fill();c.stroke();
+  c.fillStyle='#e0533d';c.beginPath();c.arc(x,y-23,13.4,Math.PI*1.02,TAU*.995);c.closePath();c.fill();c.stroke();c.beginPath();c.moveTo(x-12,y-24);c.lineTo(x-23,y-21);c.lineTo(x-12,y-19.5);c.closePath();c.fill();c.stroke();   // 反戴的帽子
+  c.fillStyle=INK;c.beginPath();c.arc(x-5,y-17,1.6,0,TAU);c.arc(x+4,y-17,1.6,0,TAU);c.fill();
+  c.fillStyle='#fffdf5';c.beginPath();c.moveTo(x-6,y-12);c.quadraticCurveTo(x-.5,y-5,x+5,y-12);c.closePath();c.fill();c.lineWidth=1.6;c.stroke();   // 賊笑
+  if(k.t<.3){c.font='900 15px "Chiron GoRound TC","PingFang TC",sans-serif';c.textAlign='right';c.lineWidth=4.5;c.strokeStyle=INK;c.fillStyle='#fffdf5';c.strokeText('嘿嘿～',x-26,y-34);c.fillText('嘿嘿～',x-26,y-34);c.textAlign='left';}
+  c.restore();
+  for(const it of k.items){if(it.done)continue;const p=sim.trashPos(it);
+    c.globalAlpha=.7;c.lineWidth=2;c.strokeStyle='#fffdf5';c.beginPath();c.arc(p.x,p.y,19+2*Math.sin(time*10+it.i),0,TAU);c.stroke();c.globalAlpha=1;
+    c.save();c.translate(p.x,p.y);c.rotate(it.t*8*(it.i%2?1:-1));c.strokeStyle=INK;c.lineWidth=2;c.lineJoin='round';
+    if(it.kind===0){c.fillStyle='#bfe3f7';rr(c,-5,-10,10,20,3.5);c.fill();c.stroke();c.fillStyle='#3a78b4';c.fillRect(-3.5,-13.5,7,4);c.strokeRect(-3.5,-13.5,7,4);c.fillStyle='#fffdf5';c.fillRect(-5,-2,10,6);}   // 寶特瓶
+    else if(it.kind===1){c.fillStyle='#fffdf5';c.beginPath();for(let q=0;q<9;q++){const a=q*TAU/9,r=q%2?10:7.5;c.lineTo(Math.cos(a)*r,Math.sin(a)*r);}c.closePath();c.fill();c.stroke();c.lineWidth=1.2;c.beginPath();c.moveTo(-4,-2);c.lineTo(1,1);c.lineTo(-1,5);c.moveTo(2,-5);c.lineTo(4,0);c.stroke();}   // 紙團
+    else if(it.kind===2){c.fillStyle='#c98f5a';c.beginPath();c.moveTo(-7,-9);c.lineTo(7,-9);c.lineTo(5,11);c.lineTo(-5,11);c.closePath();c.fill();c.stroke();c.fillStyle='#fffdf5';c.fillRect(-8,-11,16,3.5);c.strokeRect(-8,-11,16,3.5);c.strokeStyle='#e0533d';c.lineWidth=2.4;c.beginPath();c.moveTo(2,-11);c.lineTo(5,-18);c.stroke();c.fillStyle=INK;c.beginPath();c.arc(-2,7,1.4,0,TAU);c.arc(2,5,1.4,0,TAU);c.arc(0,9,1.4,0,TAU);c.fill();}   // 手搖杯
+    else{c.fillStyle='#ffd35c';c.beginPath();c.moveTo(0,-9);c.quadraticCurveTo(11,-2,9,10);c.quadraticCurveTo(3,3,0,1);c.quadraticCurveTo(-3,3,-9,10);c.quadraticCurveTo(-11,-2,0,-9);c.fill();c.stroke();c.fillStyle='#8a6a3a';c.fillRect(-1.5,-12,3,4);}   // 香蕉皮
+    c.restore();}
 }
 function drawUncle(c){
   const u=sim.uncle,off=u.phase==='out'?(1-clamp(u.t/.35,0,1))*-50:u.phase==='back'?clamp(u.t/.4,0,1)*-50:0;
@@ -788,6 +823,7 @@ function render(){
   drawBlanket(g);
   const pp=pigeonPos();if(pp)drawPigeon(g,pp);
   if(mode==='play'&&sim.uncle)drawUncle(g);
+  if(mode==='play'&&sim.kid)drawKid(g);
   // 冷氣水滴：外面一圈細細的白環提示「這個可以點」
   if(mode==='play'){const dp=sim.dripPos();if(dp){g.lineJoin='round';
       g.globalAlpha=.75;g.lineWidth=2;g.strokeStyle='#fffdf5';g.beginPath();g.arc(dp.x,dp.y,16+2*Math.sin(time*10),0,TAU);g.stroke();g.globalAlpha=1;
@@ -873,6 +909,7 @@ function hud(dt){
   if(mode==='play'){
     if(sim.qte)setHint('照順序，等縮圈貼上圈的瞬間點下去');
     else if(sim.uncle&&(sim.uncle.phase==='out'||sim.uncle.phase==='hawk'))setHint('點樓上阿伯！別讓他吐痰');
+    else if(sim.kid&&sim.kid.items.some(it=>!it.done))setHint('點掉飛上來的垃圾！');
     else if(sim.ac)setHint('點掉冷氣的水滴！');
     else if(tiredT>0)setHint('沒力了…停一下再點');
     else if(sim.pigeon&&sim.pigeon.phase==='on')setHint(sim.pigeon.hp>1?`還要點 ${sim.pigeon.hp} 下才趕得走！`:'鴿子踩著會往外滑，還會大便。點牠！');
@@ -895,7 +932,7 @@ function start(){
 function gameOver(){
   mode='over';paused=false;$('pause').hidden=true;const d=runDay,got=SKINS.filter(k=>k.need>best&&k.need<=d);if(d>best){best=d;store.set('bb.best',String(d));}
   $('ovUnlock').hidden=!got.length;$('ovUnlock').textContent=got.length?'解鎖新花色：'+got.map(k=>k.name).join('、')+'（按「換花色」）':'';
-  $('ovHow').textContent=sim.cause==='tornado'?'它被龍捲風捲走了。':sim.cause==='quake'?'它被地震震下去了。':'它掉了。';
+  $('ovHow').textContent=sim.cause==='tornado'?'它被龍捲風捲走了。':sim.cause==='quake'?'它被地震震下去了。':sim.cause==='trash'?'它被垃圾砸下去了。':'它掉了。';
   $('ovDay').textContent='Day '+d;$('ovRun').textContent='Day '+d;$('ovBest').textContent='Day '+best;
   $('ovRank').textContent=RANKS.find(r=>d>=r[0])[1];$('ovFans').textContent=fmt(120+Math.pow(d,1.9)*40)+' 位追蹤者';
   $('copied').textContent='';el.hud.hidden=true;el.over.hidden=false;showBest();
@@ -952,6 +989,10 @@ function handle(ev){
       else if(ev.c>=.8)banner(`撐住了，只被${verb}出去一點點`,false,2.6);
       else{banner(ev.c===0?`一個都沒點到，被被被${what}${verb}出去了！`:`節奏沒抓好，被被被${verb}出去一截`,true,3);shake=Math.max(shake,9);Snd.blip(320,120,.3,'sawtooth',.07);}
       break;}
+    case'kid':banner('一樓的小屁孩在亂丟垃圾！點掉飛上來的垃圾',false,2.8);Snd.blip(700,900,.08,'square',.05);Snd.blip(900,700,.08,'square',.05,.1);break;
+    case'throw':Snd.blip(300,620,.12,'sine',.05);break;
+    case'trashPop':{const it=sim.kid&&sim.kid.items[ev.i],p=it?sim.trashPos(it):null;if(p){bursts.push({x:p.x,y:p.y,life:.3,dur:.3,col:'#fffdf5',rays:6,big:false,a0:Math.random()*TAU});judges.push({x:p.x,y:p.y+26,text:'擋掉',col:'#fffdf5',life:.5,dur:.5});}Snd.blip(900,1300,.07,'triangle',.08);break;}
+    case'trashHit':if(ev.on){shake=Math.max(shake,7);const q=cloth.p[7];judges.push({x:q.x,y:q.y+10,text:'被砸到！',col:'#ee5b3a',life:.7,dur:.7});Snd.blip(220,110,.14,'square',.08);}break;
     case'acStart':banner('樓上冷氣在滴水！把水滴點掉，不然被被會濕',false,2.8);Snd.blip(520,420,.1,'sine',.06);break;
     case'dripPop':{for(let i=0;i<5;i++)drips.push({x:AC_X+(Math.random()-.5)*10,y:(sim.dripY||AC_Y)+(Math.random()-.5)*6,vy:-60-Math.random()*60,land:false});ripples.push({x:AC_X,y:sim.dripY||AC_Y,life:.35,big:true});Snd.blip(1200,1700,.06,'sine',.08);break;}
     case'dripHit':if(ev.on){for(let i=0;i<4;i++)drips.push({x:AC_X+(Math.random()-.5)*16,y:AC_LAND-2,vy:-50-Math.random()*50,land:false});Snd.blip(380,240,.08,'sine',.07);}break;
@@ -975,7 +1016,7 @@ function tick(dt){
   time+=dt;
   if(mode==='play'){
 
-    sim.step(dt,inp);inp.tap=false;inp.shoo=false;inp.uncle=false;inp.drip=false;inp.hits.length=0;
+    sim.step(dt,inp);inp.tap=false;inp.shoo=false;inp.uncle=false;inp.drip=false;inp.hits.length=0;inp.trash.length=0;
     while(sim.events.length)handle(sim.events.shift());
     if(sim.qte)shake=Math.max(shake,sim.qte.kind==='quake'?6:3);
     if(sim.weather==='typhoon'&&Math.random()<dt*.12)flash=1;
@@ -1046,6 +1087,7 @@ function down(cx,cy){
     else if(q.t-q.notes[hit].at<-QTE_EARLY){const o=q.notes[hit];judges.push({x:o.x,y:o.y,text:'還沒',col:'#fffdf5',life:.5,dur:.5});}   // 縮圈還很遠：不算，可以再點
     else inp.hits.push(hit);
     return;}
+  if(sim.kid){let got=false;for(const it of sim.kid.items){if(it.done||inp.trash.includes(it.i))continue;const tp=sim.trashPos(it);if(Math.hypot(x-tp.x,y-tp.y)<32){inp.trash.push(it.i);got=true;break;}}if(got)return;}
   {const dp=sim.dripPos();if(dp&&Math.hypot(x-dp.x,y-dp.y)<32){sim.dripY=dp.y;inp.drip=true;return;}}
   if(sim.uncle&&(sim.uncle.phase==='out'||sim.uncle.phase==='hawk')&&Math.hypot(x-UNCLE.x,y-UNCLE.y)<38){inp.uncle=true;ripples.push({x:UNCLE.x,y:UNCLE.y,life:.35,big:true});return;}
   const p=pigeonPos();
@@ -1067,7 +1109,7 @@ $('pauseBtn').addEventListener('click',()=>setPaused(true));
 $('resume').addEventListener('click',()=>setPaused(false));
 el.mute.addEventListener('click',()=>{Snd.init();Snd.setOn(!Snd.on);muteIcon();});
 $('share').addEventListener('click',async()=>{
-  const text=`我的被被在遮雨棚上撐到 Day ${runDay} 才${sim.cause==='tornado'?'被龍捲風捲走':sim.cause==='quake'?'被地震震下去':'掉下去'}，封號「${$('ovRank').textContent}」。你的能撐幾天？`+(document.querySelector('link[rel=canonical]')?' '+document.querySelector('link[rel=canonical]').href:''),out=$('copied');
+  const text=`我的被被在遮雨棚上撐到 Day ${runDay} 才${sim.cause==='tornado'?'被龍捲風捲走':sim.cause==='quake'?'被地震震下去':sim.cause==='trash'?'被小屁孩的垃圾砸下去':'掉下去'}，封號「${$('ovRank').textContent}」。你的能撐幾天？`+(document.querySelector('link[rel=canonical]')?' '+document.querySelector('link[rel=canonical]').href:''),out=$('copied');
   try{await navigator.clipboard.writeText(text);out.textContent='已複製，貼到脆上炫耀吧';}
   catch(e){out.textContent=text;const r=document.createRange();r.selectNodeContents(out);const s=getSelection();s.removeAllRanges();s.addRange(r);}
 });
@@ -1075,7 +1117,7 @@ window.addEventListener('resize',resize);
 if(window.ResizeObserver)new ResizeObserver(resize).observe(gameEl);
 
 muteIcon();showBest();resize();requestAnimationFrame(frame);
-window.__bb={Sim,DAY_LEN,get paused(){return paused},get sim(){return sim},get mode(){return mode},start,pigeonXY(){const p=pigeonPos();if(!p)return null;const b=gameEl.getBoundingClientRect();return{x:b.left+ox+p.x*scale,y:b.top+oy+(p.y-10*PIGEON_SC[p.lv])*scale};},dripXY(){const p=sim.dripPos();if(!p)return null;const b=gameEl.getBoundingClientRect();return{x:b.left+ox+p.x*scale,y:b.top+oy+p.y*scale};},uncleXY(){const b=gameEl.getBoundingClientRect();return{x:b.left+ox+UNCLE.x*scale,y:b.top+oy+UNCLE.y*scale};},qteXY(i){const p=sim.qtePos(i),b=gameEl.getBoundingClientRect();return{x:b.left+ox+p.x*scale,y:b.top+oy+p.y*scale};}};
+window.__bb={Sim,DAY_LEN,get paused(){return paused},get sim(){return sim},get mode(){return mode},start,pigeonXY(){const p=pigeonPos();if(!p)return null;const b=gameEl.getBoundingClientRect();return{x:b.left+ox+p.x*scale,y:b.top+oy+(p.y-10*PIGEON_SC[p.lv])*scale};},trashXY(){const k=sim.kid;if(!k)return null;const it=k.items.find(q=>!q.done);if(!it)return null;const p=sim.trashPos(it),b=gameEl.getBoundingClientRect();return{x:b.left+ox+p.x*scale,y:b.top+oy+p.y*scale};},dripXY(){const p=sim.dripPos();if(!p)return null;const b=gameEl.getBoundingClientRect();return{x:b.left+ox+p.x*scale,y:b.top+oy+p.y*scale};},uncleXY(){const b=gameEl.getBoundingClientRect();return{x:b.left+ox+UNCLE.x*scale,y:b.top+oy+UNCLE.y*scale};},qteXY(i){const p=sim.qtePos(i),b=gameEl.getBoundingClientRect();return{x:b.left+ox+p.x*scale,y:b.top+oy+p.y*scale};}};
 })();
 </script>
 <!--/PAGE-->
