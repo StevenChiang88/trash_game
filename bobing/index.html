@@ -1,0 +1,625 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover, user-scalable=no">
+<meta name="description" content="踩著薄冰走過結冰的湖。冰有厚有薄，踩了會裂、站太久會破，後面的冰還一直融。我這一生如履薄冰，你說我能走到對岸嗎？">
+<meta name="theme-color" content="#2f6f9f">
+<link rel="canonical" href="https://stevenchiang88.github.io/trash_game/bobing/">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="我這一生如履薄冰">
+<meta property="og:title" content="我這一生如履薄冰｜你說我能走到對岸嗎？">
+<meta property="og:description" content="踩著薄冰走過結冰的湖。冰有厚有薄，踩了會裂、站太久會破，後面的冰還一直融。我這一生如履薄冰，你說我能走到對岸嗎？">
+<meta property="og:url" content="https://stevenchiang88.github.io/trash_game/bobing/">
+<meta property="og:image" content="https://stevenchiang88.github.io/trash_game/bobing/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="一隻白色圓頭、穿黑色長大衣的小傢伙站在裂開的冰面上，四周是深藍色的湖水，遠處是對岸">
+<meta property="og:locale" content="zh_TW">
+<meta name="twitter:card" content="summary_large_image">
+<style>
+  /* 與發佈環境相同的最小底座：上下避開瀏海與手勢列 */
+  html{box-sizing:border-box;padding:env(safe-area-inset-top,0px) 0 env(safe-area-inset-bottom,0px)}
+  body{margin:0}
+  [hidden]{display:none!important}
+</style>
+<!--PAGE-->
+<title>我這一生如履薄冰</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chiron+GoRound+TC:wght@500;900&family=Fredoka:wght@600;700&display=swap">
+<style>
+/* 版面：從上往下看的結冰的湖。他站在畫面下方的冰上往上走，對岸在上面。
+   左上是過了幾座湖和分數，下面是他的獨白和提示。點一下往前走一格，滑一下往那個方向走一格 */
+:root{
+  --ink:#1f2a44;        /* 描邊與文字 */
+  --paper:#f7fbff;      /* 卡片、厚冰 */
+  --band:#e5432f;       /* 紅：主色，也是危險 */
+  --sun:#ffc93c;        /* 按鈕、強調 */
+  --ice:#9fd0ea;        /* 薄冰 */
+  --ok:#2f9a7c;
+  --water:#2f6f9f;      /* 湖水 */
+  --backdrop:#14213a;
+  --display:"Fredoka","Chiron GoRound TC","PingFang TC","Microsoft JhengHei",sans-serif;
+  --body:"Chiron GoRound TC","PingFang TC","Noto Sans TC","Microsoft JhengHei",sans-serif;
+  --sticker:-2px -2px 0 var(--ink),2px -2px 0 var(--ink),-2px 2px 0 var(--ink),2px 2px 0 var(--ink),0 -2.5px 0 var(--ink),0 2.5px 0 var(--ink),-2.5px 0 0 var(--ink),2.5px 0 0 var(--ink);
+}
+html,body{height:100%;touch-action:none;overscroll-behavior:none}
+button{touch-action:manipulation}
+body{background:var(--backdrop);color:var(--ink);font-family:var(--body);font-weight:500;overflow:hidden;display:grid;place-items:center}
+#game{position:relative;height:100%;aspect-ratio:9/16;max-width:100%;overflow:hidden;touch-action:none;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent;background:var(--water)}
+#c{position:absolute;inset:0;width:100%;height:100%;display:block}
+
+.hud{position:absolute;inset:0;pointer-events:none;display:flex;flex-direction:column;gap:8px;padding-block:14px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.top{display:flex;align-items:flex-start;justify-content:space-between;gap:8px}
+.left{display:flex;flex-direction:column;align-items:flex-start;gap:6px}
+.count{display:flex;align-items:baseline;gap:5px;font-family:var(--display);color:var(--paper);text-shadow:var(--sticker);line-height:1}
+.count small{font-family:var(--body);font-weight:900;font-size:15px}
+.count b{font-size:40px;font-weight:700;font-variant-numeric:tabular-nums}
+.score{display:flex;align-items:baseline;gap:6px;font-family:var(--display);color:var(--paper);text-shadow:var(--sticker);line-height:1}
+.score small{font-family:var(--body);font-weight:900;font-size:13px}
+.score b{font-size:22px;font-weight:700;font-variant-numeric:tabular-nums}
+.score em{font-style:normal;font-family:var(--body);font-weight:900;font-size:13px;color:var(--sun)}
+.side{display:flex;flex-direction:column;gap:8px}
+.icon-btn{pointer-events:auto;width:40px;height:40px;display:grid;place-items:center;border:2.5px solid var(--ink);border-radius:50%;background:var(--paper);color:var(--ink);cursor:pointer;padding:0}
+.icon-btn svg{width:20px;height:20px}
+.icon-btn:focus-visible,.btn:focus-visible{outline:3px solid var(--sun);outline-offset:3px}
+.gap{flex:1}
+/* 獨白和提示：畫面最下面 */
+.cap{align-self:center;margin-top:auto;width:min(328px,100%);min-height:58px;display:flex;flex-direction:column;justify-content:center;gap:2px;padding:8px 14px;border-radius:12px;background:rgba(20,33,58,.7);color:#fff;text-align:center}
+.cap b{font-weight:900;font-size:17px;line-height:1.3;min-height:1.3em;text-wrap:balance}
+.cap span{font-weight:900;font-size:13px;color:var(--sun);min-height:1.3em}
+
+.btn{pointer-events:auto;font:inherit;font-weight:900;font-size:20px;color:var(--ink);background:var(--sun);border:3px solid var(--ink);border-radius:16px;padding:12px 26px;box-shadow:0 5px 0 var(--ink);cursor:pointer;transition:transform .06s,box-shadow .06s}
+.btn:active{transform:translateY(4px);box-shadow:0 1px 0 var(--ink)}
+.btn.ghost{background:var(--paper);font-size:15px;padding:10px 16px}
+
+.screen{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;gap:12px;padding-block:24px 18px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));text-align:center}
+#title{background:linear-gradient(rgba(20,33,58,.7),rgba(20,33,58,.1) 36%,rgba(20,33,58,.1) 70%,rgba(20,33,58,.7))}
+.logo{margin:2vh 0 0;font-weight:900;font-size:clamp(34px,10.5vw,50px);line-height:1.08;letter-spacing:.02em;color:var(--paper);text-shadow:var(--sticker),0 6px 0 var(--ink);transform:rotate(-3deg)}
+.logo span{display:block;color:var(--sun);font-size:1.2em}
+.tag{margin:4px 0 0;font-weight:900;font-size:16px;color:var(--paper);text-shadow:var(--sticker);text-wrap:balance}
+.how{display:flex;flex-wrap:wrap;justify-content:center;gap:7px;margin:0;padding:0;list-style:none;font-size:13.5px}
+.how li{padding:5px 11px;border:2.5px solid var(--ink);border-radius:999px;background:var(--paper);white-space:nowrap}
+.how b{font-weight:900;color:var(--band)}
+.listen{font-weight:900;font-size:14px;padding:6px 14px;border-radius:999px;background:rgba(20,33,58,.7);color:var(--sun);animation:nudge 1.6s ease-in-out infinite}
+@keyframes nudge{50%{transform:translateY(-4px)}}
+.best{font-weight:900;font-size:13px;color:var(--paper);text-shadow:var(--sticker);min-height:1.4em}
+.home{pointer-events:auto;font-weight:900;font-size:14px;color:var(--paper);text-shadow:var(--sticker);text-underline-offset:4px}
+
+#over,#pause{justify-content:center;background:rgba(20,33,58,.6)}
+.card{width:min(330px,100%);max-height:100%;overflow-y:auto;touch-action:pan-y;overscroll-behavior:contain;display:flex;flex-direction:column;gap:12px;padding:18px;border:3px solid var(--ink);border-radius:22px;background:var(--paper);box-shadow:0 7px 0 var(--ink);text-align:left;animation:pop .35s cubic-bezier(.3,1.5,.5,1)}
+@keyframes pop{from{transform:scale(.85);opacity:0}}
+.verdict{margin:0;font-weight:900;font-size:28px;line-height:1.25}
+.verdict .n{font-family:var(--display);font-weight:700;color:var(--band)}
+/* 大大的成績或觀看次數 */
+.big{display:flex;align-items:baseline;gap:10px;padding:10px 14px;border:2.5px solid var(--ink);border-radius:14px;background:#fff}
+.big b{font-family:var(--display);font-weight:700;font-size:46px;line-height:1;color:var(--band);font-variant-numeric:tabular-nums}
+.big span{font-weight:900;font-size:14px}
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:9px 12px;margin:0}
+.stats dt{font-size:12px;opacity:.65}
+.stats dd{margin:0;font-weight:900;font-size:16px;font-variant-numeric:tabular-nums}
+.stats .wide{grid-column:1/-1}
+.acts{display:flex;flex-wrap:wrap;gap:9px;align-items:center}
+.copied{font-size:13px;font-weight:900;color:var(--ok);min-height:1.3em;user-select:text;-webkit-user-select:text}
+.note{margin:0;font-size:14px;opacity:.75}
+/* 帶著的能力、用魚換能力 */
+.kit{font-weight:900;font-size:12px;color:var(--sun);text-shadow:var(--sticker);min-height:1.2em}
+.tools{position:absolute;right:max(12px,env(safe-area-inset-right,0px));bottom:118px;display:flex;flex-direction:column;gap:10px;align-items:flex-end}
+.tool{pointer-events:auto;font:inherit;font-weight:900;font-size:17px;min-width:66px;height:56px;padding:0 12px;border:3px solid var(--ink);border-radius:18px;background:var(--paper);color:var(--ink);box-shadow:0 4px 0 var(--ink);cursor:pointer;touch-action:manipulation}
+.tool:active{transform:translateY(3px);box-shadow:0 1px 0 var(--ink)}
+.tool small{font-size:13px;margin-left:3px}
+.tool.taxi{background:var(--sun)}
+.shop{pointer-events:auto;width:min(330px,100%);display:flex;flex-direction:column;gap:6px}
+.bank{margin:0;font-weight:900;font-size:13px}
+.bank b{color:var(--band);font-size:1.15em}
+#shopT .bank{color:var(--paper);text-shadow:var(--sticker)}
+#shopT .bank b{color:var(--sun)}
+.goods{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.buy{pointer-events:auto;font:inherit;display:flex;flex-direction:column;gap:2px;align-items:center;justify-content:space-between;padding:7px 4px;border:2.5px solid var(--ink);border-radius:12px;background:#fff;color:var(--ink);cursor:pointer;text-align:center;touch-action:manipulation}
+.buy b{font-weight:900;font-size:14px}
+.buy span{font-size:10.5px;line-height:1.25;opacity:.75}
+.buy em{font-style:normal;font-weight:900;font-size:12px;color:var(--band)}
+.buy:disabled{opacity:.55;cursor:default}
+.buy:not(:disabled):active{transform:translateY(2px)}
+.buy:focus-visible,.tool:focus-visible{outline:3px solid var(--sun);outline-offset:2px}
+@media (prefers-reduced-motion:reduce){.card{animation:none}.listen{animation:none}}
+</style>
+</head>
+<body>
+<div id="game">
+  <canvas id="c" aria-label="一隻白色圓頭、穿黑色長大衣的小傢伙踩著薄冰，要走過結冰的湖到對岸"></canvas>
+
+  <div class="hud" id="hud" hidden>
+    <div class="top">
+      <div class="left">
+        <div class="count"><small>過了</small><b id="num">0</b><small>座湖</small></div>
+        <div class="score"><small>膽量</small><b id="score">0</b><em id="combo"></em></div>
+        <div class="kit" id="kit"></div>
+      </div>
+      <div class="side">
+        <button class="icon-btn" id="pauseBtn" type="button" aria-label="暫停"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="6" y="5" width="4.5" height="14" rx="1.6"/><rect x="13.5" y="5" width="4.5" height="14" rx="1.6"/></svg></button>
+        <button class="icon-btn" id="mute" type="button" aria-label="聲音開關"></button>
+      </div>
+    </div>
+    <div class="tools"><button class="tool" id="jump" type="button" hidden aria-label="跳兩格">跳<small id="jumpN"></small></button><button class="tool taxi" id="taxi" type="button" hidden aria-label="打車到對岸">打車</button></div>
+    <div class="cap"><b id="cap"></b><span id="hint"></span></div>
+  </div>
+
+  <div class="screen" id="title">
+    <h1 class="logo">我這一生<span>如履薄冰</span></h1>
+    <p class="tag">你說，我能走到對岸嗎？</p>
+    <ul class="how">
+      <li><b>點一下</b> 往前一格</li>
+      <li><b>滑一下</b> 往那邊一格</li>
+      <li><b>越藍越薄</b> 踩了會裂</li>
+      <li><b>站太久</b> 冰會破</li>
+      <li><b>後面的冰</b> 一直在融</li>
+    </ul>
+    <div class="shop" id="shopT" hidden></div>
+    <div class="gap"></div>
+    <div class="listen" id="listen">點一下畫面，聽他怎麼說</div>
+    <button class="btn" id="start" type="button">如履薄冰，出發</button>
+    <div class="best" id="best"></div>
+    <a class="home" href="../">其他遊戲</a>
+  </div>
+
+  <div class="screen" id="over" hidden>
+    <div class="card">
+      <p class="verdict">呦，這不<span class="n">薄冰哥</span>嗎？</p>
+      <div class="big"><b id="ovBig">0</b><span>座湖，走到了對岸</span></div>
+      <dl class="stats">
+        <div><dt>膽量</dt><dd id="ovScore">0</dd></div>
+        <div><dt>最佳紀錄</dt><dd id="ovBest"></dd></div>
+        <div><dt>封號</dt><dd id="ovRank"></dd></div>
+        <div><dt>撈到的魚</dt><dd id="ovFish">0</dd></div>
+        <div class="wide"><dt>怎麼掉下去的</dt><dd id="ovWhy"></dd></div>
+      </dl>
+      <div class="shop" id="shopO"></div>
+      <div class="acts">
+        <button class="btn" id="again" type="button">再走一次</button>
+        <button class="btn ghost" id="share" type="button">複製戰績</button>
+      </div>
+      <div class="copied" id="copied"></div>
+    </div>
+  </div>
+
+  <div class="screen" id="pause" hidden>
+    <div class="card">
+      <p class="verdict">暫停中</p>
+      <p class="note">離開畫面會自動暫停。冰不會等你，按「繼續」就接著走。</p>
+      <div class="acts"><button class="btn" id="resume" type="button">繼續</button></div>
+    </div>
+  </div>
+</div>
+<script>
+(() => {
+'use strict';
+const clamp=(x,a,b)=>x<a?a:x>b?b:x, lerp=(a,b,t)=>a+(b-a)*t, TAU=Math.PI*2;
+const rnd=(a,b)=>a+Math.random()*(b-a), pick=a=>a[(Math.random()*a.length)|0];
+const hash=(i,k)=>{const x=Math.sin(i*127.1+k*311.7)*43758.5453;return x-Math.floor(x);};
+const store={get(k){try{return localStorage.getItem(k)}catch(e){return null}},set(k,v){try{localStorage.setItem(k,v)}catch(e){}}};
+const $=id=>document.getElementById(id);
+const INK='#1f2a44',PAPER='#f7fbff',BAND='#e5432f',SUN='#ffc93c',WATER='#2f6f9f';
+const FONT='"Chiron GoRound TC","PingFang TC","Microsoft JhengHei",sans-serif';
+function rrect(c,x,y,w,h,r){c.beginPath();c.moveTo(x+r,y);c.arcTo(x+w,y,x+w,y+h,r);c.arcTo(x+w,y+h,x,y+h,r);c.arcTo(x,y+h,x,y,r);c.arcTo(x,y,x+w,y,r);c.closePath();}
+
+/* ───────── 規則 ─────────
+   從上往下看的結冰的湖，一格一格的冰，五格寬。他從下面的岸往上走到對岸，過了一座後面還有一座。
+   每塊冰有厚度（hp 1~3，越藍越薄）。踩上去少 1；站著不動每 STAND 秒再少 1；變成 0 之後還能撐 GRACE 秒，然後破掉變成洞。
+   所以薄冰（hp 1）只能快步踩過去，不能停。離開一塊已經是 0 的冰，它馬上就破，路會斷在身後。
+   後面的冰會從岸邊開始融、一排一排追上來（融冰線）。雪蓋住的冰看不出厚薄；光滑的冰會讓他一路滑到底。
+   掉進水裡就結束。踩越薄的冰「膽量」越高，連續踩薄冰有加成 */
+const VW=360,VH=640,COLS=5,TW=62,X0=(VW-COLS*TW)/2,RH=58,FEET=452;
+const MOVE_T=.11,JUMP_T=.22,STAND=1.5,GRACE=.75,LEAVE_T=.14;
+// 用魚換的能力：price 幾條魚、n 一次買到幾次、max 一局最多帶幾次
+const KIT={life:{name:'爬起來',desc:'掉下去救一次',price:8,n:1,max:1},jump:{name:'跳兩格',desc:'越過一格 ×3',price:5,n:3,max:6},taxi:{name:'打車',desc:'直接坐到對岸',price:20,n:1,max:1}};
+const cellX=c=>X0+TW*c+TW/2;
+// 第 n 座湖：幾排、洞和薄冰的比例、有沒有雪／滑冰／霧、融冰線多快
+// 湖況：第 KIND_FROM 座起，每座湖有 KIND_P 的機會抽到一種，不連續重複
+const KINDS={thin:{name:'薄冰湖',tip:'幾乎整片都是薄冰，一步都不能停'},holes:{name:'碎冰湖',tip:'到處是洞，路要繞'},rink:{name:'溜冰場',tip:'一大片滑冰，踩上去會一路滑到底'},snow:{name:'大雪',tip:'雪把冰蓋住了，看不出底下多厚'},
+  fog:{name:'起霧',tip:'只看得到前面兩三排'},warm:{name:'回暖',tip:'後面融得特別快'},wind:{name:'大風',tip:'風會把你往旁邊吹一格，看箭頭'},fish:{name:'魚群',tip:'冰下都是魚，多撈一點'}};
+// 朋友來亂：第 PAL_FROM 座起。兔子隔 BALL_GAP 秒丟雪球（越後面越密；第 BALL_2 座起一次兩顆、第 BALL_3 座起三顆），先看到紅圈，BALL_WARN 秒後砸下來，那格少 BALL_DMG 級；
+// 有 BALL_ME 的機會其中一顆直接瞄準他腳下，被砸中的話腳下的冰只剩 BALL_GRACE 秒。藍貓隔 CAT_GAP 秒來一次：前面有魚就去搶（CAT_EAT 秒後吃掉），沒魚才幫忙掀雪
+const PAL_FROM=2,BALL_GAP=[2.8,4.8],BALL_WARN=.85,BALL_DMG=2,BALL_ME=.4,BALL_GRACE=.45,BALL_2=5,BALL_3=9,CAT_GAP=[7,12],CAT_EAT=2.2,RIDE_IN=.35,RIDE_T=1.15;
+const KIND_FROM=3,KIND_P=.65,GUST_WARN=.9,GUST_GAP=[2.4,3.8];let lastKind='';
+const lakeOf=n=>{const L={n,len:Math.min(7+n,16),hole:Math.min(.04+.03*n,.26),thin:Math.min(.1+.06*n,.55),mid:.3,snow:n>=2?Math.min(.08+.03*n,.3):0,slip:n>=4?Math.min(.06+.02*n,.2):0,fog:false,melt:Math.min(3,.8+.13*n),wait:Math.max(.6,1.3-.05*n),fishN:2,kind:''};
+  if(n>=KIND_FROM&&Math.random()<KIND_P){const k=L.kind=lastKind=pick(Object.keys(KINDS).filter(q=>q!==lastKind));
+    if(k==='thin'){L.thin=Math.min(.8,L.thin+.3);L.hole*=.6;}else if(k==='holes')L.hole=Math.min(.4,L.hole*1.8+.06);else if(k==='rink')L.slip=.45;else if(k==='snow')L.snow=.6;else if(k==='fog')L.fog=true;else if(k==='warm'){L.melt=Math.min(3.6,L.melt*1.45);L.wait=.35;}else if(k==='fish')L.fishN=7;}
+  else lastKind='';return L;};
+const RANKS=[[20,'這不是薄冰哥，是冰上之神'],[12,'對岸的常客'],[7,'如履平地'],[4,'薄冰哥本人'],[2,'有走到過對岸'],[1,'至少過了一座'],[0,'一腳就沒了']];
+const SHORE_LINES=['到了。','但前面還有一座湖。','對岸的後面，還是岸。','人生就是一座又一座的湖。','我這一生，如履薄冰。','腳好冰。','剛剛那塊差點破。','不要回頭看。','一生懸命。'];
+const WHY={stand:'站太久，腳下的冰撐不住了',thin:'薄冰只能踩過去，不能停',snow:'雪下面原來是薄冰',melt:'被融冰追上了',slide:'一路滑進洞裡',wind:'被風吹進洞裡',ball:'被兔子的雪球砸中，腳下的冰破了'};
+
+/* ───────── 聲音 ───────── */
+const Snd={ctx:null,on:store.get('bi.mute')!=='1',
+  init(){if(this.ctx){if(this.ctx.state==='suspended'&&!paused)this.ctx.resume();return;}
+    try{const C=window.AudioContext||window.webkitAudioContext,c=this.ctx=new C();this.master=c.createGain();this.master.gain.value=this.on?1:0;this.master.connect(c.destination);
+      const buf=c.createBuffer(1,c.sampleRate,c.sampleRate),d=buf.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=Math.random()*2-1;this.noise=buf;}catch(e){this.ctx=null;}},
+  blip(f0,f1,dur,type,vol,delay){if(!this.ctx)return;const c=this.ctx,t=c.currentTime+(delay||0),o=c.createOscillator(),g=c.createGain();
+    o.type=type||'sine';o.frequency.setValueAtTime(f0,t);o.frequency.exponentialRampToValueAtTime(Math.max(30,f1),t+dur);
+    g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(vol||.1,t+.012);g.gain.exponentialRampToValueAtTime(.0008,t+dur);o.connect(g);g.connect(this.master);o.start(t);o.stop(t+dur+.03);},
+  burst(dur,freq,vol,type,delay){if(!this.ctx)return;const c=this.ctx,t=c.currentTime+(delay||0),n=c.createBufferSource(),f=c.createBiquadFilter(),g=c.createGain();n.buffer=this.noise;n.loop=true;f.type=type||'lowpass';f.frequency.value=freq;
+    g.gain.setValueAtTime(vol,t);g.gain.exponentialRampToValueAtTime(.001,t+dur);n.connect(f);f.connect(g);g.connect(this.master);n.start(t);n.stop(t+dur+.05);},
+  step(hp){this.burst(.07,hp>=2?2400:3600,.16,'highpass');},
+  crack(big){this.burst(big?.22:.1,big?1800:3200,big?.34:.2,'bandpass');this.blip(big?900:1400,big?220:500,big?.2:.09,'square',big?.07:.04);},
+  splash(){this.burst(.6,700,.45);this.burst(.9,2600,.16,'highpass',.05);this.blip(300,70,.4,'sine',.2);},
+  setOn(v){this.on=v;store.set('bi.mute',v?'0':'1');if(this.ctx)this.master.gain.setTargetAtTime(v?1:0,this.ctx.currentTime,.02);if(!v){Voice.stop();Clips.stop();}}
+};
+// 開場那句獨白用裝置內建的中文語音唸（壓低、放慢）；沒有中文語音就只有字幕
+const Voice={ok:'speechSynthesis' in window&&'SpeechSynthesisUtterance' in window,v:null,warm:false,
+  pick(){if(!this.ok)return;let vs=[];try{vs=speechSynthesis.getVoices()||[];}catch(e){}const L=v=>(v.lang||'').replace('_','-').toLowerCase();
+    this.v=vs.find(v=>L(v)==='zh-tw')||vs.find(v=>L(v).startsWith('zh-tw'))||vs.find(v=>/^(zh-cn|zh-hans|zh-hant|cmn|zh$)/.test(L(v)))||null;},
+  unlock(){if(!this.ok)return;this.stop();if(this.warm)return;this.warm=true;try{this.pick();const u=new SpeechSynthesisUtterance(' ');u.volume=0;speechSynthesis.speak(u);}catch(e){}},
+  say(text){if(!this.ok||!Snd.on)return;try{if(!this.v)this.pick();if(!this.v)return;speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(text);u.voice=this.v;u.lang=this.v.lang;u.rate=.86;u.pitch=.6;u.volume=1;speechSynthesis.speak(u);}catch(e){}},
+  stop(){if(this.ok)try{speechSynthesis.cancel();}catch(e){}}};
+if(Voice.ok){Voice.pick();try{speechSynthesis.addEventListener('voiceschanged',()=>Voice.pick());}catch(e){}}
+// 錄音檔（放在同一個資料夾）：title＝封面，第一次點封面的時候放一次（瀏覽器規定要先有點擊才能出聲）；
+// intro＝開始走的那句獨白（有的話就不用內建語音唸）；over＝結算畫面出現的時候放。
+// 同一個時機有好幾個檔就隨機挑一個（不連續重複）。要拿掉就把清單清空、刪掉檔案
+const V_OVER1='voice-over1.mp3',V_TAXI='voice-play4.mp3',CLIP_FILES={title:['voice-title.mp3'],intro:['voice-intro.mp3'],play:['voice-play1.mp3','voice-play2.mp3','voice-play3.mp3',V_TAXI,V_OVER1],taxi:[V_TAXI],over:[V_OVER1,'voice-over2.mp3']},CLIP_GAIN=1.25,CHAT_FIRST=[8,13],CHAT_GAP=[12,22];
+const Clips={raw:{},buf:{},busy:{},src:null,last:{},pending:null,
+  has(name){return Object.keys(this.raw).concat(Object.keys(this.buf)).some(k=>k.split('#')[0]===name);},
+  // 還在解碼的話，解完馬上放（第一次按開始的時候會遇到）
+  soon(name){this.want=mode;if(!this.play(name))this.pending=name;},
+  // 檔案寫在頁面裡的時候（試玩頁）自己解開，不經過網路請求
+  load(){for(const name in CLIP_FILES)CLIP_FILES[name].forEach((f,i)=>{const k=name+'#'+i;if(!f)return;
+      if(f.slice(0,5)==='data:'){try{const b=atob(f.slice(f.indexOf(',')+1)),u=new Uint8Array(b.length);for(let q=0;q<b.length;q++)u[q]=b.charCodeAt(q);this.raw[k]=u.buffer;}catch(e){}}
+      else if(window.fetch)fetch(f).then(r=>r.ok?r.arrayBuffer():Promise.reject()).then(b=>{this.raw[k]=b;this.decode();}).catch(()=>{});});
+    this.decode();},
+  decode(){if(!Snd.ctx)return;for(const k in this.raw){if(this.buf[k]||this.busy[k])continue;this.busy[k]=true;try{const p=Snd.ctx.decodeAudioData(this.raw[k].slice(0),b=>{this.buf[k]=b;if(this.pending===k.split('#')[0]){this.pending=null;if(mode===this.want)this.play(k.split('#')[0]);}},()=>{});if(p&&p.catch)p.catch(()=>{});}catch(e){}}},
+  play(name){if(!Snd.on||!Snd.ctx)return false;let ks=Object.keys(this.buf).filter(k=>k.split('#')[0]===name);if(!ks.length)return false;if(ks.length>1)ks=ks.filter(k=>k!==this.last[name]);const k=this.last[name]=pick(ks);
+    this.stop();try{const c=Snd.ctx,n=c.createBufferSource(),g=c.createGain();n.buffer=this.buf[k];g.gain.value=CLIP_GAIN;n.connect(g);g.connect(Snd.master);n.onended=()=>{if(this.src===n)this.src=null;};n.start();this.src=n;}catch(e){}return true;},
+  stop(){this.pending=null;if(this.src){try{this.src.stop();}catch(e){}this.src=null;}}};
+Clips.load();
+
+/* ───────── 狀態 ───────── */
+let mode='title',time=0,rows=[],lakes=[],gen=0,pr=1,pc=2,fr=1,fc=2,mv=0,buf=null,slide=null,standT=0,camR=1,crossed=0,score=0,fish=0,combo=0,why='',fallT=0,shake=0,flash=0,capText='',capAt=0,capQueue=[],introClip=false,chatT=0,overClip=false;
+let bank=Math.max(0,parseInt(store.get('bi.fish')||'0',10)||0),kit={life:0,jump:0,taxi:0},lives=0,jumps=0,taxis=0,mvT=MOVE_T;
+try{const k=JSON.parse(store.get('bi.kit')||'{}');for(const q in KIT)kit[q]=clamp(parseInt(k[q],10)||0,0,KIT[q].max);}catch(e){}
+const saveKit=()=>{store.set('bi.fish',String(bank));store.set('bi.kit',JSON.stringify(kit));};
+let best=parseInt(store.get('bi.best')||'0',10)||0,bestScore=parseInt(store.get('bi.score')||'0',10)||0;
+const melt={lake:null,r:-9,wait:0},gust={t:2,warn:0,dir:1,push:0,blow:0},pops=[],parts=[];let blown=false,ride=null;const ball={t:7,list:[],hits:[]},catEv={t:10,show:0,steal:0,r:0,c:0};
+// 排一座湖：先隨機鋪冰和洞，再保證至少有一條走得過去的路；接著放雪、滑冰和魚，最後是對岸（兩排）
+function genLake(){
+  const L=lakeOf(++gen),start=rows.length;L.start=start;L.end=start+L.len-1;lakes.push(L);
+  for(let i=0;i<L.len;i++){const cells=[];for(let c=0;c<COLS;c++){const q=Math.random(),edge=i===0||i===L.len-1,hp=q<L.hole&&!edge?0:q<L.hole+L.thin?1:q<L.hole+L.thin+L.mid?2:3;
+      cells.push({hp,max:hp,hole:hp===0,snow:false,slip:false,fish:false,breakT:-1,melt:false,seed:Math.random()*1000,thin0:hp<=1});}rows.push({t:'ice',lake:L,cells});}
+  let c=(Math.random()*COLS)|0;
+  for(let r=start;r<=L.end;r++){const steps=Math.random()<.5?0:Math.random()<.7?1:2,d=Math.random()<.5?-1:1;
+    for(let k=0;k<=steps;k++){const cc=clamp(c+d*k,0,COLS-1),cell=rows[r].cells[cc];if(cell.hole){cell.hole=false;cell.hp=cell.max=1+(Math.random()<.5?1:0);cell.thin0=cell.hp<=1;}cell.path=true;if(k===steps)c=cc;}}
+  const free=[];for(let r=start;r<=L.end;r++)for(let k=0;k<COLS;k++){const cell=rows[r].cells[k];if(cell.hole)continue;if(Math.random()<L.snow)cell.snow=true;else if(Math.random()<L.slip&&r>start&&r<L.end&&!cell.path)cell.slip=true;if(!cell.path&&cell.hp<=2&&r>start)free.push(cell);}
+  for(let k=0;k<L.fishN&&free.length;k++)free.splice((Math.random()*free.length)|0,1)[0].fish=true;
+  rows.push({t:'shore',goal:L,line:gen===1?'到了。':pick(SHORE_LINES)});rows.push({t:'shore'});
+}
+function need(r){while(rows.length<r+16)genLake();}
+const cellAt=(r,c)=>rows[r]&&rows[r].t==='ice'?rows[r].cells[c]:null;
+function pop(x,y,text,col,big,o){pops.push(Object.assign({x,y,text,col:col||PAPER,life:big?1:.7,dur:big?1:.7,big},o));}
+function say(text,speak){capText=text;capAt=time;if(speak)Voice.say(text);}
+function shards(x,y,n,col){for(let i=0;i<n;i++)parts.push({x:x+rnd(-18,18),y:y+rnd(-12,12),vx:rnd(-150,150),vy:rnd(-220,-40),r:rnd(2,5),col:col||pick(['#f4fbff','#cfe9f7','#9fd0ea']),life:rnd(.3,.7),sq:true});}
+
+/* ───────── 流程 ───────── */
+function reset(){rows=[];lakes=[];gen=0;rows.push({t:'shore'},{t:'shore'});need(2);pr=fr=1;pc=fc=2;mv=0;buf=null;slide=null;standT=0;camR=1;crossed=0;score=0;fish=0;combo=0;why='';lastKind='';blown=false;ride=null;ball.t=rnd(BALL_GAP[0],BALL_GAP[1]);ball.list.length=ball.hits.length=0;catEv.t=rnd(CAT_GAP[0],CAT_GAP[1]);catEv.show=catEv.steal=0;gust.t=2;gust.warn=gust.push=gust.blow=0;melt.lake=null;melt.r=-9;pops.length=parts.length=0;shake=flash=0;capQueue=[];}
+function start(){Snd.init();Voice.unlock();Clips.stop();Clips.decode();titleHeard=true;$('listen').hidden=true;Snd.blip(520,780,.14,'triangle',.1);paused=false;$('pause').hidden=true;reset();lives=kit.life;jumps=kit.jump;taxis=kit.taxi;kit={life:0,jump:0,taxi:0};saveKit();renderShop();lastKit=null;mode='play';lastNum=lastScore=-1;lastCombo=lastCap=lastHint=null;el.title.hidden=true;el.over.hidden=true;el.hud.hidden=false;
+  mode='play';introClip=Clips.has('intro');if(introClip)Clips.soon('intro');say('我這一生如履薄冰。',!introClip);capQueue=[[introClip?1.45:1.9,'你說，我能走到對岸嗎？']];chatT=rnd(CHAT_FIRST[0],CHAT_FIRST[1]);overClip=false;}
+// 走一格。dr：1 往前、-1 往後；dc：-1 往左、1 往右。還在走的時候再下指令，會記住、到了之後接著走
+function move(dr,dc,sliding){
+  if(mode!=='play'||paused||ride)return;if(mv>0){if(!sliding)buf=[dr,dc];return;}
+  if(dr===2&&jumps<=0)return false;
+  const nr=pr+dr,nc=pc+dc;if(nc<0||nc>=COLS||nr<1){if(!sliding)Snd.blip(170,130,.06,'square',.035);return false;}
+  need(nr);const t=cellAt(nr,nc);
+  if(t&&t.hole&&!sliding){Snd.blip(170,130,.06,'square',.035);pop(cellX(nc),rowY(nr)-20,'那是水',PAPER);return false;}   // 看得到的洞不會自己走進去；用滑的才會掉進去
+  const from=cellAt(pr,pc);if(from&&from.hp<=0&&from.breakT>LEAVE_T)from.breakT=LEAVE_T;                              // 腳一離開，已經撐不住的冰馬上破
+  if(!sliding)blown=false;if(dr===2){jumps--;Snd.blip(420,880,.18,'sine',.1);}fr=pr;fc=pc;pr=nr;pc=nc;mv=mvT=dr===2?JUMP_T:MOVE_T;standT=0;slide=sliding?[dr,dc]:null;lastDir=[Math.sign(dr),dc];return true;
+}
+let lastDir=[1,0];
+function arrive(){
+  const row=rows[pr],x=cellX(pc),y=rowY(pr);
+  if(row.t==='shore'){combo=0;const gr=row.goal?row:rows[pr-1]&&rows[pr-1].goal?rows[pr-1]:null;if(gr&&!gr.goal.done){gr.goal.done=true;crossed++;score+=10*gr.goal.n;melt.lake=null;pop(VW/2,y-70,`第 ${crossed} 座湖，到對岸了`,SUN,true,{life:1.3,dur:1.3});say(gr.line);{const nx=lakes[crossed];if(nx&&nx.kind)pop(VW/2,y-112,'下一座：'+KINDS[nx.kind].name,PAPER,true,{life:1.8,dur:1.8,size:22});}
+      Snd.blip(523,523,.12,'triangle',.1);Snd.blip(659,659,.12,'triangle',.1,.12);Snd.blip(784,784,.2,'triangle',.1,.24);if(crossed>best){best=crossed;store.set('bi.best',String(best));}}
+    slide=null;return;}
+  const cell=row.cells[pc],L=row.lake;
+  if(melt.lake!==L){melt.lake=L;melt.r=L.start-1.6;melt.wait=L.wait;}                                                      // 一踏上這座湖，後面就開始融
+  if(cell.hole){why=blown?'wind':slide?'slide':'thin';return fall();}
+  // 光滑的冰：停不住，繼續往同一個方向滑，直到不滑的冰、岸邊或牆
+  if(cell.slip&&!cell.snow){const d=slide||lastDir,nr=pr+d[0],nc=pc+d[1];if(nc>=0&&nc<COLS&&nr>=1){Snd.burst(.12,5200,.08,'highpass');mv=0;if(move(d[0],d[1],true))return;}}
+  slide=null;const was=cell.hp,snow=cell.snow;cell.snow=false;cell.hp=Math.max(0,cell.hp-1);cell.thin0=was<=1;cell.wasSnow=snow;
+  const pts=was<=1?3:was===2?2:1;if(was<=1){combo++;}else combo=0;const gain=Math.round(pts*(1+Math.min(combo,8)*.25));score+=gain;
+  if(was<=1)pop(x,y-46,combo>1?`如履薄冰 ×${combo}　+${gain}`:`薄冰！+${gain}`,SUN);
+  if(cell.fish){cell.fish=false;fish++;bank++;store.set('bi.fish',String(bank));score+=10;if(catEv.steal>0&&catEv.r===pr&&catEv.c===pc){catEv.steal=0;catEv.show=.7;pop(x,y-88,'搶贏貓了！',PAPER);}pop(x,y-66,'撈到魚 +10',SUN);Snd.blip(880,1320,.08,'triangle',.09);Snd.blip(1320,1760,.1,'triangle',.07,.07);}
+  Snd.step(cell.hp);if(cell.hp<=0){cell.breakT=GRACE;Snd.crack(true);shards(x,y,5);shake=Math.max(shake,4);}else if(was!==cell.hp)Snd.crack(false);
+  if(snow&&was<=1)pop(x,y-84,'雪下面是薄冰！',BAND);
+  if(buf){const b=buf;buf=null;move(b[0],b[1]);}
+}
+// 爬起來：腳下那格重新結成厚冰，融冰線退後幾排、停一下
+function rescue(){
+  const x=cellX(pc),y=rowY(pr),c=cellAt(pr,pc);if(c)Object.assign(c,{hole:false,hp:3,max:3,breakT:-1,melt:false,snow:false,slip:false,thin0:false,wasSnow:false});
+  mv=0;buf=null;slide=null;standT=0;blown=false;combo=0;gust.warn=gust.push=0;gust.t=Math.max(gust.t,2);if(melt.lake){melt.r=Math.min(melt.r,pr-2.6);melt.wait=1.2;}
+  why='';Snd.splash();Snd.blip(392,784,.2,'triangle',.1,.12);shake=8;flash=.3;shards(x,y,6);pop(x,y-60,'爬起來了！',SUN,true,{life:1.2,dur:1.2});
+}
+// 跳兩格：越過前面那一格。落點是洞的話不會跳（跟走路一樣）
+function jump(){if(mode!=='play'||paused||jumps<=0)return;Snd.init();move(2,0);}
+// 打車：直接到這座湖（在岸上的話是下一座）的對岸
+function taxi(){
+  if(mode!=='play'||paused||ride||taxis<=0||mv>0)return;const row=rows[pr],L=row.t==='ice'?row.lake:lakes[crossed];if(!L)return;const target=L.end+1;need(target+2);taxis--;Snd.init();
+  buf=null;slide=null;blown=false;gust.warn=gust.push=0;ball.list.length=0;standT=0;ride={t:0,from:pr,to:target,r:pr};
+  Snd.blip(520,520,.09,'square',.08);Snd.blip(520,520,.14,'square',.08,.14);Clips.play('taxi');chatT=Math.max(chatT,6);pop(VW/2,300,'上車！直達對岸',SUN,true,{life:1.2,dur:1.2});
+}
+function fall(){
+  if(mode!=='play')return;if(lives>0){lives--;return rescue();}mode='fall';fallT=0;mv=0;buf=null;Voice.stop();Clips.stop();Snd.splash();shake=12;flash=.4;const x=cellX(pc),y=rowY(pr);
+  for(let i=0;i<22;i++)parts.push({x:x+rnd(-14,14),y:y+rnd(-6,10),vx:rnd(-190,190),vy:rnd(-330,-80),r:rnd(2,4.5),col:pick(['#bfe6f7','#e9f7ff','#7fc4e8']),life:rnd(.4,.9)});shards(x,y,8);
+  say('……');
+}
+function gameOver(){
+  mode='over';paused=false;$('pause').hidden=true;renderShop();if(!overClip){overClip=true;Clips.play('over');}if(score>bestScore){bestScore=score;store.set('bi.score',String(score));}
+  $('ovBig').textContent=crossed;$('ovScore').textContent=score.toLocaleString('en-US');$('ovBest').textContent=`${best} 座湖`;$('ovRank').textContent=RANKS.find(r=>crossed>=r[0])[1];$('ovFish').textContent=fish+' 條';$('ovWhy').textContent=WHY[why]||why;
+  $('copied').textContent='';el.hud.hidden=true;el.over.hidden=false;showBest();
+}
+function tick(dt){
+  time+=dt;shake=Math.max(0,shake-dt*26);flash=Math.max(0,flash-dt*3);
+  for(let i=pops.length-1;i>=0;i--)if((pops[i].life-=dt)<=0)pops.splice(i,1);
+  for(let i=parts.length-1;i>=0;i--){const p=parts[i];p.x+=p.vx*dt;p.y+=p.vy*dt;p.vy+=640*dt;if((p.life-=dt)<=0)parts.splice(i,1);}
+  if(mode==='over'||mode==='title')return;
+  if(ride){ride.t+=dt;ride.r=lerp(ride.from,ride.to,ease(clamp((ride.t-RIDE_IN)/(RIDE_T-RIDE_IN),0,1)));camR+=(ride.r-camR)*Math.min(1,dt*14);
+    if(ride.t>=RIDE_T){fr=pr=ride.to;fc=pc;mv=0;ride=null;flash=.2;arrive();}return;}
+  camR+=((mv>0?lerp(pr,fr,mv/mvT):pr)-camR)*Math.min(1,dt*9);
+  if(mode==='fall'){fallT+=dt;if(fallT>=.85&&!overClip){overClip=true;Clips.play('over');}if(fallT>.9&&fallT-dt<=.9)pop(VW/2,clamp(rowY(pr)-66,150,420),'呦，這不薄冰哥嗎？',SUN,true,{life:1.2,dur:1.2,size:25});if(fallT>2)gameOver();}
+  if(capQueue.length&&time-capAt>=capQueue[0][0]&&mode==='play'){say(capQueue.shift()[1],!introClip);}
+  // 融冰線：一排一排往上吃，被它掃到的冰很快就破
+  if(mode==='play'&&melt.lake){const L=melt.lake;if(melt.wait>0)melt.wait-=dt;else{const before=Math.floor(melt.r);melt.r+=L.melt*dt;
+      for(let r=Math.max(L.start,before+1);r<=Math.min(L.end,Math.floor(melt.r));r++)for(const c of rows[r].cells)if(!c.hole&&c.breakT<0){c.breakT=rnd(.05,.4);c.melt=true;c.hp=0;}}}
+  if(mode==='play'&&melt.lake&&melt.wait<=0){const row=rows[pr];if(row.t==='ice'&&row.lake===melt.lake&&pr<=Math.floor(melt.r)){const c=cellAt(pr,pc);if(c&&!c.hole){c.hole=true;c.hp=0;c.holeAt=time;}why='melt';fall();}}
+  // 每塊正在撐的冰倒數，數完就破成洞
+  const lo=Math.max(0,Math.floor(camR)-5),hi=Math.min(rows.length-1,Math.floor(camR)+10);
+  for(let r=lo;r<=hi;r++){const row=rows[r];if(row.t!=='ice')continue;for(let c=0;c<COLS;c++){const cell=row.cells[c];if(cell.breakT>=0&&!cell.hole&&(cell.breakT-=dt)<=0){cell.hole=true;cell.hp=0;cell.holeAt=time;Snd.crack(true);shards(cellX(c),rowY(r),7);
+        if(mode==='play'&&r===pr&&c===pc&&mv<=0){why=cell.ball?'ball':cell.melt?'melt':cell.wasSnow&&cell.thin0?'snow':cell.thin0?'thin':'stand';fall();}}}}
+  if(mode!=='play')return;
+  {const wr=rows[pr];if(wr.t==='ice'&&wr.lake.kind==='wind'){
+      if(gust.warn>0){if((gust.warn-=dt)<=0){gust.push=gust.dir;gust.blow=.5;Snd.burst(.35,900,.12,'bandpass');}}
+      else if((gust.t-=dt)<=0){gust.dir=Math.random()<.5?-1:1;gust.warn=GUST_WARN;gust.t=rnd(GUST_GAP[0],GUST_GAP[1]);pop(VW/2,206,gust.dir<0?'←　風來了':'風來了　→',PAPER,true,{life:GUST_WARN,dur:GUST_WARN,size:24});Snd.burst(.5,500,.05,'bandpass');}
+      if(gust.push&&mv<=0){const d=gust.push;gust.push=0;blown=true;if(move(0,d,true)===false)blown=false;if(mode!=='play')return;}
+    }else{gust.warn=0;gust.push=0;gust.t=Math.max(gust.t,1.2);}
+    gust.blow=Math.max(0,gust.blow-dt);}
+  {const wr=rows[pr],onIce=wr.t==='ice'&&wr.lake.n>=PAL_FROM;catEv.show=Math.max(0,catEv.show-dt);
+    for(let i=ball.hits.length-1;i>=0;i--)if((ball.hits[i].t-=dt)<=0)ball.hits.splice(i,1);
+    for(let i=ball.list.length-1;i>=0;i--){const b=ball.list[i];if((b.warn-=dt)>0)continue;ball.list.splice(i,1);ball.hits.push({r:b.r,c:b.c,t:.3});
+      const c=cellAt(b.r,b.c),me=b.r===pr&&b.c===pc;Snd.burst(.14,700,.14,'lowpass');shards(cellX(b.c),rowY(b.r),6,'#ffffff');if(!c||c.hole)continue;
+      if(c.breakT<0&&c.hp>0){c.hp=Math.max(0,c.hp-BALL_DMG);c.thin0=c.hp<=1;if(c.hp<=0){c.breakT=me?BALL_GRACE:GRACE;c.ball=true;Snd.crack(true);}else Snd.crack(false);}
+      else if(me&&c.breakT>BALL_GRACE){c.breakT=BALL_GRACE;c.ball=true;}
+      if(me){shake=Math.max(shake,7);flash=Math.max(flash,.18);if(c.hp<=0)pop(cellX(pc),rowY(pr)-50,'被砸中了，快走！',BAND);}}
+    if(onIce&&!ball.list.length&&(ball.t-=dt)<=0){const n=wr.lake.n,k=n>=BALL_3?3:n>=BALL_2?2:1,opts=[];ball.t=rnd(BALL_GAP[0],BALL_GAP[1])*Math.max(.6,1-.03*n);
+      for(let r=pr+1;r<=Math.min(pr+3,wr.lake.end);r++)for(let c=Math.max(0,pc-1);c<=Math.min(COLS-1,pc+1);c++){const q=cellAt(r,c);if(q&&!q.hole&&q.breakT<0&&q.hp>0)opts.push([r,c]);}
+      if(Math.random()<BALL_ME)ball.list.push({r:pr,c:pc,warn:BALL_WARN});
+      while(ball.list.length<k&&opts.length){const o=opts.splice((Math.random()*opts.length)|0,1)[0];ball.list.push({r:o[0],c:o[1],warn:BALL_WARN+ball.list.length*.18});}
+      if(ball.list.length)Snd.blip(1500,500,BALL_WARN,'sine',.05);}
+    if(catEv.steal>0){if((catEv.steal-=dt)<=0){const q=cellAt(catEv.r,catEv.c);catEv.show=.5;if(q&&q.fish){q.fish=false;Snd.blip(600,300,.16,'square',.06);pop(cellX(catEv.c),rowY(catEv.r)-38,'魚被貓吃掉了',BAND);}}}
+    else if(onIce&&(catEv.t-=dt)<=0){catEv.t=rnd(CAT_GAP[0],CAT_GAP[1]);let f=null,sn=null,fd=99,sd=99;
+      for(let r=pr+1;r<=Math.min(pr+5,wr.lake.end);r++)for(let c=0;c<COLS;c++){const q=cellAt(r,c);if(!q||q.hole)continue;const d=(r-pr)+Math.abs(c-pc)*.6;if(q.fish&&d<fd){fd=d;f=[r,c];}if(q.snow&&r<=pr+4&&d<sd){sd=d;sn=[r,c];}}
+      if(f){catEv.r=f[0];catEv.c=f[1];catEv.steal=CAT_EAT;Snd.blip(700,1050,.1,'triangle',.07);pop(cellX(f[1]),rowY(f[0])-38,'這條我要了',PAPER);}
+      else if(sn){cellAt(sn[0],sn[1]).snow=false;catEv.r=sn[0];catEv.c=sn[1];catEv.show=1.2;Snd.blip(880,1175,.09,'triangle',.07);pop(cellX(sn[1]),rowY(sn[0])-38,'幫你看過了',PAPER);}}}
+  if((chatT-=dt)<=0){if(Clips.src||Clips.pending)chatT=1;else{Clips.play('play');chatT=rnd(CHAT_GAP[0],CHAT_GAP[1]);}}
+  if(mv>0&&(mv-=dt)<=0){mv=0;arrive();if(mode!=='play')return;}
+  // 站著不動：冰一直在吃力，每 STAND 秒再裂一級
+  const cell=mv<=0?cellAt(pr,pc):null;
+  if(cell&&cell.hp>0&&(standT+=dt)>=STAND){standT=0;cell.hp--;cell.thin0=false;Snd.crack(cell.hp<=0);shake=Math.max(shake,cell.hp<=0?5:2);if(cell.hp<=0){cell.breakT=GRACE;shards(cellX(pc),rowY(pr),4);pop(cellX(pc),rowY(pr)-50,'快走！',BAND);}}
+}
+
+/* ───────── 畫面 ───────── */
+const gameEl=$('game'),cv=$('c'),g=cv.getContext('2d');
+const reduced=window.matchMedia&&matchMedia('(prefers-reduced-motion:reduce)').matches;
+let cw=1,ch=1,dpr=1,scale=1,ox=0,oy=0,wx0=0,wx1=VW,wy0=0,wy1=VH;
+function resize(){
+  const b=gameEl.getBoundingClientRect();cw=Math.max(1,b.width);ch=Math.max(1,b.height);dpr=Math.min(window.devicePixelRatio||1,2);
+  cv.width=Math.round(cw*dpr);cv.height=Math.round(ch*dpr);scale=Math.min(cw/VW,ch/VH);ox=(cw-VW*scale)/2;oy=(ch-VH*scale)/2;
+  wx0=-ox/scale;wx1=(cw-ox)/scale;wy0=-oy/scale;wy1=(ch-oy)/scale;
+}
+const rowY=r=>FEET-(r-camR)*RH;
+const ICE=['#8cc3e2','#9fd0ea','#cfe9f7','#f4fbff'],EDGE=['#5d9cc4','#6aa9cf','#93c4de','#b9d9ea'];
+function drawCell(cell,r,c){
+  const x=cellX(c),y=rowY(r),w=TW-6,h=RH-8;if(cell.hole){   // 剛破掉的洞：幾塊碎冰漂著
+    const age=time-(cell.holeAt||-9);if(age<4){g.globalAlpha=clamp(1-age/4,0,1)*.9;g.fillStyle='#cfe9f7';for(let i=0;i<3;i++){const a=cell.seed+i*2.1;g.beginPath();g.ellipse(x+Math.cos(a)*14+Math.sin(time*1.3+a)*2,y+Math.sin(a)*9+Math.cos(time*1.1+a)*2,6-i,4-i*.5,a,0,TAU);g.fill();}g.globalAlpha=1;}return;}
+  const brk=cell.breakT>=0,sx=brk&&!reduced?(Math.random()-.5)*3:0,sy=brk&&!reduced?(Math.random()-.5)*3:0,hp=cell.snow?3:cell.hp;
+  g.save();g.translate(x+sx,y+sy);
+  g.fillStyle=cell.snow?'#c9dbe8':EDGE[hp];rrect(g,-w/2,-h/2+4,w,h,10);g.fill();                                       // 冰的側面（厚度）
+  g.globalAlpha=cell.snow?1:hp<=1?.8:1;g.fillStyle=cell.snow?'#ffffff':brk&&Math.sin(time*40)>0?'#ffffff':ICE[hp];rrect(g,-w/2,-h/2,w,h-(hp>=2||cell.snow?5:2),10);g.fill();g.globalAlpha=1;
+  if(cell.snow){g.fillStyle='#e6f0f7';for(let i=0;i<5;i++){g.beginPath();g.arc((hash(cell.seed,i)-.5)*(w-16),(hash(cell.seed,i+9)-.5)*(h-20)-2,3+hash(cell.seed,i+3)*3,0,TAU);g.fill();}}
+  else{if(cell.slip){g.strokeStyle='rgba(255,255,255,.85)';g.lineWidth=3;g.lineCap='round';g.beginPath();for(const q of[-14,0,14]){g.moveTo(q-7,6);g.lineTo(q+7,-10);}g.stroke();}
+    if(cell.fish){g.fillStyle='#ff9d3c';g.beginPath();g.ellipse(-2,2,9,5,-.2,0,TAU);g.fill();g.beginPath();g.moveTo(6,0);g.lineTo(14,-5);g.lineTo(13,6);g.closePath();g.fill();g.fillStyle=INK;g.beginPath();g.arc(-6,1,1.4,0,TAU);g.fill();}
+    // 裂痕：每少一級多幾條，快破的時候滿滿都是
+    const n=(cell.max-cell.hp)*2+(cell.max<=1?1:0)+(brk?4:0);if(n>0){g.strokeStyle='rgba(31,42,68,.55)';g.lineWidth=1.6;g.lineCap='round';g.beginPath();
+      for(let i=0;i<n;i++){const a=hash(cell.seed,i)*TAU,l=10+hash(cell.seed,i+20)*16;g.moveTo(Math.cos(a)*3,Math.sin(a)*3);const mx=Math.cos(a+.5)*l*.5,my=Math.sin(a+.5)*l*.4;g.lineTo(mx,my);g.lineTo(Math.cos(a)*l,Math.sin(a)*l*.75);}g.stroke();}}
+  g.restore();
+}
+function drawShore(row,r){
+  const y=rowY(r),top=y-RH/2;g.fillStyle='#eef6fb';g.fillRect(wx0,top,wx1-wx0,RH);g.fillStyle='rgba(159,208,234,.35)';for(let i=0;i<7;i++){const x=wx0+hash(r,i)*(wx1-wx0);g.beginPath();g.ellipse(x,top+10+hash(r,i+5)*(RH-20),14+hash(r,i+8)*14,4,0,0,TAU);g.fill();}
+  for(const[i,sd]of[[0,-1],[1,1]]){const x=sd<0?wx0+18+hash(r,3)*14:wx1-18-hash(r,4)*14;if(row.goal&&sd>0)continue;g.fillStyle='#8a6a48';g.fillRect(x-3,y+2,6,12);g.fillStyle='#3f7d5a';g.strokeStyle=INK;g.lineWidth=2.2;g.lineJoin='round';for(const[q,s]of[[0,16],[-12,13],[-22,9]]){g.beginPath();g.moveTo(x-s,y+4+q);g.lineTo(x,y-14+q);g.lineTo(x+s,y+4+q);g.closePath();g.fill();g.stroke();}}
+  if(row.goal){const x=wx1-44;g.strokeStyle=INK;g.lineWidth=2.6;g.lineJoin='round';g.beginPath();g.moveTo(x,y+14);g.lineTo(x,y-26);g.stroke();g.fillStyle=BAND;g.beginPath();g.moveTo(x,y-26);g.lineTo(x+30,y-19);g.lineTo(x,y-11);g.closePath();g.fill();g.stroke();
+    g.fillStyle=PAPER;g.font='900 9px '+FONT;g.textAlign='left';g.textBaseline='middle';g.fillText('對岸',x+3,y-18.5);g.textBaseline='alphabetic';}
+}
+// 薄冰哥：白色的大圓頭、小耳朵、腮紅、w 形的嘴，穿黑色長大衣、立領、手插口袋，走在冰上。
+// o：hop 跳到一半、shiver 發抖、sweat 冒汗、scared 眼眶含淚、sink 往下沉（0~1）
+function drawHero(x,y,o){
+  g.save();g.translate(x,y);const s=1-(o.sink||0)*.75,sh=o.shiver&&!reduced?Math.sin(time*46)*1.3:0,fl=Math.sin(time*7)*(o.hop?3.2:1.3),COAT='#23232e';
+  g.fillStyle='rgba(31,42,68,.22)';g.beginPath();g.ellipse(0,17,16*s,5*s,0,0,TAU);g.fill();
+  g.translate(sh,-(o.hop||0)*10+(o.sink||0)*14);g.scale(s,s);g.lineJoin='round';g.lineCap='round';g.strokeStyle=INK;g.lineWidth=2.6;
+  g.fillStyle=INK;for(const sd of[-1,1]){g.beginPath();g.ellipse(sd*5.5,16,5.2,3.2,0,0,TAU);g.fill();}                         // 靴子
+  g.fillStyle='#16161d';g.fillRect(-7,7,14,8);                                                                                // 褲子
+  g.fillStyle=COAT;g.beginPath();g.moveTo(-9.5,-7);g.lineTo(9.5,-7);g.lineTo(13.5+fl,13);g.lineTo(2.2+fl*.5,13);g.lineTo(0,6.5);g.lineTo(-2.2+fl*.3,13);g.lineTo(-13.5+fl*.4,13);g.closePath();g.fill();g.stroke();   // 黑色長大衣，下襬開衩、會飄
+  g.strokeStyle='#55556a';g.lineWidth=1.5;g.beginPath();g.moveTo(0,-5);g.lineTo(0,6);g.moveTo(-10.4,2);g.lineTo(10.4,2);g.stroke();                 // 門襟、腰帶
+  g.fillStyle='#9a9aad';g.fillRect(-1.8,.6,3.6,2.8);g.strokeStyle='#9a9aad';g.lineWidth=1.2;g.beginPath();g.moveTo(3.5,3.2);g.quadraticCurveTo(6.5,9,10,3.6);g.stroke();   // 皮帶扣、腰間的鍊子
+  g.strokeStyle=INK;g.lineWidth=2.6;
+  for(const sd of[-1,1]){g.fillStyle=COAT;g.beginPath();g.ellipse(sd*10.8,-.5,3.5,6.8,sd*.3,0,TAU);g.fill();g.stroke();}        // 袖子：手插在口袋裡
+  g.translate(0,-20);
+  g.fillStyle='#ffffff';for(const sd of[-1,1]){g.beginPath();g.arc(sd*10.5,-11.5,4.6,0,TAU);g.fill();g.stroke();}              // 小耳朵
+  g.beginPath();g.ellipse(0,0,15.5,14.2,0,0,TAU);g.fill();g.stroke();                                                          // 圓圓的白色大頭
+  g.fillStyle='rgba(232,92,92,.8)';for(const sd of[-1,1]){g.beginPath();g.ellipse(sd*10.6,5.4,3.4,2.3,0,0,TAU);g.fill();}     // 腮紅
+  g.lineWidth=2;g.beginPath();if(o.scared){g.moveTo(-9.3,-6.6);g.lineTo(-4.8,-8.4);g.moveTo(9.3,-6.6);g.lineTo(4.8,-8.4);}else{g.moveTo(-9.3,-8.4);g.lineTo(-4.8,-7.2);g.moveTo(9.3,-8.4);g.lineTo(4.8,-7.2);}g.stroke();   // 眉毛離眼睛一段距離：岸上嚴肅，冰上垮成八字
+  g.fillStyle=INK;g.beginPath();g.ellipse(-6.2,.8,2.5,3.1,0,0,TAU);g.ellipse(6.2,.8,2.5,3.1,0,0,TAU);g.fill();g.fillStyle='#ffffff';g.beginPath();g.arc(-6.9,-.4,.95,0,TAU);g.arc(5.5,-.4,.95,0,TAU);g.fill();
+  const q=o.scared&&!reduced?Math.sin(time*30)*.5:0;g.lineWidth=1.9;g.beginPath();g.moveTo(-3.7,6.3+q);g.quadraticCurveTo(-1.85,9.7-q,0,6.8+q);g.quadraticCurveTo(1.85,9.7-q,3.7,6.3+q);g.stroke();   // w 形的微笑；怕的時候在抖
+  if(o.scared){g.fillStyle='#7fc4e8';for(const sd of[-1,1]){const d=(time*2.2+(sd>0?.5:0))%1;g.globalAlpha=1-d*.6;g.beginPath();g.ellipse(sd*9.4,4.6+d*5,1.6,2.3,0,0,TAU);g.fill();}g.globalAlpha=1;}
+  if(o.sweat){g.fillStyle='#7fc4e8';g.beginPath();g.moveTo(-16,-13);g.quadraticCurveTo(-20,-7,-16,-6);g.quadraticCurveTo(-12,-7,-16,-13);g.fill();}
+  g.lineWidth=2.6;g.fillStyle=COAT;g.beginPath();g.moveTo(-12.5,9.6);g.quadraticCurveTo(0,17.4,12.5,9.6);g.lineTo(11,15.6);g.quadraticCurveTo(0,19.4,-11,15.6);g.closePath();g.fill();g.stroke();   // 立起來的高領，包住下巴
+  g.restore();
+}
+// 兩個朋友：一隻是白色、頭頂藍色、尖耳朵的貓；一隻是奶油色、長耳朵的兔子，半瞇著眼斜眼看人。
+// 平常在對岸等；他掉下去的時候會湊過來吐槽。
+function palBlush(y){
+  for(const sd of[-1,1]){g.fillStyle='rgba(255,128,150,.8)';g.beginPath();g.ellipse(sd*8.4,y,3.1,2.1,0,0,TAU);g.fill();
+    g.strokeStyle='#c9485c';g.lineWidth=.9;g.beginPath();for(const k of[-1.5,0,1.5]){g.moveTo(sd*8.4+k+.6,y-1.1);g.lineTo(sd*8.4+k-.6,y+1.1);}g.stroke();}   // 腮紅上的斜線
+  g.strokeStyle=INK;
+}
+function palMouth(y){g.strokeStyle=INK;g.lineWidth=1.7;g.beginPath();g.moveTo(-3,y);g.quadraticCurveTo(-1.5,y+2.8,0,y+.4);g.quadraticCurveTo(1.5,y+2.8,3,y);g.stroke();}
+function drawPal(x,y,smug){
+  g.save();g.translate(x,y);g.lineJoin='round';g.lineCap='round';g.strokeStyle=INK;g.lineWidth=2.4;g.fillStyle='rgba(31,42,68,.2)';g.beginPath();g.ellipse(0,14,13,4,0,0,TAU);g.fill();
+  const w=Math.sin(time*9)*.5,BLUE='#5b9bd5';g.fillStyle='#ffffff';g.save();g.translate(12,2);g.rotate(-.9+w);g.beginPath();g.ellipse(6,0,6,3.4,0,0,TAU);g.fill();g.stroke();g.restore();
+  g.fillStyle=BLUE;for(const sd of[-1,1]){g.beginPath();g.moveTo(sd*11.5,-7);g.lineTo(sd*10.5,-17.5);g.lineTo(sd*3.5,-12.5);g.closePath();g.fill();g.stroke();}   // 藍色的尖耳朵
+  g.fillStyle='#ffffff';g.beginPath();g.moveTo(-13,2);g.bezierCurveTo(-14,-18,14,-18,13,2);g.bezierCurveTo(13,16,-13,16,-13,2);g.closePath();g.fill();g.stroke();                       // 白色的身體
+  g.save();g.clip();g.fillStyle=BLUE;g.beginPath();g.moveTo(-15,-20);g.lineTo(15,-20);g.lineTo(15,-6.5);g.quadraticCurveTo(7,-9.5,0,-7.2);g.quadraticCurveTo(-7,-9.5,-15,-6.5);g.closePath();g.fill();g.lineWidth=1.6;g.stroke();g.restore();   // 頭頂那一塊藍
+  g.lineWidth=2.4;g.beginPath();g.moveTo(-13,2);g.bezierCurveTo(-14,-18,14,-18,13,2);g.stroke();
+  palBlush(6);g.lineWidth=1.5;g.beginPath();g.moveTo(-7.4,-4.6);g.lineTo(-4.6,-5);g.moveTo(7.4,-4.6);g.lineTo(4.6,-5);g.stroke();                                          // 短短的眉毛
+  g.fillStyle=INK;g.beginPath();g.ellipse(-5.2,1,2.2,2.8,0,0,TAU);g.ellipse(5.2,1,2.2,2.8,0,0,TAU);g.fill();g.fillStyle='#ffffff';g.beginPath();g.arc(-5.8,0,.85,0,TAU);g.arc(4.6,0,.85,0,TAU);g.fill();
+  palMouth(5.2);g.restore();
+}
+// look：斜眼看哪一邊（-1 左、1 右）
+function drawPal2(x,y,smug,look){
+  g.save();g.translate(x,y);g.lineJoin='round';g.lineCap='round';g.strokeStyle=INK;g.lineWidth=2.4;g.fillStyle='rgba(31,42,68,.2)';g.beginPath();g.ellipse(0,14,12,4,0,0,TAU);g.fill();
+  const b=Math.sin(time*6)*.08,L=look||1;
+  for(const sd of[-1,1]){g.save();g.translate(sd*5.5,-11);g.rotate(sd*(.12+b));g.fillStyle='#fff1c9';g.beginPath();g.ellipse(0,-11,4.2,12,0,0,TAU);g.fill();g.stroke();g.fillStyle='#ffb9c4';g.beginPath();g.ellipse(0,-11,1.8,8,0,0,TAU);g.fill();g.restore();}   // 長耳朵
+  g.fillStyle='#fff1c9';g.beginPath();g.moveTo(-12,2);g.bezierCurveTo(-13,-17,13,-17,12,2);g.bezierCurveTo(12,16,-12,16,-12,2);g.closePath();g.fill();g.stroke();
+  palBlush(5.6);g.lineWidth=1.4;g.beginPath();g.moveTo(-9.4,-5.4);g.quadraticCurveTo(-6.4,-9,-2.8,-6.6);g.moveTo(9.4,-5.4);g.quadraticCurveTo(6.4,-9,2.8,-6.6);g.stroke();        // 挑起來的眉毛
+  for(const sd of[-1,1]){const cx=sd*5.2,cy=-.6;g.fillStyle='#ffffff';g.beginPath();g.moveTo(cx-3.3,cy);g.lineTo(cx+3.3,cy);g.ellipse(cx,cy,3.3,2.7,0,0,Math.PI);g.closePath();g.fill();g.lineWidth=1.3;g.stroke();
+    g.fillStyle=INK;g.beginPath();g.arc(cx+L*1.5,cy+1.25,1.25,0,TAU);g.fill();}                                                                                             // 半瞇的眼睛，斜眼看
+  palMouth(4.6);g.restore();
+}
+// 計程車：從上往下看，車頭朝前（畫面上方）
+function drawTaxi(x,y){
+  g.save();g.translate(x,y+Math.sin(time*40)*.6);g.lineJoin='round';g.strokeStyle=INK;g.lineWidth=2.6;
+  g.fillStyle='rgba(31,42,68,.25)';g.beginPath();g.ellipse(0,6,24,34,0,0,TAU);g.fill();
+  g.fillStyle=INK;for(const sx of[-1,1])for(const sy of[-17,15]){g.beginPath();g.rect(sx*19-3,sy-6,6,12);g.fill();}                      // 輪子
+  g.fillStyle='#ffc93c';g.beginPath();g.moveTo(-17,-22);g.quadraticCurveTo(-17,-32,-8,-33);g.lineTo(8,-33);g.quadraticCurveTo(17,-32,17,-22);g.lineTo(17,24);g.quadraticCurveTo(17,31,10,31);g.lineTo(-10,31);g.quadraticCurveTo(-17,31,-17,24);g.closePath();g.fill();g.stroke();   // 車身
+  g.fillStyle='#bfe6f7';g.beginPath();g.moveTo(-12,-16);g.lineTo(12,-16);g.lineTo(10,-8);g.lineTo(-10,-8);g.closePath();g.fill();g.stroke();g.beginPath();g.moveTo(-10,14);g.lineTo(10,14);g.lineTo(12,21);g.lineTo(-12,21);g.closePath();g.fill();g.stroke();   // 前後擋風玻璃
+  g.fillStyle=INK;for(let i=0;i<6;i++)if(i%2===0){g.fillRect(-15+i*5,-5,5,4);}else g.fillRect(-15+i*5,-1,5,4);                           // 車頂的棋盤格
+  g.fillStyle='#ffffff';g.beginPath();g.rect(-8,5,16,7);g.fill();g.stroke();g.fillStyle=INK;g.font='900 6px '+FONT;g.textAlign='center';g.fillText('TAXI',0,10.6);g.textAlign='left';
+  g.fillStyle='#fff6c4';for(const sx of[-1,1]){g.beginPath();g.ellipse(sx*11,-31,3.4,2,0,0,TAU);g.fill();}                                // 車頭燈
+  g.restore();
+}
+const ease=t=>t*t*(3-2*t);
+function render(){
+  const W=cv.width,H=cv.height,k=dpr*scale;let sx=0,sy=0;if(shake>0&&!reduced){sx=(Math.random()-.5)*shake;sy=(Math.random()-.5)*shake;}
+  g.setTransform(1,0,0,1,0,0);g.fillStyle=WATER;g.fillRect(0,0,W,H);g.setTransform(k,0,0,k,(ox+sx)*dpr,(oy+sy)*dpr);
+  // 湖水的波紋
+  g.strokeStyle='rgba(255,255,255,.13)';g.lineWidth=2;g.lineCap='round';g.beginPath();for(let i=0;i<26;i++){const x=wx0+hash(i,1)*(wx1-wx0),y=wy0+((hash(i,2)*900+camR*RH+time*6)%(wy1-wy0+40))-20;g.moveTo(x-9,y);g.quadraticCurveTo(x,y-4,x+9,y);}g.stroke();
+  const r0=Math.floor(camR-(wy1-FEET)/RH-1),r1=Math.ceil(camR+(FEET-wy0)/RH+1),LAND={t:'shore'};need(r1);
+  for(let r=r1;r>=r0;r--){const row=rows[r]||LAND;if(row.t==='shore')drawShore(row,r);else for(let c=0;c<COLS;c++)drawCell(row.cells[c],r,c);}
+  // 融冰線：一條暖色的波浪往上推
+  if(melt.lake&&melt.wait<=0&&mode!=='over'){const y=rowY(melt.r)+RH/2;if(y<wy1+20){const gr=g.createLinearGradient(0,y-10,0,y+70);gr.addColorStop(0,'rgba(255,170,90,.55)');gr.addColorStop(1,'rgba(255,170,90,0)');g.fillStyle=gr;g.beginPath();g.moveTo(wx0,y+70);for(let x=wx0;x<=wx1;x+=12)g.lineTo(x,y+Math.sin(x*.07+time*5)*4);g.lineTo(wx1,y+70);g.closePath();g.fill();
+      g.fillStyle='#ffd9a8';g.font='900 12px '+FONT;g.textAlign='center';g.fillText('融冰',VW/2,y+18);g.textAlign='left';}}
+  for(let r=r1;r>=Math.max(0,r0);r--){const row=rows[r];if(row.t==='shore'&&row.goal){drawPal(wx1-78,rowY(r)+4);drawPal2(wx0+74,rowY(r)+2,false,1);}}
+  for(const b of ball.list){const k=clamp(1-b.warn/BALL_WARN,0,1),x=cellX(b.c),y=rowY(b.r);g.fillStyle=`rgba(20,33,58,${.15+.3*k})`;g.beginPath();g.ellipse(x,y+4,6+12*k,3+6*k,0,0,TAU);g.fill();g.strokeStyle=`rgba(229,67,47,${.5+.5*k})`;g.lineWidth=3;g.beginPath();g.arc(x,y,25-10*k,0,TAU);g.stroke();
+    const by=lerp(y-420,y-6,k*k),bx=x+(1-k)*26;g.fillStyle='#ffffff';g.strokeStyle=INK;g.lineWidth=2.2;g.beginPath();g.arc(bx,by,7+3*k,0,TAU);g.fill();g.stroke();}
+  for(const h of ball.hits){const k=1-h.t/.3,x=cellX(h.c),y=rowY(h.r);g.strokeStyle=`rgba(255,255,255,${1-k})`;g.lineWidth=3;g.beginPath();g.arc(x,y,8+26*k,0,TAU);g.stroke();}
+  if(catEv.steal>0){const x=cellX(catEv.c),y=rowY(catEv.r);drawPal(x-17,y-2-Math.abs(Math.sin(time*10))*2.5);g.strokeStyle=BAND;g.lineWidth=3.5;g.lineCap='round';g.beginPath();g.arc(x+6,y-26,7,-Math.PI/2,-Math.PI/2+TAU*catEv.steal/CAT_EAT);g.stroke();}
+  else if(catEv.show>0){g.save();g.globalAlpha=clamp(catEv.show/.25,0,1);drawPal(cellX(catEv.c),rowY(catEv.r)-2-Math.abs(Math.sin(catEv.show*9))*3);g.restore();}
+  // 薄冰哥
+  if(mode!=='over'||true){const t=mv>0?1-mv/mvT:1,e=ease(t),x=lerp(cellX(fc),cellX(pc),e),y=lerp(rowY(fr),rowY(pr),e),cell=mv<=0?cellAt(pr,pc):null,sink=mode==='fall'?clamp(fallT/.5,0,1):mode==='over'?1:0;
+    if(ride){const tx=cellX(pc),ty=ride.t<RIDE_IN?lerp(rowY(pr)+330,rowY(pr)+6,ease(ride.t/RIDE_IN)):rowY(ride.r)+6;if(ride.t<RIDE_IN*.9)drawHero(x,y-4,{scared:rows[pr].t==='ice'});drawTaxi(tx,ty);}
+    else if(sink<1)drawHero(x,y-4,{hop:mv>0&&!slide?Math.sin(t*Math.PI)*(mvT>MOVE_T?2.4:1):0,shiver:!!cell&&(cell.hp<=1||standT>.8),sweat:!!cell&&cell.hp<=1,scared:mode!=='title'&&rows[pr].t==='ice',sink});
+    if(mode==='fall'&&fallT>.55){const q=ease(clamp((fallT-.55)/.3,0,1)),hx=clamp(x,wx0+70,wx1-70);drawPal(lerp(wx0-30,hx-44,q),y+4,true);drawPal2(lerp(wx1+30,hx+44,q),y+2,true,-1);}
+    if(mode==='fall'){g.strokeStyle='rgba(255,255,255,.7)';g.lineWidth=2.5;for(const q of[0,.35]){const a=(fallT+q)%.9/.9;g.globalAlpha=1-a;g.beginPath();g.ellipse(x,y+6,10+a*30,4+a*11,0,0,TAU);g.stroke();}g.globalAlpha=1;}}
+  for(const p of parts){g.globalAlpha=clamp(p.life*3,0,1);g.fillStyle=p.col;if(p.sq){g.fillRect(p.x-p.r,p.y-p.r,p.r*2,p.r*1.6);}else{g.beginPath();g.arc(p.x,p.y,p.r,0,TAU);g.fill();}}g.globalAlpha=1;
+  // 起霧的湖：只看得清前面兩三排
+  const row=rows[pr];if(mode==='play'&&row&&row.t==='ice'&&row.lake.fog){const y=rowY(pr+2.6),gr=g.createLinearGradient(0,y-90,0,y+30);gr.addColorStop(0,'rgba(232,242,248,.97)');gr.addColorStop(1,'rgba(232,242,248,0)');g.fillStyle='rgba(232,242,248,.97)';g.fillRect(wx0,wy0,wx1-wx0,y-90-wy0);g.fillStyle=gr;g.fillRect(wx0,y-90,wx1-wx0,120);}
+  if(mode==='play'&&(gust.warn>0||gust.blow>0)){const strong=gust.blow>0,sp=strong?900:260;g.strokeStyle=`rgba(255,255,255,${strong?.55:.25})`;g.lineWidth=2;g.lineCap='round';g.beginPath();for(let i=0;i<14;i++){const yy=wy0+hash(i,7)*(wy1-wy0),xx=wx0+((hash(i,8)*440+time*sp*gust.dir)%440+440)%440-40;g.moveTo(xx,yy);g.lineTo(xx+gust.dir*(strong?46:22),yy);}g.stroke();}
+  g.textAlign='center';g.textBaseline='middle';g.lineJoin='round';
+  for(const p of pops){const e=1-p.life/p.dur,pp=1+.45*Math.pow(clamp(1-e*6,0,1),2);g.font='900 '+(p.size||(p.big?22:16))+'px '+FONT;g.globalAlpha=clamp(p.life*4,0,1);g.save();g.translate(clamp(p.x,wx0+80,wx1-80),p.y-e*22);g.scale(pp,pp);g.lineWidth=5.5;g.strokeStyle=INK;g.strokeText(p.text,0,0);g.fillStyle=p.col;g.fillText(p.text,0,0);g.restore();}
+  g.globalAlpha=1;g.textBaseline='alphabetic';g.textAlign='left';g.setTransform(1,0,0,1,0,0);
+  if(flash>0){g.fillStyle='#fff';g.globalAlpha=flash*.6;g.fillRect(0,0,W,H);g.globalAlpha=1;}
+}
+
+/* ───────── HUD 與流程 ───────── */
+const el={hud:$('hud'),num:$('num'),score:$('score'),cap:$('cap'),hint:$('hint'),title:$('title'),over:$('over'),best:$('best'),mute:$('mute')};
+let lastNum=-1,lastScore=-1,lastCombo=null,lastCap=null,lastHint=null,lastKit=null,paused=false;
+function muteIcon(){el.mute.innerHTML=Snd.on
+  ?'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9.5v5h3.5L12 18.5v-13L7.5 9.5z" fill="currentColor"/><path d="M15.5 9a4.2 4.2 0 0 1 0 6M18 6.5a8 8 0 0 1 0 11"/></svg>'
+  :'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9.5v5h3.5L12 18.5v-13L7.5 9.5z" fill="currentColor"/><path d="M16 9.5l5 5M21 9.5l-5 5"/></svg>';
+  el.mute.setAttribute('aria-pressed',String(!Snd.on));}
+function buy(k){const it=KIT[k];if(!it||bank<it.price||kit[k]+it.n>it.max)return false;bank-=it.price;kit[k]+=it.n;saveKit();Snd.init();Snd.blip(660,990,.1,'triangle',.1);renderShop();return true;}
+function renderShop(){
+  const has=Object.keys(KIT).filter(k=>kit[k]),html=`<p class="bank">手上有 <b>${bank}</b> 條魚${has.length?'　下一局帶：'+has.map(k=>KIT[k].name+(KIT[k].max>1?' ×'+kit[k]:'')).join('、'):'，可以換能力'}</p><div class="goods">`+
+    Object.keys(KIT).map(k=>{const it=KIT[k],full=kit[k]+it.n>it.max;return `<button class="buy" type="button" data-buy="${k}"${full||bank<it.price?' disabled':''}><b>${it.name}</b><span>${it.desc}</span><em>${full?'已帶上':it.price+' 條魚'}</em></button>`;}).join('')+'</div>';
+  $('shopT').innerHTML=html;$('shopO').innerHTML=html;$('shopT').hidden=bank<=0&&!has.length;
+}
+gameEl.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('[data-buy]');if(b&&!b.disabled)buy(b.dataset.buy);});
+function showBest(){el.best.textContent=best>0?`最佳紀錄　過了 ${best} 座湖　膽量 ${bestScore.toLocaleString('en-US')}`:'';}
+function hud(){
+  if(mode!=='play'&&mode!=='fall')return;
+  if(crossed!==lastNum){lastNum=crossed;el.num.textContent=crossed;}
+  if(score!==lastScore){lastScore=score;el.score.textContent=score.toLocaleString('en-US');}
+  const cb=combo>1?`如履薄冰 ×${combo}`:'';if(cb!==lastCombo){lastCombo=cb;$('combo').textContent=cb;}
+  if(capText!==lastCap){lastCap=capText;el.cap.textContent=capText;}
+  const row=rows[pr],L=row&&row.t==='ice'?row.lake:lakes[crossed],cell=cellAt(pr,pc);
+  const h=mode!=='play'?'':crossed===0&&pr<=1?'點一下往前走一格；往左、往右、往下滑，往那邊走一格':crossed===0&&cell&&cell.hp<=0?'這塊快破了，快走！':crossed===0?'越藍的冰越薄。薄冰只能踩過去，不能停':crossed===1&&row.t==='shore'&&L&&L.snow?'蓋著雪的冰，看不出底下多厚':crossed===3&&row.t==='shore'&&!(L&&L.kind)?'亮亮的是滑冰，踩上去會一路滑到底':L&&L.kind?`${KINDS[L.kind].name}：${KINDS[L.kind].tip}`:'';
+  if(h!==lastHint){lastHint=h;el.hint.textContent=h;}
+  const ks=lives+'/'+jumps+'/'+taxis;if(ks!==lastKit){lastKit=ks;$('kit').textContent=lives>0?'掉下去可以爬起來一次':'';$('jump').hidden=jumps<=0;$('jumpN').textContent='×'+jumps;$('taxi').hidden=taxis<=0;}
+}
+const H=1/120;let acc=0,last=0,holdLoop=false;
+function setPaused(p){if(p&&(paused||mode!=='play'))return;if(!p&&!paused)return;paused=p;$('pause').hidden=!p;last=0;acc=0;if(p)Voice.stop();if(Snd.ctx){try{p?Snd.ctx.suspend():Snd.ctx.resume();}catch(e){}}if(p)$('resume').focus({preventScroll:true});}
+function frame(now){
+  const dt=Math.min(.05,(now-(last||now))/1000);last=now;
+  if(!paused&&!holdLoop){acc+=dt;let n=0;while(acc>=H&&n++<10){tick(H);acc-=H;}if(n>=10)acc=0;hud();}
+  render();requestAnimationFrame(frame);
+}
+
+/* ───────── 輸入 ─────────
+   點一下：往前走一格。往左、往右、往下滑：往那邊走一格；往上滑也是往前。一次觸控只算一個動作 */
+let tp=null;const SLOP=8,HSWIPE=14,VSWIPE=22;
+// 封面：第一次點封面（不是按鈕）的時候，放一次封面的那段話
+let titleHeard=false;
+gameEl.addEventListener('pointerdown',e=>{if(e.target.closest('button,a,.card'))return;e.preventDefault();Snd.init();
+  if(mode==='title'){if(!titleHeard&&Clips.has('title')){titleHeard=true;$('listen').hidden=true;Clips.decode();Clips.soon('title');}return;}
+  if(tp&&e.pointerId!==tp.id){move(1,0);return;}tp={id:e.pointerId,ox:e.clientX,oy:e.clientY,moved:false,done:false};});
+gameEl.addEventListener('pointermove',e=>{if(!tp||e.pointerId!==tp.id||tp.done)return;const dx=e.clientX-tp.ox,dy=e.clientY-tp.oy;
+  if(!tp.moved){if(Math.hypot(dx,dy)<SLOP)return;tp.moved=true;}
+  if(Math.abs(dx)>=HSWIPE&&Math.abs(dx)>=Math.abs(dy)){tp.done=true;move(0,dx>0?1:-1);}
+  else if(Math.abs(dy)>=VSWIPE&&Math.abs(dy)>Math.abs(dx)){tp.done=true;move(dy<0?1:-1,0);}});
+const tpEnd=e=>{if(!tp||e.pointerId!==tp.id)return;if(!tp.moved&&e.type==='pointerup')move(1,0);tp=null;};
+gameEl.addEventListener('pointerup',tpEnd);gameEl.addEventListener('pointercancel',tpEnd);
+gameEl.addEventListener('contextmenu',e=>e.preventDefault());
+// App 內建瀏覽器會把滑動當成「關掉這一頁」，所以遊戲畫面上的觸控不交給瀏覽器
+for(const t of['touchstart','touchmove'])gameEl.addEventListener(t,e=>{if(e.cancelable&&!(e.target.closest&&e.target.closest('button,a,.card')))e.preventDefault();},{passive:false});
+let lastTouchEnd=0;
+document.addEventListener('touchend',e=>{const now=Date.now(),btn=e.target&&e.target.closest&&e.target.closest('button,a');if(now-lastTouchEnd<=350&&!btn&&e.cancelable)e.preventDefault();lastTouchEnd=now;},{passive:false});
+for(const t of['gesturestart','gesturechange','gestureend'])document.addEventListener(t,e=>e.preventDefault(),{passive:false});
+document.addEventListener('dblclick',e=>e.preventDefault());
+document.addEventListener('visibilitychange',()=>{last=0;if(document.hidden)setPaused(true);});
+window.addEventListener('blur',()=>setPaused(true));
+window.addEventListener('pagehide',()=>setPaused(true));
+window.addEventListener('keydown',e=>{if(e.code==='Escape'||e.code==='KeyP'){if(!e.repeat)setPaused(!paused);return;}
+  if(mode==='play'&&!paused&&!e.repeat&&(e.code==='KeyJ'||e.code==='KeyT')){e.preventDefault();Snd.init();e.code==='KeyJ'?jump():taxi();return;}
+  const K={Space:[1,0],Enter:[1,0],ArrowUp:[1,0],KeyW:[1,0],ArrowDown:[-1,0],KeyS:[-1,0],ArrowLeft:[0,-1],KeyA:[0,-1],ArrowRight:[0,1],KeyD:[0,1]}[e.code];
+  if(paused||e.repeat||!K)return;if(e.target.closest&&e.target.closest('button,a'))return;e.preventDefault();Snd.init();
+  if(mode==='play')move(K[0],K[1]);else if((mode==='title'||mode==='over')&&K[0]===1)start();});
+$('start').addEventListener('click',start);
+$('jump').addEventListener('click',jump);$('taxi').addEventListener('click',taxi);
+$('again').addEventListener('click',start);
+$('pauseBtn').addEventListener('click',()=>setPaused(true));
+$('resume').addEventListener('click',()=>setPaused(false));
+el.mute.addEventListener('click',()=>{Snd.init();Snd.setOn(!Snd.on);muteIcon();});
+$('share').addEventListener('click',async()=>{
+  const link=document.querySelector('link[rel=canonical]'),out=$('copied');
+  const text=`我這一生如履薄冰，走過了 ${crossed} 座湖才掉下去（${WHY[why]||why}），膽量 ${score}。你說，你能走到對岸嗎？`+(link?' '+link.href:'');
+  try{await navigator.clipboard.writeText(text);out.textContent='已複製，貼到脆上炫耀吧';}
+  catch(e){out.textContent=text;const r=document.createRange();r.selectNodeContents(out);const s=getSelection();s.removeAllRanges();s.addRange(r);}
+});
+window.addEventListener('resize',resize);
+if(window.ResizeObserver)new ResizeObserver(resize).observe(gameEl);
+
+reset();muteIcon();showBest();renderShop();resize();requestAnimationFrame(frame);$('listen').hidden=!Clips.has('title')&&!CLIP_FILES.title.some(f=>f&&f.slice(0,5)!=='data:');
+window.__bi={COLS,STAND,GRACE,MOVE_T,get rows(){return rows},get lakes(){return lakes},get mode(){return mode},get pr(){return pr},get pc(){return pc},get mv(){return mv},get crossed(){return crossed},get score(){return score},get combo(){return combo},get fish(){return fish},get why(){return why},
+  get standT(){return standT},get meltR(){return melt.r},get meltOn(){return !!melt.lake&&melt.wait<=0},get clipsReady(){return Object.keys(Clips.buf).sort()},get clipDur(){const o={};for(const k in Clips.buf)o[k]=+Clips.buf[k].duration.toFixed(2);return o;},get lastClip(){return Clips.last.over},get chatT(){return chatT},gust,melt,KINDS,KIT,jump,taxi,buy,ball,catEv,get ride(){return ride},get bank(){return bank},set bank(v){bank=v;saveKit();renderShop();},get kit(){return kit},get lives(){return lives},get jumps(){return jumps},get taxis(){return taxis},get fish(){return fish},get fallT(){return fallT},set chatT(v){chatT=v},get clipOn(){return !!Clips.src},cellAt,need,move,start,tick,set loopHold(v){holdLoop=v;}};
+})();
+</script>
+<!--/PAGE-->
+</body>
+</html>
