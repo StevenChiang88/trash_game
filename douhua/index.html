@@ -267,28 +267,28 @@ const Snd={ctx:null,on:store.get('dh.mute')!=='1',
 };
 
 // 那句話用裝置內建的中文語音喊出來，調高、調快一點。沒有中文語音的裝置（例如部分 App 內建瀏覽器）就只有尖叫聲
-const Voice={ok:'speechSynthesis' in window&&'SpeechSynthesisUtterance' in window,v:null,warm:false,raw:null,buf:null,busy:false,src:null,
+const Voice={ok:'speechSynthesis' in window&&'SpeechSynthesisUtterance' in window,v:null,warm:false,want:false,raw:null,buf:null,busy:false,src:null,
   // 錄音檔：先把檔案抓下來，等玩家第一次點畫面、聲音系統開起來之後再解碼。跟其他音效走同一條路，所以靜音、暫停都管得到，iOS 也不用另外解鎖
-  load(){if(!VOICE_FILE)return;
+  load(){if(!VOICE_FILE)return;this.want=true;
     // 音檔直接寫在頁面裡的時候（試玩頁）自己解開，不經過網路請求：有些環境會擋掉對 data: 的請求
     if(VOICE_FILE.slice(0,5)==='data:'){try{const b=atob(VOICE_FILE.slice(VOICE_FILE.indexOf(',')+1)),u=new Uint8Array(b.length);for(let i=0;i<b.length;i++)u[i]=b.charCodeAt(i);this.raw=u.buffer;this.decode();}catch(e){}return;}
-    if(!window.fetch)return;fetch(VOICE_FILE).then(r=>r.ok?r.arrayBuffer():Promise.reject()).then(b=>{this.raw=b;this.decode();}).catch(()=>{});},
-  decode(){if(!this.raw||this.buf||this.busy||!Snd.ctx)return;this.busy=true;const done=b=>{this.buf=b;this.raw=null;},fail=()=>{this.raw=null;};
+    if(!window.fetch)return;fetch(VOICE_FILE).then(r=>r.ok?r.arrayBuffer():Promise.reject()).then(b=>{this.raw=b;this.decode();}).catch(()=>{this.want=false;});},
+  decode(){if(!this.raw||this.buf||this.busy||!Snd.ctx)return;this.busy=true;const done=b=>{this.buf=b;this.raw=null;},fail=()=>{this.raw=null;this.want=false;};
     try{const p=Snd.ctx.decodeAudioData(this.raw.slice(0),done,fail);if(p&&p.catch)p.catch(()=>{});}catch(e){fail();}},
   pick(){if(!this.ok)return;let vs=[];try{vs=speechSynthesis.getVoices()||[];}catch(e){}const L=v=>(v.lang||'').replace('_','-').toLowerCase();
     this.v=vs.find(v=>L(v)==='zh-tw')||vs.find(v=>L(v).startsWith('zh-tw'))||vs.find(v=>/^(zh-cn|zh-hans|zh-hant|cmn|zh$)/.test(L(v)))||null;},
   // iOS 的內建語音要先在點擊的當下講過一次（這裡講一句聽不到的），之後才能在別的時間點出聲
-  unlock(){this.stop();this.decode();if(!this.ok||this.warm)return;this.warm=true;try{this.pick();const u=new SpeechSynthesisUtterance(' ');u.volume=0;speechSynthesis.speak(u);}catch(e){}},
+  unlock(){this.stop();this.decode();if(this.want||!this.ok||this.warm)return;this.warm=true;try{this.pick();const u=new SpeechSynthesisUtterance(' ');u.volume=0;speechSynthesis.speak(u);}catch(e){}},
   // 有錄音檔就放錄音檔，沒有（或還沒載好）就用內建語音唸
   say(text){if(!Snd.on)return;
     if(this.buf&&Snd.ctx){if(this.src){try{this.src.stop();}catch(e){}this.src=null;}try{const c=Snd.ctx,n=c.createBufferSource(),g=c.createGain();n.buffer=this.buf;g.gain.value=VOICE_GAIN;n.connect(g);g.connect(Snd.master);n.start();this.src=n;}catch(e){}return;}
-    if(!this.ok)return;try{if(!this.v)this.pick();if(!this.v)return;speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(text);u.voice=this.v;u.lang=this.v.lang;u.pitch=1.8;u.rate=1.15;u.volume=1;speechSynthesis.speak(u);}catch(e){}},
+    if(this.want||!this.ok)return;try{if(!this.v)this.pick();if(!this.v)return;speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(text);u.voice=this.v;u.lang=this.v.lang;u.pitch=1.8;u.rate=1.15;u.volume=1;speechSynthesis.speak(u);}catch(e){}},
   stop(){if(this.src){try{this.src.stop();}catch(e){}this.src=null;}if(this.ok)try{speechSynthesis.cancel();}catch(e){}}};
 Voice.load();
 if(Voice.ok){Voice.pick();try{speechSynthesis.addEventListener('voiceschanged',()=>Voice.pick());}catch(e){}}
 
 /* ───────── 狀態 ───────── */
-let mode='title',time=0,rows=[],gen=0,pr=1,from=1,px=CX,tx=CX,inPud=false,minR=1,camR=1,stepT=0,buf=null,th=0,om=0,foot=1,streets=0,money=0,earned=0,spare=0,rescue=false,idle=0,lim=LIMIT,goalN=5,mods=[],windT=6,windWarn=false,windFx=0,winT=0,winBonus=0,eliseT=1,lastWon=false,best=parseInt(store.get('dh.best')||'0',10)||0;
+let mode='title',time=0,rows=[],gen=0,pr=1,from=1,px=CX,tx=CX,inPud=false,minR=1,camR=1,stepT=0,buf=null,th=0,om=0,foot=1,streets=0,money=0,earned=0,spare=0,rescue=false,idle=0,lim=LIMIT,goalN=5,mods=[],windT=6,windWarn=false,windFx=0,winT=0,winBonus=0,eliseT=1,lastWon=false,voiced=false,best=parseInt(store.get('dh.best')||'0',10)||0;
 let cause='',lastShock='step',dropT=0,dropX=CX,dropY=0,shake=0,flash=0,fx=CX-30,fr=1;
 const pops=[],splash=[],nm={r:0,x:0,t:0},dog={on:false,r:-5,x:CX,bark:0,eat:0};
 const has=m=>mods.includes(m),DOG_GAP=2.7,dogSpeed=()=>Math.min(1.05,.56+.035*Math.min(day,12)+.008*streets)*(1-.12*U('jerky'));
@@ -550,7 +550,7 @@ function revive(){
   pop(CX,rowY(pr)-122,'拿去啦，你欠我 30！',SUN,true,{life:1.3,dur:1.3});Snd.blip(520,780,.14,'triangle',.1);
 }
 function drop(why){
-  if(mode!=='play')return;mode='drop';dropT=0;cause=why;rescue=spare>0;dropX=plX()+26+clamp(th,-1,1)*18;dropY=rowY(stepT>0?from+(1-stepT/STEP_T):pr)+12;shake=14;flash=.7;Snd.splat();Snd.scream();
+  if(mode!=='play')return;mode='drop';dropT=0;cause=why;rescue=spare>0;dropX=plX()+26+clamp(th,-1,1)*18;dropY=rowY(stepT>0?from+(1-stepT/STEP_T):pr)+12;shake=14;flash=.7;Snd.splat();voiced=!!Voice.buf;if(voiced)Voice.say('');else Snd.scream();
   pop(CX,220,'啊————',PAPER,true,{huge:true,life:1.1,dur:1.1});
 }
 // 到家：今天過關。身上的零錢加上到家的獎金存起來，明天再來
@@ -589,7 +589,7 @@ function tick(dt){
   camR+=((stepT>0?from+(1-stepT/STEP_T):pr)-camR)*Math.min(1,dt*10);
   // 朋友貼在左後方，慢半拍跟上
   {const k=Math.min(1,dt*13),tr=stepT>0?from+(pr-from)*(1-stepT/STEP_T):pr;fx+=(px-30-fx)*k;fr+=(tr-fr)*k;}
-  if(mode==='drop'){dropT+=dt;if(dropT>.55&&dropT-dt<=.55){pop(CX,270,'我的豆花！30塊！',SUN,true,{huge:true,life:1.4,dur:1.4,rot:-.05});Voice.say('我的豆花！三十塊！');}
+  if(mode==='drop'){dropT+=dt;if(dropT>.55&&dropT-dt<=.55){pop(CX,270,'我的豆花！30塊！',SUN,true,{huge:true,life:1.4,dur:1.4,rot:-.05});if(!voiced)Voice.say('我的豆花！三十塊！');}
     if(rescue&&dropT>1.75){revive();return;}if(dropT>2.1)gameOver();return;}
   if(mode==='win'){winT+=dt;if(winT>1.8)showCard(true);return;}
   if(mode!=='play')return;
