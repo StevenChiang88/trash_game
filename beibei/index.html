@@ -995,7 +995,7 @@ function renderSkins(){
 function handle(ev){
   switch(ev.type){
     case'day':{const w=sim.weather,d=sim.day,pooped=poopedToday,spat=spatToday,peed=peedToday;poopedToday=spatToday=peedToday=false;el.dayN.textContent=d;el.wx.textContent=sim.season==='plum'?'梅雨':WX[w];Snd.blip(660,990,.14,'triangle',.07);
-      const list=sim.season==='plum'?['梅雨季，天天濕，還在。','又下雨，它還在。','曬不乾，但沒掉。']:w==='cold'?['好冷，還在。','寒流來了，它在發抖。','冷到縮起來，沒掉。']:POSTS[w];post(ev.afterTor?'龍捲風過了，還在。':ev.afterQuake?'地震完，還在。':pooped?'被鴿子大便了，但還在。':spat?'被樓上阿伯吐痰了，但還在。':peed?'ㄆㄨㄧ打拉被我弄濕了哈哈':w==='sunny'&&sim.wet>.3?'出太陽了，正在曬乾。':list[Math.floor(Math.random()*list.length)]);
+      const list=sim.season==='plum'?['梅雨季，天天濕，還在。','又下雨，它還在。','曬不乾，但沒掉。']:w==='cold'?['好冷，還在。','寒流來了，它在發抖。','冷到縮起來，沒掉。']:POSTS[w];post(ev.afterTor?'龍捲風過了，還在。':ev.afterQuake?'地震完，還在。':pooped?'被鴿子大便了，但還在。':spat?'被樓上阿伯吐痰了，但還在。':peed?'ㄆㄨㄧ打拉被我弄濕了哈哈。':w==='sunny'&&sim.wet>.3?'出太陽了，正在曬乾。':list[Math.floor(Math.random()*list.length)]);
       if(ev.news==='plumStart'){banner('梅雨季開始：連下好幾天雨，被被曬不乾',true,3.6);Snd.blip(500,260,.4,'sine',.07);}
       else if(ev.news==='plumEnd')banner('梅雨季結束，終於出太陽了',false,3);
       else if(ev.news==='coldStart'){banner('寒流來襲：力氣回得慢，東北風一直往外吹',true,3.6);Snd.blip(900,500,.35,'triangle',.06);}
