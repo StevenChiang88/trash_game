@@ -78,15 +78,16 @@ body{background:var(--sky);color:var(--ink);font-family:var(--body);font-weight:
 .banner.show{opacity:1;transform:none}
 .banner.alert{background:var(--alert)}
 .gap{flex:1}
-.post{align-self:flex-start;display:flex;gap:10px;align-items:center;max-width:min(280px,100%);padding:9px 14px 9px 10px;border:2.5px solid var(--ink);border-radius:16px;background:var(--quilt);box-shadow:0 4px 0 var(--ink);opacity:0;transform:translateY(14px);transition:opacity .25s,transform .25s}
+/* 下方的文字（日記卡、提示、兩條量表）全部收在左邊六成寬：右下角是小屁孩和垃圾飛上來的地方，要點得到 */
+.post{align-self:flex-start;display:flex;gap:10px;align-items:center;max-width:62%;padding:9px 14px 9px 10px;border:2.5px solid var(--ink);border-radius:16px;background:var(--quilt);box-shadow:0 4px 0 var(--ink);opacity:0;transform:translateY(14px);transition:opacity .25s,transform .25s}
 .post.show{opacity:1;transform:none}
 .avatar{flex:none;width:34px;height:34px;border-radius:50%;border:2.5px solid var(--ink);background:var(--tin);position:relative;overflow:hidden}
 .avatar::after{content:"";position:absolute;left:5px;right:-6px;top:11px;height:9px;border-radius:6px;background:var(--quilt);border:2px solid var(--ink);transform:rotate(11deg)}
 .post-b{min-width:0;display:flex;flex-direction:column;gap:1px;font-size:14px;line-height:1.35}
 .post-b b{font-weight:900;font-size:12px;opacity:.7}
 .post-b em{font-style:normal;font-family:var(--display);font-weight:600;font-size:13px;color:var(--alert)}
-.hint{align-self:center;text-align:center;font-weight:900;font-size:17px;color:var(--quilt);text-shadow:var(--sticker);min-height:1.5em;text-wrap:balance}
-.bars{display:flex;flex-direction:column;gap:6px}
+.hint{align-self:flex-start;max-width:62%;text-align:left;font-weight:900;font-size:16px;line-height:1.3;color:var(--quilt);text-shadow:var(--sticker);min-height:1.3em;text-wrap:pretty}
+.bars{display:flex;flex-direction:column;gap:6px;width:62%}
 .stam span{min-width:2.3em}
 .wetrow .track{height:12px}
 .wetrow .fill{background:var(--water);border-right:0}
@@ -935,7 +936,7 @@ function muteIcon(){el.mute.innerHTML=Snd.on
   el.mute.setAttribute('aria-pressed',String(!Snd.on));}
 function hud(dt){
   if(bannerT>0){bannerT-=dt;if(bannerT<=0)el.banner.classList.remove('show');}
-  if(postT>0){postT-=dt;if(postT<=0)el.post.classList.remove('show');}
+  if(postT>0){postT-=dt;if(sim.qte)postT=0;if(postT<=0)el.post.classList.remove('show');}   // 圈圈事件一開始就把日記卡收掉，免得擋到圈
   const gst=sim.gust;let dir,str,warn=false;
   if(gst){dir=gst.dir;str=gst.str;warn=gst.t<gst.tele;}else{str=Math.abs(sim.wind);dir=str<50?0:Math.sign(sim.wind);}
   const torOn=mode==='play'&&!!sim.tor&&sim.tor.leave<0;if(torOn){dir=1;str=999;warn=sim.tor.t<0;}
