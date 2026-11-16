@@ -950,7 +950,7 @@ function hud(dt){
   if(mode==='play'){
     if(sim.qte)setHint('照順序，等縮圈貼上圈的瞬間點下去');
     else if(sim.uncle&&(sim.uncle.phase==='out'||sim.uncle.phase==='hawk'))setHint('點樓上阿伯！別讓他吐痰');
-    else if(sim.kid&&sim.kid.fled===undefined&&sim.wet>=PEE_COST)setHint('夠濕了！點小屁孩尿他');
+    else if(sim.kid&&sim.kid.fled===undefined&&sim.wet>=PEE_COST)setHint('夠濕了！點擊趕走小屁孩');
     else if(sim.kid&&sim.kid.items.some(it=>!it.done))setHint('點掉飛上來的垃圾！');
     else if(sim.ac)setHint('點掉水滴，或留著存水尿小屁孩');
     else if(tiredT>0)setHint('沒力了…停一下再點');
@@ -1033,7 +1033,7 @@ function handle(ev){
       break;}
     case'pee':peeFx=.75;peedToday=true;shake=Math.max(shake,4);banner(`尿到了！小屁孩 ${PEE_SCARE} 天不敢來`,false,2.8);Snd.blip(900,300,.5,'sine',.07);Snd.blip(500,900,.3,'square',.04,.25);break;
     case'peeDry':judges.push({x:KID.x-20,y:KID.y-10,text:'沒水了',col:'#fffdf5',life:.7,dur:.7});Snd.blip(200,150,.1,'triangle',.05);break;
-    case'kid':banner(sim.wet>=PEE_COST?'小屁孩來丟垃圾了！被被夠濕，點他就能尿他':'一樓的小屁孩在亂丟垃圾！點掉飛上來的垃圾',false,3);Snd.blip(700,900,.08,'square',.05);Snd.blip(900,700,.08,'square',.05,.1);break;
+    case'kid':banner(sim.wet>=PEE_COST?'小屁孩來丟垃圾了！被被夠濕，點擊趕走小屁孩':'一樓的小屁孩在亂丟垃圾！點掉飛上來的垃圾',false,3);Snd.blip(700,900,.08,'square',.05);Snd.blip(900,700,.08,'square',.05,.1);break;
     case'throw':Snd.blip(300,620,.12,'sine',.05);break;
     case'trashPop':{const it=sim.kid&&sim.kid.items[ev.i],p=it?sim.trashPos(it):null;if(p){bursts.push({x:p.x,y:p.y,life:.3,dur:.3,col:'#fffdf5',rays:6,big:false,a0:Math.random()*TAU});judges.push({x:p.x,y:p.y+26,text:'擋掉',col:'#fffdf5',life:.5,dur:.5});}Snd.blip(900,1300,.07,'triangle',.08);break;}
     case'trashHit':if(ev.on){shake=Math.max(shake,7);const q=cloth.p[7];judges.push({x:q.x,y:q.y+10,text:'被砸到！',col:'#ee5b3a',life:.7,dur:.7});Snd.blip(220,110,.14,'square',.08);}break;
