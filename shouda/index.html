@@ -727,8 +727,13 @@ const AI_ON=35,AI_OFF=45,AI_FROM=8,AI_STEP=.035,COMPILE_T=.8,OUT_T=2.4,INTRO_T=1
 const KEYSETS=[[['D','F','J','K']],[['S','D','F','J','K','L']],[['E','R','U','I'],['D','F','J','K']],[['E','R','U','I'],['S','D','F','J','K','L']]];
 const KEYCOL={S:'#e0503f',D:'#ef8a3a',E:'#ef8a3a',F:'#f2c14e',R:'#f2c14e',J:'#5fbf7f',U:'#5fbf7f',K:'#4aa3df',I:'#4aa3df',L:'#8b6fd6'};
 // 每種語言一首歌：多快（每分鐘幾拍）、半拍音符多不多、休息多不多、歌多長
-const SONG={py:{bpm:92,e8:.05,rest:.14,len:1},js:{bpm:100,e8:.2,rest:.16,len:1},c:{bpm:104,e8:.08,rest:.05,len:1.05},java:{bpm:96,e8:.1,rest:.08,len:1.3},rust:{bpm:112,e8:.26,rest:.06,len:1.1},
-  basic:{bpm:92,e8:.08,rest:.1,len:1},fortran:{bpm:96,e8:.08,rest:.1,len:1},cobol:{bpm:96,e8:.1,rest:.08,len:1.05},asm:{bpm:100,e8:.12,rest:.08,len:1}};
+// 曲風 style、主音 key（MIDI 音高，低音那一個八度）、小調 minor
+const SONG={py:{bpm:92,e8:.05,rest:.14,len:1,style:'zheng',key:48},js:{bpm:100,e8:.2,rest:.16,len:1,style:'swing',key:50},c:{bpm:104,e8:.08,rest:.05,len:1.05,style:'march',key:53},
+  java:{bpm:96,e8:.1,rest:.08,len:1.3,style:'grand',key:43},rust:{bpm:112,e8:.26,rest:.06,len:1.1,style:'electro',key:45,minor:1},
+  basic:{bpm:92,e8:.08,rest:.1,len:1,style:'ancient',key:40,minor:1},fortran:{bpm:96,e8:.08,rest:.1,len:1,style:'ancient',key:42,minor:1},cobol:{bpm:96,e8:.1,rest:.08,len:1.05,style:'ancient',key:40,minor:1},asm:{bpm:100,e8:.12,rest:.08,len:1,style:'ancient',key:43,minor:1}};
+// 和弦進行（從主音算幾個半音）：大調 一、六、四、五；小調 一、六、三、七
+const PROG=[[0,[0,4,7]],[9,[0,3,7]],[5,[0,4,7]],[7,[0,4,7]]],PROG_M=[[0,[0,3,7]],[8,[0,4,7]],[3,[0,4,7]],[10,[0,4,7]]];
+const PENTA=[0,2,4,7,9],PENTA_M=[0,3,5,7,10];
 // 第 n 場：用哪一組鍵、歌快多少、觀眾每秒不耐煩多少（熱度往下掉）、半拍多多少、幾顆音符、多久來一次干擾、小朋友走多快。
 // 第 16 場以後歌還會再慢慢變快、觀眾越來越不耐煩，所以一定會結束
 const showOf=n=>{const shl=n%SHL_EVERY===0;return{n,shl,ks:n<=2?0:n<=4?1:n<=7?2:3,bpmUp:n<=16?6*(n-1):90+3*(n-16),drain:Math.min(DRAIN_MAX,DRAIN_N*(n-1))+Math.max(0,.25*(n-15)),e8Up:Math.min(.3,.025*(n-1)),notes:Math.min(70,24+3*n),
@@ -779,13 +784,18 @@ function makeSong(cfg,L){
   const keys=KEYSETS[cfg.ks].flat(),notes=[];let t=.4+COUNT_IN*beat,half=false;
   for(let i=0;i<n;i++){let k;do k=pick(keys);while(notes.length>=2&&notes[i-1].k===k&&notes[i-2].k===k);notes.push({t,k,st:0,g:-1});
     const r=Math.random();let gap=1;if(half){gap=.5;half=false;}else if(r<e8){gap=.5;half=Math.random()<.5;}else if(r<e8+rest)gap=2;t+=gap*beat;}
-  return{bpm,beat,notes,end:notes[n-1].t+.6,beats:Math.ceil((notes[n-1].t-.4)/beat)+1};}
+  const sc=sp.minor?PENTA_M:PENTA,lad=[];for(let o=0;o<3;o++)for(const d of sc)lad.push(sp.key+24+o*12+d);let li=5;
+  for(const q of notes){const r=Math.random();li+=r<.3?-1:r<.6?1:r<.75?-2:r<.9?2:0;if(li<2)li=3;if(li>lad.length-3)li=lad.length-4;q.m=lad[li];}
+  const steps=Math.ceil((notes[n-1].t-.4)/beat*2)+4;
+  // 歌在最後一格（敲鑼收尾）之後才算唱完
+  return{bpm,beat,notes,style:sp.style,key:sp.key,minor:!!sp.minor,end:Math.max(notes[n-1].t+.6,.4+(steps-1)*beat/2+.15),steps};}
 
 /* ───────── 聲音 ───────── */
+const mtof=m=>440*Math.pow(2,(m-69)/12);
 const Snd={ctx:null,on:store.get('sd.mute')!=='1',
   init(){if(this.ctx){if(this.ctx.state==='suspended'&&!paused)this.ctx.resume();return;}
     try{const C=window.AudioContext||window.webkitAudioContext,c=this.ctx=new C();this.master=c.createGain();this.master.gain.value=this.on?1:0;this.master.connect(c.destination);
-      const buf=c.createBuffer(1,c.sampleRate,c.sampleRate),d=buf.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=Math.random()*2-1;this.noise=buf;}catch(e){this.ctx=null;}},
+      const buf=c.createBuffer(1,c.sampleRate,c.sampleRate),d=buf.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=Math.random()*2-1;this.noise=buf;this.music();}catch(e){this.ctx=null;}},
   blip(f0,f1,dur,type,vol,delay){if(!this.ctx)return;const c=this.ctx,t=c.currentTime+(delay||0),o=c.createOscillator(),g=c.createGain();
     o.type=type||'sine';o.frequency.setValueAtTime(f0,t);o.frequency.exponentialRampToValueAtTime(Math.max(30,f1),t+dur);
     g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(vol||.1,t+.01);g.gain.exponentialRampToValueAtTime(.0008,t+dur);o.connect(g);g.connect(this.master);o.start(t);o.stop(t+dur+.03);},
@@ -793,6 +803,7 @@ const Snd={ctx:null,on:store.get('sd.mute')!=='1',
     g.gain.setValueAtTime(vol,t);g.gain.exponentialRampToValueAtTime(.001,t+dur);n.connect(f);f.connect(g);g.connect(this.master);n.start(t);n.stop(t+dur+.05);},
   key(){const k=up.keyboard;this.burst(.035,2600+Math.random()*900,.16+.05*k,'highpass');this.blip(170,90,.05,'square',.03+.012*k);},
   hit(g){this.key();this.blip(g===0?1046:g===1?880:660,g===0?1568:1100,.09,'triangle',g===0?.07:.05);},
+  tap(g){this.burst(.03,2800+Math.random()*700,.07+.03*up.keyboard,'highpass');if(g===0)this.blip(2093,2093,.05,'sine',.025);},
   bad(){this.blip(220,110,.2,'sawtooth',.07);},
   drum(d,v){this.blip(140,55,.28,'sine',.3*(v||1),d);this.burst(.09,500,.2*(v||1),'lowpass',d);},
   wood(d){this.blip(1200,900,.05,'square',.05,d);this.burst(.03,3000,.08,'bandpass',d);},
@@ -806,8 +817,53 @@ const Snd={ctx:null,on:store.get('sd.mute')!=='1',
   slap(){this.burst(.12,900,.28,'lowpass');this.blip(260,120,.1,'square',.04);},
   sad(){[392,370,349,311].forEach((f,i)=>this.blip(f,f*.97,.36,'sawtooth',.06,i*.3));},
   tada(){[523,659,784,1047].forEach((f,i)=>this.blip(f,f,.22,'triangle',.08,i*.09));},
+  music(){if(!this.ctx||this.mus)return;const c=this.ctx;this.musF=c.createBiquadFilter();this.musF.type='lowpass';this.musF.frequency.value=14000;this.mus=c.createGain();this.mus.gain.value=.7;this.mus.connect(this.musF);this.musF.connect(this.master);},
+  osc(type,f,at,dur,vol,o){const c=this.ctx,n=c.createOscillator(),g=c.createGain();n.type=type;n.frequency.setValueAtTime(f,at);if(o&&o.f1)n.frequency.exponentialRampToValueAtTime(o.f1,at+(o.glide||dur));
+    g.gain.setValueAtTime(0,at);g.gain.linearRampToValueAtTime(vol,at+(o&&o.atk||.005));if(o&&o.hold)g.gain.setValueAtTime(vol,at+o.hold);g.gain.exponentialRampToValueAtTime(.0005,at+dur);
+    let last=g;if(o&&o.lp){const f2=c.createBiquadFilter();f2.type=o.bp?'bandpass':'lowpass';f2.frequency.value=o.lp;f2.Q.value=o.q||.7;g.connect(f2);last=f2;}
+    if(o&&o.vib){const l=c.createOscillator(),lg2=c.createGain();l.frequency.value=o.vib;lg2.gain.value=f*.007;l.connect(lg2);lg2.connect(n.frequency);l.start(at);l.stop(at+dur+.05);}
+    n.connect(g);last.connect(o&&o.dest||this.mus);n.start(at);n.stop(at+dur+.05);},
+  nz(at,dur,vol,type,freq,q){const c=this.ctx,n=c.createBufferSource(),f=c.createBiquadFilter(),g=c.createGain();n.buffer=this.noise;n.loop=true;f.type=type;f.frequency.value=freq;f.Q.value=q||.7;
+    g.gain.setValueAtTime(vol,at);g.gain.exponentialRampToValueAtTime(.001,at+dur);n.connect(f);f.connect(g);g.connect(this.mus);n.start(at,Math.random()*.5);n.stop(at+dur+.05);},
+  // 古箏撥弦、低音、鼓、鈸、木魚、鑼
+  pluck(m,at,v){const f=mtof(m);this.osc('triangle',f,at,.9,.16*v,{lp:2600});this.osc('sine',f*2,at,.3,.05*v);},
+  bass(m,at,dur,v){this.osc('triangle',mtof(m),at,dur,.26*v,{atk:.01,hold:dur*.5,lp:700});},
+  kick(at,v){this.osc('sine',150,at,.32,.5*v,{f1:42,glide:.18});},
+  tanggu(at,v){this.osc('sine',190,at,.28,.42*v,{f1:85,glide:.2});this.nz(at,.07,.12*v,'lowpass',700);},
+  cym(at,v,len){this.nz(at,len||.28,.11*v,'highpass',5200);this.nz(at,(len||.28)*.6,.06*v,'bandpass',8500,2);},
+  hat(at,v){this.nz(at,.045,.07*v,'highpass',8000);},
+  snare(at,v){this.nz(at,.14,.16*v,'bandpass',1900,.8);this.osc('triangle',210,at,.09,.1*v,{f1:150});},
+  woodAt(at,v){this.osc('square',1250,at,.045,.05*v,{f1:950});this.nz(at,.03,.06*v,'bandpass',3000,3);},
+  gongAt(at,v){for(const[f,a]of[[196,.11],[294,.06],[415,.045],[587,.03]])this.osc('sine',f,at,2.2,a*v,{f1:f*.985});this.nz(at,.6,.05*v,'bandpass',3200);},
+  // 打中音符時的旋律：笛子、嗩吶、晶片音、陶笛，看曲風
+  lead(m,style,v){if(!this.ctx||!this.mus)return;const at=this.ctx.currentTime+.005,f=mtof(m);
+    if(style==='zheng'){this.osc('sine',f,at,.42,.2*v,{atk:.015,hold:.18,vib:5.5});this.osc('triangle',f*2,at,.25,.04*v);this.nz(at,.06,.03*v,'bandpass',f*2,4);}
+    else if(style==='march'||style==='grand'){this.osc('sawtooth',f,at,.38,.17*v,{atk:.02,hold:.2,vib:6,lp:1700,bp:1,q:1.4});this.osc('square',f,at,.3,.04*v,{lp:2400});}
+    else if(style==='ancient'){this.osc('sine',f/2,at,.55,.24*v,{atk:.04,hold:.25,vib:4.5});this.nz(at,.12,.025*v,'bandpass',f,6);}
+    else{this.osc('square',f,at,.24,.1*v,{atk:.004,hold:.08,lp:3200});this.osc(style==='electro'?'sawtooth':'triangle',f*2,at,.16,.04*v,{lp:4000});}},
   setOn(v){this.on=v;store.set('sd.mute',v?'0':'1');if(this.ctx)this.master.gain.setTargetAtTime(v?1:0,this.ctx.currentTime,.02);}
 };
+
+/* ───────── 伴奏 ─────────
+   一格是半拍，一小節八格。開頭八格是數拍子：木魚三下、第四拍「鏘」。之後照曲風排鼓、低音、撥弦；
+   連擊 10 以上多一層打擊；最後一格敲鑼收尾 */
+function musicStep(sg,k,at){
+  const S2=Snd;if(!S2.ctx||!S2.mus)return;const beat=sg.beat,half=beat/2;
+  if(k<COUNT_IN*2){if(k%2===0){if(k===COUNT_IN*2-2)S2.cym(at,1,.35);else S2.woodAt(at,1.2);}return;}
+  const j=k-COUNT_IN*2,bar=Math.floor(j/8),s=j%8,pr=sg.minor?PROG_M:PROG,[ro,tri]=pr[bar%4],root=sg.key+ro,hot=S&&S.combo>=10,st=sg.style;
+  if(k>=sg.steps-1){S2.gongAt(at,1);S2.bass(sg.key,at,1.6,1);for(let i=0;i<3;i++)S2.pluck(sg.key+24+[0,sg.minor?3:4,7][i],at+i*.06,1);return;}
+  const arp=i=>root+24+tri[i%3]+(i>=3?12:0);
+  if(st==='zheng'){if(s===0)S2.bass(root,at,beat*2,1);if(s===4)S2.bass(root+7,at,beat*2,.8);if(s%2===0)S2.pluck(arp(s/2),at,1);
+    if(s===2||s===6)S2.woodAt(at,.5);if(s===0)S2.tanggu(at,.35);if(hot&&s%2===1)S2.pluck(arp(s+1)+12,at,.45);if(s===0&&bar%4===0)S2.gongAt(at,.35);}
+  else if(st==='swing'){const sw=s%2?half*.18:0;if(s===0)S2.bass(root,at,beat*1.4,1);if(s===3)S2.bass(root+7,at+sw,beat,.85);if(s===6)S2.bass(root+12,at,beat,.75);
+    if(s===4)S2.snare(at,.8);if(s%2===1)S2.hat(at+sw,.9);if(s===0)S2.kick(at,.7);if(s===2||s===5)S2.pluck(arp(s),at+(s===5?sw:0),.9);if(s===0&&bar%2===0)S2.cym(at,.7);if(hot&&s%2===0)S2.hat(at,.6);}
+  else if(st==='march'){if(s===0||s===4)S2.tanggu(at,1);if(s===6)S2.tanggu(at,.5);if(s===2||s===6)S2.cym(at,.8,.18);if(s%2===0)S2.bass(s%4?root+7:root,at,beat*.9,.9);
+    if(s===1||s===5)S2.pluck(arp(s),at,.7);if(hot&&s%2===1)S2.woodAt(at,.6);if(s===0&&bar%2===0)S2.gongAt(at,.45);}
+  else if(st==='grand'){if(s===0)S2.bass(root,at,beat*4,1);if(s===0||s===3||s===4)S2.tanggu(at,s===0?1:.6);if(s===7)S2.cym(at,.6,.5);S2.pluck(arp(s),at,.55);
+    if(hot&&(s===2||s===6))S2.snare(at,.5);if(s===0&&bar%4===0)S2.gongAt(at,.7);}
+  else if(st==='electro'){if(s%2===0)S2.kick(at,1);if(s===4||(hot&&s===2))S2.snare(at,.9);if(s%2===1)S2.hat(at,1);S2.bass(root+(s%2?12:0),at,half*.9,.75);if(s===3||s===7)S2.pluck(arp(s),at,.7);if(s===0&&bar%4===0)S2.cym(at,.8,.6);}
+  else{if(s===0&&bar%2===0)S2.osc('sine',mtof(root+12),at,beat*8,.07,{atk:.4,hold:beat*6,vib:3});if(s===0)S2.tanggu(at,.45);if(s===4)S2.woodAt(at,.7);if(s===2||s===6)S2.pluck(arp(s/2)+12,at,.55);if(hot&&s%2===1)S2.woodAt(at,.35);}
+}
 
 /* ───────── 狀態 ───────── */
 let mode='title',time=0,paused=false,run=null,S=null,introT=0,leaveT=0,capText='',capUntil=0,lastLang=store.get('sd.lang')||'py';
@@ -846,7 +902,7 @@ function nextShow(){
     :`<small>第 ${run.n} 場</small><b>宜蘭傳藝中心</b><span>今天純手打：${esc(L.name)}・${Math.round(song.bpm)} 拍／分</span>`;
   b.hidden=false;$('langTag').textContent=L.name;fitCode();renderCode();Snd.opening();resizeLane();
 }
-function beginPlay(){mode='play';S.t=0;S.bk=0;$('banner').hidden=true;}
+function beginPlay(){mode='play';S.t=0;S.bk=0;S.dull=false;if(Snd.musF)Snd.musF.frequency.setTargetAtTime(14000,Snd.ctx.currentTime,.05);$('banner').hidden=true;}
 // 鍵盤：照這一場的那組鍵排；小朋友亂插的時候，畫面上的鍵帽位置會被打亂
 let keyPos=[];
 function buildKeys(){const rows=KEYSETS[S.cfg.ks],box=$('keys');box.innerHTML='';keyPos=[];
@@ -867,10 +923,10 @@ function hit(k){
 // 判定：g 0 完美、1 不錯、2 勉強、-1 漏掉、-2 按錯
 function judge(nt,g){nt.st=1;nt.g=g;while(S.ni<S.notes.length&&S.notes[S.ni].st)S.ni++;
   const idx=S.notes.indexOf(nt),upto=Math.round((idx+1)/S.notes.length*S.toks.length);
-  if(g>=0){S.cnt[g]++;S.combo++;S.maxCombo=Math.max(S.maxCombo,S.combo);S.heat=Math.min(100,S.heat+H_GAIN[g]+Math.min(S.combo,25)*H_COMBO);Snd.hit(g);cheer=Math.min(1,cheer+.1);
+  if(g>=0){S.cnt[g]++;S.combo++;S.maxCombo=Math.max(S.maxCombo,S.combo);S.heat=Math.min(100,S.heat+H_GAIN[g]+Math.min(S.combo,25)*H_COMBO);Snd.lead(nt.m,S.song.style,g===2?.6:1);Snd.tap(g);cheer=Math.min(1,cheer+.1);
     lanePops.push({text:GRADE[g],col:g===0?GOLD:g===1?'#9fe3a8':'#cfd3dc',life:.5});
     if(S.combo%10===0){const s=pick(seats.filter(q=>q.on));if(s)pop(s.x,s.y-24,pick(CHEERS),GOLD,{size:16});Snd.cheer(.6);mood='happy';moodT=1;}}
-  else{S.miss++;S.combo=0;S.heat-=H_MISS*(1-.12*up.coffee);if(g===-2)Snd.bad();else Snd.burst(.08,400,.12,'lowpass');shake=Math.max(shake,3);mood='sweat';moodT=1;
+  else{S.miss++;S.combo=0;S.heat-=H_MISS*(1-.12*up.coffee);if(g===-2)Snd.bad();else Snd.burst(.12,300,.16,'lowpass');shake=Math.max(shake,3);mood='sweat';moodT=1;
     lanePops.push({text:g===-2?'按錯':'漏掉',col:'#ff8a7a',life:.55});S.bad.add(clamp(upto-1,0,S.toks.length-1));
     if(Math.random()<.4){const s=pick(seats.filter(q=>q.on));if(s)pop(s.x,s.y-22,'噓～','#d0d0d0');}}
   S.typed=Math.max(S.typed,upto);renderCode();
@@ -936,8 +992,9 @@ function tick(dt){
   for(const s of seats)s.k=clamp(s.k+(s.on?dt*3:-dt*2.5),0,1);
   if(mode==='intro'){if((introT-=dt)<=0)beginPlay();return;}
   if(mode==='play'){S.t+=dt;const sg=S.song;
-    // 背景的拍子：先數四拍（木魚），之後每拍一下鼓
-    while(S.bk<sg.beats&&S.t+.1>=.4+S.bk*sg.beat){const d=Math.max(0,.4+S.bk*sg.beat-S.t);if(S.bk<COUNT_IN)Snd.wood(d);else Snd.drum(d,.35);S.bk++;}
+    // 伴奏往前排 0.12 秒；熱度低的時候整個音樂變悶
+    while(S.bk<sg.steps&&S.t+.12>=.4+S.bk*sg.beat/2){const tt=.4+S.bk*sg.beat/2;if(Snd.ctx)musicStep(sg,S.bk,Snd.ctx.currentTime+Math.max(0,tt-S.t));S.bk++;}
+    const dull=S.heat<30;if(Snd.musF&&dull!==S.dull){S.dull=dull;Snd.musF.frequency.setTargetAtTime(dull?900:14000,Snd.ctx.currentTime,.15);}
     if(((S.t-.4)/sg.beat%1+1)%1<dt/sg.beat*1.5)beatPulse=1;
     const wm=wmul();for(let i=S.ni;i<S.notes.length;i++){const q=S.notes[i];if(q.t>S.t)break;if(!q.st&&S.t-q.t>W[2]*wm){judge(q,-1);if(mode!=='play')return;}}
     if(S.t>.4+COUNT_IN*sg.beat)S.heat-=S.cfg.drain*dt;
@@ -1202,7 +1259,7 @@ window.addEventListener('resize',resize);
 if(window.ResizeObserver){const ro=new ResizeObserver(resize);ro.observe(stageEl);ro.observe(laneEl);}
 
 muteIcon();renderShop();showBest();resize();requestAnimationFrame(frame);
-window.__sd={P,UPG,showOf,tokenize,makeSong,seats,KEYSETS,W,
+window.__sd={P,UPG,showOf,tokenize,makeSong,seats,KEYSETS,W,musicStep,snd:Snd,
   get mode(){return mode},get S(){return S},get run(){return run},get ev(){return ev},get up(){return up},get keyPos(){return keyPos},
   get bank(){return bank},set bank(v){bank=v;saveUp();renderShop();},get best(){return best},
   hit,judge,doRun,next(){if(mode==='bow')nextShow();},pickLang,openLang,newRun,shoo,dismissAma,hangUp,buy,tick,startEvent,askAI,
