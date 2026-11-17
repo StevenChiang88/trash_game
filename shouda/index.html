@@ -1,0 +1,1271 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover, user-scalable=no">
+<meta name="description" content="AI 都會寫程式了，你還在手打？軟體工程師上台表演純手打 code：選一種語言，一個字一個字照著打，打錯要刪、觀眾會走。每四場還有一場十三行博物館的出土程式碼特別演出。">
+<meta name="theme-color" content="#8e2a22">
+<link rel="canonical" href="https://stevenchiang88.github.io/trash_game/shouda/">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="純手打 Code">
+<meta property="og:title" content="純手打 Code｜AI 時代的傳統技藝">
+<meta property="og:description" content="AI 都會寫程式了，你還在手打？軟體工程師上台表演純手打 code：選一種語言，一個字一個字照著打，打錯要刪、觀眾會走。每四場還有一場十三行博物館的出土程式碼特別演出。">
+<meta property="og:url" content="https://stevenchiang88.github.io/trash_game/shouda/">
+<meta property="og:image" content="https://stevenchiang88.github.io/trash_game/shouda/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="穿格子襯衫的工程師坐在傳統戲台上的桌子前打鍵盤，背後的布幕投影著程式碼，台下坐滿觀眾">
+<meta property="og:locale" content="zh_TW">
+<meta name="twitter:card" content="summary_large_image">
+<style>
+  /* 與發佈環境相同的最小底座：上下避開瀏海與手勢列 */
+  html{box-sizing:border-box;padding:env(safe-area-inset-top,0px) 0 env(safe-area-inset-bottom,0px)}
+  body{margin:0}
+  [hidden]{display:none!important}
+</style>
+<!--PAGE-->
+<title>純手打 Code</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chiron+GoRound+TC:wght@500;900&family=Fredoka:wght@600;700&family=JetBrains+Mono:wght@500;700&display=swap">
+<style>
+/* 版面：上面是戲台（canvas），工程師坐在桌子前打鍵盤，台下是觀眾；下面是音符跑道、他的螢幕和鍵盤。
+   音符（寫著字母的鍵帽）從右邊飛到左邊的圈圈，飛進圈圈的那一刻按同一個字母；打中一顆，螢幕上的程式就多長一段 */
+:root{
+  --ink:#2a1d1a;        /* 描邊與文字 */
+  --paper:#fff6e5;      /* 卡片 */
+  --red:#b8332b;        /* 戲台的紅：主色，也是錯誤 */
+  --gold:#f2c14e;       /* 金：按鈕、強調 */
+  --ok:#3aa76d;         /* 打對、執行 */
+  --wood:#3b2418;       /* 桌面、底色 */
+  --screen:#1b1c24;     /* 程式碼螢幕 */
+  --backdrop:#1a0f0b;
+  --display:"Fredoka","Chiron GoRound TC","PingFang TC","Microsoft JhengHei",sans-serif;
+  --body:"Chiron GoRound TC","PingFang TC","Noto Sans TC","Microsoft JhengHei",sans-serif;
+  --mono:"JetBrains Mono","SFMono-Regular",Menlo,Consolas,"Chiron GoRound TC","PingFang TC",monospace;
+  --sticker:-2px -2px 0 var(--ink),2px -2px 0 var(--ink),-2px 2px 0 var(--ink),2px 2px 0 var(--ink),0 -2.5px 0 var(--ink),0 2.5px 0 var(--ink),-2.5px 0 0 var(--ink),2.5px 0 0 var(--ink);
+}
+html,body{height:100%;touch-action:none;overscroll-behavior:none}
+button{touch-action:manipulation}
+body{background:var(--backdrop);color:var(--ink);font-family:var(--body);font-weight:500;overflow:hidden;display:grid;place-items:center}
+#game{position:relative;height:100%;aspect-ratio:9/16;max-width:100%;overflow:hidden;touch-action:none;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent;background:var(--wood);display:flex;flex-direction:column}
+
+/* 戲台 */
+#stage{position:relative;flex:none;width:100%;aspect-ratio:360/250}
+#c{position:absolute;inset:0;width:100%;height:100%;display:block}
+.hud{position:absolute;left:0;right:0;top:0;pointer-events:none;display:flex;align-items:flex-start;justify-content:space-between;gap:8px;padding:10px max(12px,env(safe-area-inset-right,0px)) 0 max(12px,env(safe-area-inset-left,0px))}
+.left{display:flex;flex-direction:column;align-items:flex-start;gap:3px}
+.showno{display:flex;align-items:baseline;gap:4px;font-family:var(--display);color:var(--paper);text-shadow:var(--sticker);line-height:1}
+.showno small{font-family:var(--body);font-weight:900;font-size:14px}
+.showno b{font-size:32px;font-weight:700;font-variant-numeric:tabular-nums}
+.venue{font-weight:900;font-size:12px;color:var(--gold);text-shadow:var(--sticker)}
+.side{display:flex;gap:8px}
+.icon-btn{pointer-events:auto;width:38px;height:38px;display:grid;place-items:center;border:2.5px solid var(--ink);border-radius:50%;background:var(--paper);color:var(--ink);cursor:pointer;padding:0}
+.icon-btn svg{width:19px;height:19px}
+.icon-btn:focus-visible,.btn:focus-visible,.key:focus-visible{outline:3px solid var(--gold);outline-offset:3px}
+.cap{position:absolute;left:50%;bottom:8px;transform:translateX(-50%);width:max-content;max-width:calc(100% - 24px);padding:5px 12px;border-radius:999px;background:rgba(26,15,11,.78);color:#fff;font-weight:900;font-size:13px;text-align:center;pointer-events:none;text-wrap:balance}
+.cap:empty{display:none}
+.banner{position:absolute;left:50%;top:44%;transform:translate(-50%,-50%);width:max-content;max-width:calc(100% - 28px);padding:10px 18px 12px;border:3px solid var(--ink);border-radius:16px;background:var(--red);color:var(--paper);text-align:center;box-shadow:0 5px 0 var(--ink);pointer-events:none;animation:pop .3s cubic-bezier(.3,1.5,.5,1)}
+.banner small{display:block;font-weight:900;font-size:13px;color:var(--gold)}
+.banner b{display:block;font-weight:900;font-size:24px;line-height:1.25}
+.banner span{display:block;font-weight:900;font-size:13px;margin-top:2px}
+.banner.shl{background:#4b5563}
+.phone{position:absolute;left:58%;top:50%;pointer-events:auto;font:inherit;font-weight:900;font-size:13px;display:flex;align-items:center;gap:5px;padding:6px 10px;border:2.5px solid var(--ink);border-radius:999px;background:var(--gold);color:var(--ink);cursor:pointer;box-shadow:0 3px 0 var(--ink);animation:ring .18s ease-in-out infinite alternate}
+.phone svg{width:16px;height:16px}
+@keyframes ring{from{transform:rotate(-5deg)}to{transform:rotate(5deg)}}
+
+/* 桌面：熱度、螢幕、鍵盤 */
+#desk{position:relative;flex:1;min-height:0;display:flex;flex-direction:column;gap:7px;padding:8px max(10px,env(safe-area-inset-right,0px)) 10px max(10px,env(safe-area-inset-left,0px));background:linear-gradient(#4a2d1f,#2e1c13)}
+.meter{display:flex;align-items:center;gap:8px;color:var(--paper);font-weight:900;font-size:12px}
+.meter .lbl{white-space:nowrap}
+.bar{position:relative;flex:1;height:14px;border:2.5px solid var(--ink);border-radius:999px;background:#1b1210;overflow:hidden}
+.bar i{position:absolute;left:0;top:0;bottom:0;width:60%;border-radius:999px;background:linear-gradient(90deg,#e0503f,#f2c14e);transition:width .12s linear}
+.bar.low i{background:#e0503f;animation:blink .5s steps(2) infinite}
+@keyframes blink{50%{opacity:.45}}
+.meter em{font-style:normal;min-width:58px;text-align:right;color:var(--gold);font-variant-numeric:tabular-nums}
+.tips{white-space:nowrap;color:var(--gold)}
+#codebox{position:relative;flex:1;min-height:56px;border:3px solid var(--ink);border-radius:12px;background:var(--screen);overflow:hidden}
+#code{position:relative;margin:0;height:100%;box-sizing:border-box;overflow:hidden;padding:9px 11px 30px;font-family:var(--mono);font-weight:500;font-size:14px;line-height:1.55;color:#cfd3dc;white-space:pre-wrap;overflow-wrap:anywhere;tab-size:4}
+#code .g{color:#4b5160}
+#code .cur{color:#fff;background:rgba(242,193,78,.25);outline:2px solid var(--gold);border-radius:3px;animation:cur 1s ease-in-out infinite}
+@keyframes cur{50%{background:rgba(242,193,78,.1)}}
+#code .typo{color:#ff6b5e;text-decoration:underline wavy #ff6b5e;text-underline-offset:3px}
+#code .dirt{color:#7a5a3a;letter-spacing:-1px}
+#code .dirt.now{color:#c0915e;outline:2px dashed #c0915e;border-radius:3px}
+#code .kw{color:#ff8a65}#code .str{color:#a5d66f}#code .num{color:#ffd666}#code .fn{color:#6fc8ff}#code .ty{color:#d7a6ff}#code .op{color:#e6e6e6}#code .id{color:#eceff4}#code .pre{color:#ff8fb1}
+#code .au{opacity:.6}
+.lang{position:absolute;right:8px;top:6px;font-family:var(--mono);font-size:11px;font-weight:700;color:#7d8494;pointer-events:none}
+.out{position:absolute;left:0;right:0;bottom:0;max-height:62%;overflow:hidden;padding:8px 12px 10px;border-top:3px solid var(--ink);background:#0d0e12;font-family:var(--mono);font-size:13px;line-height:1.5;color:#9cf09c;white-space:pre-wrap}
+.out b{display:block;font-family:var(--body);font-weight:900;font-size:12px;color:var(--gold);margin-bottom:2px}
+.dust{position:absolute;pointer-events:none;width:6px;height:6px;border-radius:50%;background:#c0915e;animation:dust .6s ease-out forwards}
+@keyframes dust{to{transform:translate(var(--dx),var(--dy));opacity:0}}
+
+#lane{display:block;width:100%;aspect-ratio:360/76;box-sizing:border-box;border:3px solid var(--ink);border-radius:12px;background:#24170f;flex:none}
+#keyarea{position:relative;flex:none}
+#keys{display:flex;flex-direction:column;gap:7px}
+.krow{display:flex;gap:7px}
+.key{flex:1;min-width:0;pointer-events:auto;font-family:var(--display);font-weight:700;font-size:30px;height:66px;padding:0;border:3px solid var(--ink);border-bottom-width:3px;border-radius:14px;background:var(--paper);color:var(--ink);box-shadow:inset 0 -9px 0 var(--c),0 4px 0 var(--ink);cursor:pointer;touch-action:manipulation}
+.krow.two .key{height:56px;font-size:26px}
+.key:active,.key.hit{transform:translateY(3px);box-shadow:inset 0 -6px 0 var(--c),0 1px 0 var(--ink);background:#fff}
+.key.mixed{animation:mix .25s ease-in-out 2}
+@keyframes mix{50%{transform:rotate(-6deg)}}
+.aibar{flex:none;pointer-events:auto;font:inherit;font-weight:900;font-size:15px;padding:9px 12px;border:3px solid var(--ink);border-radius:14px;background:linear-gradient(90deg,#fff1cc,#ffd98a,#fff1cc);background-size:200% 100%;color:var(--ink);box-shadow:0 4px 0 var(--ink);cursor:pointer;animation:shine 1.6s linear infinite;touch-action:manipulation}
+.aibar:active{transform:translateY(3px);box-shadow:0 1px 0 var(--ink)}
+@keyframes shine{to{background-position:-200% 0}}
+.cover{position:absolute;inset:0;pointer-events:auto;display:flex;align-items:center;justify-content:center;gap:8px;font:inherit;font-weight:900;border:3px solid var(--ink);border-radius:14px;box-shadow:0 4px 0 var(--ink);cursor:pointer;touch-action:manipulation}
+.cover:active{transform:translateY(3px);box-shadow:0 1px 0 var(--ink)}
+#runBtn{background:var(--ok);color:#fff;font-size:26px;text-shadow:0 2px 0 rgba(0,0,0,.25)}
+#ama{background:#fff;color:var(--ink);font-size:15px;text-align:left;padding:8px 14px;line-height:1.35;justify-content:flex-start}
+#ama svg{flex:none;width:46px;height:46px}
+#ama small{display:block;font-size:12px;color:var(--red)}
+
+.btn{pointer-events:auto;font:inherit;font-weight:900;font-size:20px;color:var(--ink);background:var(--gold);border:3px solid var(--ink);border-radius:16px;padding:12px 26px;box-shadow:0 5px 0 var(--ink);cursor:pointer;transition:transform .06s,box-shadow .06s}
+.btn:active{transform:translateY(4px);box-shadow:0 1px 0 var(--ink)}
+.btn.ghost{background:var(--paper);font-size:15px;padding:10px 16px}
+
+/* 各種畫面 */
+.screen{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;gap:12px;padding-block:22px 18px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));text-align:center;overflow-y:auto;touch-action:pan-y}
+#title{background:linear-gradient(rgba(26,15,11,.55),rgba(26,15,11,.15) 30%,rgba(59,36,24,.85) 46%,#2e1c13 60%)}
+.logo{margin:4px 0 0;font-weight:900;font-size:clamp(40px,12vw,58px);line-height:1;color:var(--paper);text-shadow:var(--sticker),0 6px 0 var(--ink);transform:rotate(-3deg)}
+.logo span{display:block;font-family:var(--display);font-weight:700;color:var(--gold);font-size:1.12em}
+.tag{margin:6px 0 0;font-weight:900;font-size:15px;color:var(--paper);text-shadow:var(--sticker);text-wrap:balance}
+.how{display:flex;flex-wrap:wrap;justify-content:center;gap:7px;margin:0;padding:0;list-style:none;font-size:13px}
+.how li{padding:5px 11px;border:2.5px solid var(--ink);border-radius:999px;background:var(--paper);white-space:nowrap}
+.how b{font-weight:900;color:var(--red)}
+.gap{flex:1;min-height:4px}
+.nocode{margin:0;padding:4px 12px;border-radius:999px;background:var(--gold);border:2.5px solid var(--ink);font-weight:900;font-size:13px;color:var(--ink)}
+.demo{width:min(320px,100%);display:flex;flex-direction:column;gap:8px;padding:10px 12px 9px;border:3px solid var(--ink);border-radius:14px;background:var(--screen);text-align:left}
+.demo pre{margin:0;font-family:var(--mono);font-weight:500;font-size:16px;color:#6fc8ff}
+.demo .dc{color:#fff;background:rgba(242,193,78,.25);outline:2px solid var(--gold);border-radius:3px}
+.demo .dg{color:#4b5160}
+.dl{position:relative;height:40px;border-radius:8px;background:#24170f;overflow:hidden}
+.dl .dh{position:absolute;left:10px;top:3px;width:34px;height:34px;border-radius:50%;border:3px solid var(--gold);box-sizing:border-box}
+.dl b{position:absolute;top:6px;width:28px;height:28px;margin-left:-1px;border-radius:7px;border:2.5px solid var(--ink);box-sizing:border-box;background:var(--paper);box-shadow:inset 0 -5px 0 var(--c);font-family:var(--display);font-size:16px;line-height:22px;text-align:center;color:var(--ink)}
+.dk{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.dk span{font-family:var(--display);font-weight:700;font-size:18px;padding:5px 4px 8px;border:2.5px solid var(--ink);border-radius:10px;background:var(--paper);box-shadow:inset 0 -6px 0 var(--c);text-align:center}
+.dk .ok{outline:3px solid var(--ok);outline-offset:1px}
+.demo p{margin:0;font-size:12px;font-weight:900;color:var(--gold)}
+.best{font-weight:900;font-size:13px;color:var(--paper);text-shadow:var(--sticker);min-height:1.4em}
+.home{pointer-events:auto;font-weight:900;font-size:14px;color:var(--paper);text-shadow:var(--sticker);text-underline-offset:4px}
+
+#lang,#roast{justify-content:center;background:rgba(26,15,11,.72)}
+.pick{width:min(340px,100%);display:flex;flex-direction:column;gap:10px}
+.pick h2{margin:0;font-weight:900;font-size:24px;color:var(--paper);text-shadow:var(--sticker)}
+.pick p{margin:0;font-weight:900;font-size:12.5px;line-height:1.45;color:var(--gold);text-shadow:var(--sticker)}
+.langs{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.lb{pointer-events:auto;font:inherit;display:flex;flex-direction:column;align-items:flex-start;gap:2px;padding:9px 11px;border:3px solid var(--ink);border-radius:14px;background:var(--paper);color:var(--ink);box-shadow:0 4px 0 var(--ink);cursor:pointer;text-align:left;touch-action:manipulation}
+.lb:active{transform:translateY(3px);box-shadow:0 1px 0 var(--ink)}
+.lb b{font-family:var(--display);font-weight:700;font-size:20px;line-height:1.1}
+.lb i{font-style:normal;font-size:12px;color:var(--red);letter-spacing:1px}
+.lb span{font-size:11.5px;line-height:1.3;opacity:.8}
+.lb em{font-style:normal;font-weight:900;font-size:11.5px;color:#9a6b12}
+.lb.last{border-color:#2f6f3a}
+.roast{width:min(330px,100%);display:flex;flex-direction:column;gap:12px;align-items:center}
+.roast h2{margin:0;font-weight:900;font-size:40px;line-height:1.1;color:var(--paper);text-shadow:var(--sticker),0 5px 0 var(--ink);transform:rotate(-4deg)}
+.roast h2 span{display:block;color:var(--gold);font-family:var(--display);font-size:1.15em}
+.roast p{margin:0;padding:10px 14px;border:3px solid var(--ink);border-radius:14px;background:var(--paper);font-weight:900;font-size:16px;line-height:1.45}
+
+#bow,#over,#pause{justify-content:center;background:rgba(26,15,11,.6)}
+.card{width:min(330px,100%);max-height:100%;overflow-y:auto;touch-action:pan-y;overscroll-behavior:contain;display:flex;flex-direction:column;gap:11px;padding:16px;border:3px solid var(--ink);border-radius:22px;background:var(--paper);box-shadow:0 7px 0 var(--ink);text-align:left;animation:pop .35s cubic-bezier(.3,1.5,.5,1)}
+@keyframes pop{from{transform:scale(.85);opacity:0}}
+.verdict{margin:0;font-weight:900;font-size:26px;line-height:1.25}
+.verdict .n{color:var(--red)}
+.big{display:flex;align-items:baseline;gap:10px;padding:9px 14px;border:2.5px solid var(--ink);border-radius:14px;background:#fff}
+.big b{font-family:var(--display);font-weight:700;font-size:42px;line-height:1;color:var(--red);font-variant-numeric:tabular-nums}
+.big span{font-weight:900;font-size:14px}
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:8px 12px;margin:0}
+.stats dt{font-size:12px;opacity:.65}
+.stats dd{margin:0;font-weight:900;font-size:16px;font-variant-numeric:tabular-nums}
+.stats .wide{grid-column:1/-1}
+.acts{display:flex;flex-wrap:wrap;gap:9px;align-items:center}
+.copied{font-size:13px;font-weight:900;color:var(--ok);min-height:1.3em;user-select:text;-webkit-user-select:text}
+.note{margin:0;font-size:14px;opacity:.75}
+/* 用打賞換裝備 */
+.shop{pointer-events:auto;width:min(330px,100%);display:flex;flex-direction:column;gap:6px}
+.bank{margin:0;font-weight:900;font-size:13px}
+.bank b{color:var(--red);font-size:1.15em}
+#shopT .bank{color:var(--paper);text-shadow:var(--sticker)}
+#shopT .bank b{color:var(--gold)}
+.goods{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.buy{pointer-events:auto;font:inherit;display:flex;flex-direction:column;gap:1px;align-items:flex-start;padding:7px 9px;border:2.5px solid var(--ink);border-radius:12px;background:#fff;color:var(--ink);cursor:pointer;text-align:left;touch-action:manipulation}
+.buy b{font-weight:900;font-size:14px}
+.buy b small{font-size:11px;color:#9a6b12;margin-left:4px}
+.buy span{font-size:11px;line-height:1.3;opacity:.75}
+.buy em{font-style:normal;font-weight:900;font-size:12px;color:var(--red)}
+.buy:disabled{opacity:.55;cursor:default}
+.buy:not(:disabled):active{transform:translateY(2px)}
+@media (prefers-reduced-motion:reduce){.card,.banner{animation:none}.phone{animation:none}#code .cur{animation:none}}
+</style>
+</head>
+<body>
+<div id="game">
+  <div id="stage">
+    <canvas id="c" aria-label="穿格子襯衫的工程師坐在戲台上的桌子前打鍵盤，台下坐著觀眾"></canvas>
+    <div class="hud" id="hud" hidden>
+      <div class="left">
+        <div class="showno"><small>第</small><b id="sn">1</b><small>場</small></div>
+        <div class="venue" id="venue"></div>
+      </div>
+      <div class="side">
+        <button class="icon-btn" id="pauseBtn" type="button" aria-label="暫停"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="6" y="5" width="4.5" height="14" rx="1.6"/><rect x="13.5" y="5" width="4.5" height="14" rx="1.6"/></svg></button>
+        <button class="icon-btn" id="mute" type="button" aria-label="聲音開關"></button>
+      </div>
+    </div>
+    <div class="banner" id="banner" hidden></div>
+    <button class="phone" id="phone" type="button" hidden><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M6.6 10.8a15.1 15.1 0 0 0 6.6 6.6l2.2-2.2a1 1 0 0 1 1-.25 11.4 11.4 0 0 0 3.6.57 1 1 0 0 1 1 1V20a1 1 0 0 1-1 1A17 17 0 0 1 3 4a1 1 0 0 1 1-1h3.5a1 1 0 0 1 1 1c0 1.25.2 2.45.57 3.6a1 1 0 0 1-.25 1z"/></svg>PM 來電・掛掉</button>
+    <div class="cap" id="cap"></div>
+  </div>
+
+  <div id="desk" hidden>
+    <div class="meter"><span class="lbl">觀眾熱度</span><div class="bar" id="bar"><i id="heat"></i></div><em id="combo"></em></div>
+    <canvas id="lane" aria-label="音符從右邊飛過來，飛到左邊圈圈的時候，按一樣字母的鍵"></canvas>
+    <div id="codebox"><pre id="code"></pre><div class="lang" id="langTag"></div><div class="out" id="out" hidden></div></div>
+    <button class="aibar" id="aiBar" type="button" hidden>✦ 求助 <span id="aiName">Claude</span>：剩下的我幫你打</button>
+    <div id="keyarea">
+      <div id="keys"></div>
+      <button class="cover" id="runBtn" type="button" hidden>▶ Run</button>
+      <button class="cover" id="ama" type="button" hidden><svg viewBox="0 0 48 48" aria-hidden="true"><circle cx="24" cy="9" r="6" fill="#c9c9c9" stroke="#2a1d1a" stroke-width="2"/><circle cx="24" cy="27" r="16" fill="#f3c9a0" stroke="#2a1d1a" stroke-width="2.5"/><path d="M9 24c1-10 29-10 30 0-4-5-26-5-30 0z" fill="#c9c9c9" stroke="#2a1d1a" stroke-width="2"/><circle cx="18" cy="27" r="3.6" fill="none" stroke="#2a1d1a" stroke-width="1.8"/><circle cx="30" cy="27" r="3.6" fill="none" stroke="#2a1d1a" stroke-width="1.8"/><path d="M21.6 27h4.8" stroke="#2a1d1a" stroke-width="1.6"/><path d="M19 35q5 3 10 0" fill="none" stroke="#2a1d1a" stroke-width="2" stroke-linecap="round"/><ellipse cx="13" cy="32" rx="2.6" ry="1.6" fill="#f29a8f"/><ellipse cx="35" cy="32" rx="2.6" ry="1.6" fill="#f29a8f"/></svg><span><span id="amaQ"></span><small>點這裡回答阿嬤</small></span></button>
+    </div>
+  </div>
+
+  <div class="screen" id="title">
+    <h1 class="logo">純手打<span>Code</span></h1>
+    <p class="tag">AI 都會寫了，你還在手打？<br>傳統技藝，現場一個字一個字打給你看。</p>
+    <p class="nocode">不用會寫程式，看字母按鍵盤就好</p>
+    <ul class="how">
+      <li><b>音符飛到圈圈</b> 按一樣的字母</li>
+      <li><b>漏掉、按錯</b> 觀眾會走</li>
+      <li><b>每 4 場</b> 十三行特別演出</li>
+    </ul>
+    <div class="demo" aria-hidden="true">
+      <div class="dl"><i class="dh"></i><b style="--c:#f2c14e;left:14px">F</b><b style="--c:#5fbf7f;left:92px">J</b><b style="--c:#ef8a3a;left:150px">D</b><b style="--c:#4aa3df;left:208px">K</b></div>
+      <div class="dk"><span style="--c:#ef8a3a">D</span><span class="ok" style="--c:#f2c14e">F</span><span style="--c:#5fbf7f">J</span><span style="--c:#4aa3df">K</span></div>
+      <p>音符飛進圈圈的那一刻，按同一個字母</p>
+    </div>
+    <div class="shop" id="shopT" hidden></div>
+    <div class="gap"></div>
+    <button class="btn" id="start" type="button">上台表演</button>
+    <div class="best" id="best"></div>
+    <a class="home" href="../">其他遊戲</a>
+  </div>
+
+  <div class="screen" id="lang" hidden>
+    <div class="pick">
+      <h2>今天手打哪一種？</h2>
+      <p>不用會寫程式：每種語言是一首歌，音符飛到圈圈時按一樣的字母就好。<br>越難的歌越快、越密，打賞也越多。選了就打到這次巡演結束。</p>
+      <div class="langs" id="langs"></div>
+      <button class="btn ghost" id="langBack" type="button">先不要</button>
+    </div>
+  </div>
+
+  <div class="screen" id="roast" hidden>
+    <div class="roast">
+      <h2 id="roastH">HTML<span>不是程式語言！</span></h2>
+      <p id="roastP"></p>
+      <button class="btn" id="roastOk" type="button">好啦，我重選</button>
+    </div>
+  </div>
+
+  <div class="screen" id="bow" hidden>
+    <div class="card">
+      <p class="verdict" id="bowV">謝幕！</p>
+      <div class="big"><b id="bowTip">+0</b><span>元打賞</span></div>
+      <dl class="stats">
+        <div><dt>完美／不錯</dt><dd id="bowAcc"></dd></div>
+        <div><dt>最大連擊</dt><dd id="bowCombo"></dd></div>
+        <div><dt>漏掉</dt><dd id="bowTime"></dd></div>
+        <div><dt>謝幕時的熱度</dt><dd id="bowHeat"></dd></div>
+      </dl>
+      <div class="shop" id="shopB"></div>
+      <div class="acts"><button class="btn" id="next" type="button">下一場</button></div>
+    </div>
+  </div>
+
+  <div class="screen" id="over" hidden>
+    <div class="card">
+      <p class="verdict" id="ovV"></p>
+      <div class="big"><b id="ovBig">0</b><span>場，順利謝幕</span></div>
+      <dl class="stats">
+        <div><dt>這次巡演的打賞</dt><dd id="ovTips"></dd></div>
+        <div><dt>最佳紀錄</dt><dd id="ovBest"></dd></div>
+        <div><dt>封號</dt><dd id="ovRank"></dd></div>
+        <div><dt>手打的語言</dt><dd id="ovLang"></dd></div>
+        <div class="wide"><dt>怎麼結束的</dt><dd id="ovWhy"></dd></div>
+      </dl>
+      <div class="shop" id="shopO"></div>
+      <div class="acts">
+        <button class="btn" id="again" type="button">再巡演一次</button>
+        <button class="btn ghost" id="share" type="button">複製戰績</button>
+      </div>
+      <div class="copied" id="copied"></div>
+    </div>
+  </div>
+
+  <div class="screen" id="pause" hidden>
+    <div class="card">
+      <p class="verdict">暫停中</p>
+      <p class="note">離開畫面會自動暫停。音樂和觀眾都會等你，按「繼續」就接著打。</p>
+      <div class="acts"><button class="btn" id="resume" type="button">繼續</button></div>
+    </div>
+  </div>
+</div>
+<script type="text/plain" id="progs">
+@@ py|Python|1|1|慢歌，適合暖身
+print("宜蘭好好玩")
+>>>
+宜蘭好好玩
+---
+name = "阿嬤"
+print("你好，" + name)
+>>>
+你好，阿嬤
+---
+happy = True
+if happy:
+    print("謝謝大家")
+>>>
+謝謝大家
+---
+for i in range(3):
+    print("手打", i)
+>>>
+手打 0
+手打 1
+手打 2
+---
+def tip(n):
+    return n * 100
+print(tip(3))
+>>>
+300
+---
+total = 0
+for x in [100, 200, 500]:
+    total += x
+print("打賞", total)
+>>>
+打賞 800
+---
+seats = 30
+fans = 0
+while fans < seats:
+    fans += 7
+print("滿座", fans)
+>>>
+滿座 35
+---
+def show(day):
+    if day % 4 == 0:
+        return "十三行"
+    else:
+        return "傳藝中心"
+for d in range(1, 5):
+    print(d, show(d))
+>>>
+1 傳藝中心
+2 傳藝中心
+3 傳藝中心
+4 十三行
+---
+menu = {"鴨賞": 120, "牛舌餅": 60}
+cost = 0
+for food, price in menu.items():
+    print(food, price)
+    cost += price
+print("總共", cost)
+>>>
+鴨賞 120
+牛舌餅 60
+總共 180
+@@ js|JavaScript|2|1.15|節奏忽快忽慢
+console.log("宜蘭好好玩");
+>>>
+宜蘭好好玩
+---
+const name = "阿公";
+console.log("你好，" + name);
+>>>
+你好，阿公
+---
+for (let i = 0; i < 3; i++) {
+  console.log("手打", i);
+}
+>>>
+手打 0
+手打 1
+手打 2
+---
+function tip(n) {
+  return n * 100;
+}
+console.log(tip(3));
+>>>
+300
+---
+const a = 1;
+const b = "1";
+console.log(a == b);
+console.log(a === b);
+>>>
+true
+false
+---
+const tips = [100, 200, 500];
+let total = 0;
+for (const t of tips) {
+  total += t;
+}
+console.log("打賞", total);
+>>>
+打賞 800
+---
+const show = (day) => day % 4 === 0 ? "十三行" : "傳藝中心";
+for (let d = 1; d <= 4; d++) {
+  console.log(d, show(d));
+}
+>>>
+1 傳藝中心
+2 傳藝中心
+3 傳藝中心
+4 十三行
+---
+const menu = { "鴨賞": 120, "牛舌餅": 60 };
+let cost = 0;
+for (const [food, price] of Object.entries(menu)) {
+  console.log(food, price);
+  cost += price;
+}
+console.log("總共", cost);
+>>>
+鴨賞 120
+牛舌餅 60
+總共 180
+@@ c|C|2|1.2|穩穩的四拍，一拍都不能少
+#include <stdio.h>
+int main() {
+    printf("宜蘭好好玩\n");
+    return 0;
+}
+>>>
+宜蘭好好玩
+---
+#include <stdio.h>
+int main() {
+    int tip = 100;
+    printf("打賞 %d\n", tip * 3);
+    return 0;
+}
+>>>
+打賞 300
+---
+#include <stdio.h>
+int main() {
+    for (int i = 0; i < 3; i++) {
+        printf("手打 %d\n", i);
+    }
+    return 0;
+}
+>>>
+手打 0
+手打 1
+手打 2
+---
+#include <stdio.h>
+int add(int a, int b) {
+    return a + b;
+}
+int main() {
+    printf("%d\n", add(100, 200));
+    return 0;
+}
+>>>
+300
+---
+#include <stdio.h>
+int main() {
+    int tips[3] = {100, 200, 500};
+    int total = 0;
+    for (int i = 0; i < 3; i++) {
+        total += tips[i];
+    }
+    printf("打賞 %d\n", total);
+    return 0;
+}
+>>>
+打賞 800
+---
+#include <stdio.h>
+void twice(int *n) {
+    *n = *n * 2;
+}
+int main() {
+    int fans = 21;
+    twice(&fans);
+    printf("粉絲 %d\n", fans);
+    return 0;
+}
+>>>
+粉絲 42
+---
+#include <stdio.h>
+int main() {
+    int day = 1;
+    while (day <= 4) {
+        if (day % 4 == 0) {
+            printf("%d 十三行\n", day);
+        } else {
+            printf("%d 傳藝中心\n", day);
+        }
+        day++;
+    }
+    return 0;
+}
+>>>
+1 傳藝中心
+2 傳藝中心
+3 傳藝中心
+4 十三行
+@@ java|Java|2|1.25|一首很長的歌
+public class Main {
+    public static void main(String[] args) {
+        System.out.println("宜蘭好好玩");
+    }
+}
+>>>
+宜蘭好好玩
+---
+public class Main {
+    public static void main(String[] args) {
+        String name = "阿嬤";
+        System.out.println("你好，" + name);
+    }
+}
+>>>
+你好，阿嬤
+---
+public class Main {
+    public static void main(String[] args) {
+        for (int i = 0; i < 3; i++) {
+            System.out.println("手打 " + i);
+        }
+    }
+}
+>>>
+手打 0
+手打 1
+手打 2
+---
+public class Main {
+    static int tip(int n) {
+        return n * 100;
+    }
+    public static void main(String[] args) {
+        System.out.println(tip(3));
+    }
+}
+>>>
+300
+---
+public class Main {
+    public static void main(String[] args) {
+        int[] tips = {100, 200, 500};
+        int total = 0;
+        for (int t : tips) {
+            total += t;
+        }
+        System.out.println("打賞 " + total);
+    }
+}
+>>>
+打賞 800
+---
+public class Main {
+    static class AbstractTipCalculatorFactory {
+        int create() {
+            return 42;
+        }
+    }
+    public static void main(String[] args) {
+        AbstractTipCalculatorFactory f = new AbstractTipCalculatorFactory();
+        System.out.println("打賞 " + f.create());
+    }
+}
+>>>
+打賞 42
+@@ rust|Rust|3|1.5|又快又密
+fn main() {
+    println!("宜蘭好好玩");
+}
+>>>
+宜蘭好好玩
+---
+fn main() {
+    let name = "阿嬤";
+    println!("你好，{}", name);
+}
+>>>
+你好，阿嬤
+---
+fn main() {
+    for i in 0..3 {
+        println!("手打 {}", i);
+    }
+}
+>>>
+手打 0
+手打 1
+手打 2
+---
+fn tip(n: i32) -> i32 {
+    n * 100
+}
+fn main() {
+    println!("{}", tip(3));
+}
+>>>
+300
+---
+fn main() {
+    let tips = vec![100, 200, 500];
+    let total: i32 = tips.iter().sum();
+    println!("打賞 {}", total);
+}
+>>>
+打賞 800
+---
+fn twice(n: &mut i32) {
+    *n *= 2;
+}
+fn main() {
+    let mut fans = 21;
+    twice(&mut fans);
+    println!("粉絲 {}", fans);
+}
+>>>
+粉絲 42
+---
+fn main() {
+    for day in 1..=4 {
+        match day % 4 {
+            0 => println!("{} 十三行", day),
+            _ => println!("{} 傳藝中心", day),
+        }
+    }
+}
+>>>
+1 傳藝中心
+2 傳藝中心
+3 傳藝中心
+4 十三行
+@@ html|HTML|1|1|網頁的老朋友
+@@ basic|BASIC|0|2|出土文物
+10 PRINT "HELLO, SHIHSANHANG"
+20 GOTO 10
+>>>
+HELLO, SHIHSANHANG
+HELLO, SHIHSANHANG
+HELLO, SHIHSANHANG
+……（停不下來）
+@@ fortran|FORTRAN|0|2|出土文物
+      PROGRAM HELLO
+      DO 10 I = 1, 3
+      PRINT *, 'HELLO', I
+   10 CONTINUE
+      END
+>>>
+ HELLO           1
+ HELLO           2
+ HELLO           3
+@@ cobol|COBOL|0|2|出土文物
+IDENTIFICATION DIVISION.
+PROGRAM-ID. HELLO.
+PROCEDURE DIVISION.
+    DISPLAY "HELLO, MUSEUM".
+    STOP RUN.
+>>>
+HELLO, MUSEUM
+@@ asm|組合語言|0|2|出土文物
+mov eax, 4
+mov ebx, 1
+mov ecx, msg
+mov edx, 5
+int 0x80
+>>>
+HELLO
+</script>
+<script>
+(() => {
+'use strict';
+const clamp=(x,a,b)=>x<a?a:x>b?b:x, lerp=(a,b,t)=>a+(b-a)*t, TAU=Math.PI*2;
+const rnd=(a,b)=>a+Math.random()*(b-a), pick=a=>a[(Math.random()*a.length)|0];
+const shuffle=a=>{for(let i=a.length-1;i>0;i--){const j=(Math.random()*(i+1))|0;[a[i],a[j]]=[a[j],a[i]];}return a;};
+const store={get(k){try{return localStorage.getItem(k)}catch(e){return null}},set(k,v){try{localStorage.setItem(k,v)}catch(e){}}};
+const $=id=>document.getElementById(id);
+const esc=s=>s.replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const INK='#2a1d1a',PAPER='#fff6e5',RED='#b8332b',GOLD='#f2c14e';
+const FONT='"Chiron GoRound TC","PingFang TC","Microsoft JhengHei",sans-serif';
+const DISP='"Fredoka","Chiron GoRound TC",sans-serif';
+const MONO='"JetBrains Mono",Menlo,Consolas,monospace';
+function rrect(c,x,y,w,h,r){c.beginPath();c.moveTo(x+r,y);c.arcTo(x+w,y,x+w,y+h,r);c.arcTo(x+w,y+h,x,y+h,r);c.arcTo(x,y+h,x,y,r);c.arcTo(x,y,x+w,y,r);c.closePath();}
+
+/* ───────── 規則 ─────────
+   一次巡演是一場接一場的表演，每一場是一首歌。寫著字母的音符從右邊飛過來，飛進左邊圈圈的那一刻，按同一個字母的鍵。
+   差 W[0] 秒內算完美、W[1] 秒內不錯、W[2] 秒內勉強；超過還沒按、或是按錯字母，都算漏掉。
+   打中觀眾熱度上升，漏掉往下掉；第二場起觀眾也會越來越不耐煩（熱度每秒掉一點）。熱度掉到 0 觀眾就走光，巡演結束。歌唱完、熱度還在，就按 Run，程式跑出結果，觀眾打賞。
+   每打中一顆，螢幕上的程式就多長出一段；漏掉的那段會變成紅色的錯字。
+   越後面的場次歌越快、越密，鍵也越多（先是 D F J K，再加 S L，再加上排的 E R U I）。不用會寫程式，只要看字母。
+   熱度很低的時候會冒出「求助 AI」，按了就被觀眾抓包，直接結束。
+   每 SHL_EVERY 場是十三行博物館的特別演出：歌是出土的古老語言，音符上的字母被土蓋住，快到圈圈才看得到。
+   干擾：小朋友衝上台把鍵帽拔起來亂插（點他）、阿嬤擋在鍵盤前面問問題（點她回答）、PM 打電話來（掛掉，不然熱度一直掉）。
+   打賞會存起來，可以買裝備，下一次巡演還在 */
+const VW=360,VH=250,LW=360,LH=76,HIT_X=40,PX_BEAT=118;
+const W=[.07,.14,.2],GRADE=['完美','不錯','勉強'],HEAT0=60,H_GAIN=[3,2,.8],H_MISS=10,H_COMBO=.04,DRAIN_N=.3,DRAIN_MAX=4;
+const PHONE_DRAIN=2.5,PHONE_T=5,PHONE_PEN=8,KID_T=[1.9,1.2],KID_MIX=6,DIRT_T=.45,SHL_EVERY=4,COUNT_IN=4;
+const AI_ON=35,AI_OFF=45,AI_FROM=8,AI_STEP=.035,COMPILE_T=.8,OUT_T=2.4,INTRO_T=1.6,SEATS=24;
+// 鍵：一排或兩排。同一根手指的鍵同一個顏色
+const KEYSETS=[[['D','F','J','K']],[['S','D','F','J','K','L']],[['E','R','U','I'],['D','F','J','K']],[['E','R','U','I'],['S','D','F','J','K','L']]];
+const KEYCOL={S:'#e0503f',D:'#ef8a3a',E:'#ef8a3a',F:'#f2c14e',R:'#f2c14e',J:'#5fbf7f',U:'#5fbf7f',K:'#4aa3df',I:'#4aa3df',L:'#8b6fd6'};
+// 每種語言一首歌：多快（每分鐘幾拍）、半拍音符多不多、休息多不多、歌多長
+// 曲風 style、主音 key（MIDI 音高，低音那一個八度）、小調 minor
+const SONG={py:{bpm:92,e8:.05,rest:.14,len:1,style:'zheng',key:48},js:{bpm:100,e8:.2,rest:.16,len:1,style:'swing',key:50},c:{bpm:104,e8:.08,rest:.05,len:1.05,style:'march',key:53},
+  java:{bpm:96,e8:.1,rest:.08,len:1.3,style:'grand',key:43},rust:{bpm:112,e8:.26,rest:.06,len:1.1,style:'electro',key:45,minor:1},
+  basic:{bpm:92,e8:.08,rest:.1,len:1,style:'ancient',key:40,minor:1},fortran:{bpm:96,e8:.08,rest:.1,len:1,style:'ancient',key:42,minor:1},cobol:{bpm:96,e8:.1,rest:.08,len:1.05,style:'ancient',key:40,minor:1},asm:{bpm:100,e8:.12,rest:.08,len:1,style:'ancient',key:43,minor:1}};
+// 和弦進行（從主音算幾個半音）：大調 一、六、四、五；小調 一、六、三、七
+const PROG=[[0,[0,4,7]],[9,[0,3,7]],[5,[0,4,7]],[7,[0,4,7]]],PROG_M=[[0,[0,3,7]],[8,[0,4,7]],[3,[0,4,7]],[10,[0,4,7]]];
+const PENTA=[0,2,4,7,9],PENTA_M=[0,3,5,7,10];
+// 第 n 場：用哪一組鍵、歌快多少、觀眾每秒不耐煩多少（熱度往下掉）、半拍多多少、幾顆音符、多久來一次干擾、小朋友走多快。
+// 第 16 場以後歌還會再慢慢變快、觀眾越來越不耐煩，所以一定會結束
+const showOf=n=>{const shl=n%SHL_EVERY===0;return{n,shl,ks:n<=2?0:n<=4?1:n<=7?2:3,bpmUp:n<=16?6*(n-1):90+3*(n-16),drain:Math.min(DRAIN_MAX,DRAIN_N*(n-1))+Math.max(0,.25*(n-15)),e8Up:Math.min(.3,.025*(n-1)),notes:Math.min(70,24+3*n),
+  evGap:Math.max(3.6,9.5-.5*n),kidT:lerp(KID_T[0],KID_T[1],clamp((n-2)/10,0,1))};};
+// 用打賞換的裝備（買了就一直有）
+const UPG={coffee:{name:'咖啡',desc:'漏掉扣的熱度少一點',max:3,cost:[800,1800,3000]},
+  keyboard:{name:'機械鍵盤',desc:'判定時間寬一點',max:3,cost:[600,1500,2500]},
+  fans:{name:'親友團',desc:'開場熱度高一點',max:3,cost:[900,2000,3200]},
+  bracket:{name:'自動補括號',desc:'每首歌少幾顆音符',max:1,cost:[2500]}};
+const RANKS=[[25,'人間國寶'],[15,'國寶級手打師傅'],[10,'手打 code 傳人'],[6,'技術長'],[3,'資深工程師'],[1,'實習生'],[0,'台下的觀眾都比你會打']];
+const WHY={leave:'漏太多，觀眾都走光了',ai:'在台上求助 AI，被觀眾抓包'};
+const AI_NAMES=['Claude','Codex'];
+const AMA_Q=['少年仔，這咧是咧創啥？','有影無影，用手打喔？','這會當食袂？','你哪會無用 AI？','阿你這一場是賣偌濟？','這敢是咧拍電報？'];
+const AMA_A=['阿嬤，這是手工的啦！','純手打，無添加 AI！','阿嬤，這袂當食啦','阿嬤，等一下有 Run 給你看'];
+const CHEERS=['好！','讚喔！','手速！','傳統技藝！','再來一個！','好扎實！'];
+
+/* ───────── 題庫 ─────────
+   題庫寫在頁面裡的 <script type="text/plain" id="progs">：
+   「@@ 代號|名稱|難度星數|打賞倍率|一句介紹」開始一種語言，程式之間用 ---，程式和它的輸出之間用 >>>。
+   程式只是畫面：打中音符，螢幕上就照順序長出這支程式 */
+function parseProgs(txt){const out={};let L=null,p=null,part='code';
+  for(const raw of txt.split('\n')){const line=raw.replace(/\r$/,'');
+    if(line.startsWith('@@ ')){const f=line.slice(3).split('|');L=out[f[0]]={id:f[0],name:f[1],stars:+f[2],mul:+f[3],note:f[4]||'',progs:[]};p={code:[],out:[]};L.progs.push(p);part='code';continue;}
+    if(!L)continue;if(line==='---'){p={code:[],out:[]};L.progs.push(p);part='code';continue;}if(line==='>>>'){part='out';continue;}p[part].push(line);}
+  for(const id in out)out[id].progs=out[id].progs.map(q=>({code:q.code.join('\n').replace(/^\n+|\s+$/g,''),out:q.out.join('\n').replace(/^\n+|\s+$/g,'')})).filter(q=>q.code);
+  return out;}
+const P=parseProgs($('progs').textContent);
+const PLAY=['py','js','c','java','rust','html'],ANCIENT=['basic','fortran','cobol','asm'];
+const KW={py:'def return for in if else elif while True False None and or not',js:'const let var function return for of in if else true false null new',
+  c:'int void return for while if else char',java:'public class static void int return for if else new',rust:'fn let mut for in match return if else',
+  basic:'PRINT GOTO',fortran:'PROGRAM DO PRINT CONTINUE END',cobol:'IDENTIFICATION DIVISION PROGRAM-ID PROCEDURE DISPLAY STOP RUN',asm:'mov int'};
+for(const k in KW)KW[k]=new Set(KW[k].split(' '));
+const RE_DEF=/(\s+)|("(?:\\.|[^"\\\n])*"|'(?:\\.|[^'\\\n])*')|(#include|<[a-z]+\.h>)|(0x[0-9a-fA-F]+|\d+(?:\.\d+)?)|([A-Za-z_]\w*)|(\.\.=|\.\.|::|->|=>|===|!==|==|!=|<=|>=|\+=|-=|\*=|\/=|%=|\+\+|--|&&|\|\||[{}()[\];,.:+\-*\/%<>=!&|?#@^~])|([\s\S])/g;
+const RE_RUST=/(\s+)|("(?:\\.|[^"\\\n])*")|(#include)|(0x[0-9a-fA-F]+|\d+(?:\.\d+)?)|([A-Za-z_]\w*!?)|(\.\.=|\.\.|::|->|=>|==|!=|<=|>=|\+=|-=|\*=|\/=|%=|&&|\|\||[{}()[\];,.:+\-*\/%<>=!&|?#@^~])|([\s\S])/g;
+const RE_COBOL=/(\s+)|("(?:\\.|[^"\\\n])*")|(#include)|(\d+)|([A-Za-z_]\w*(?:-\w+)*)|([.,()])|([\s\S])/g;
+// 把程式切成一個一個字（上色用）；空白和換行會自己出現
+function tokenize(code,lang){const re=lang==='rust'?RE_RUST:lang==='cobol'?RE_COBOL:RE_DEF,pieces=[],toks=[];re.lastIndex=0;let m;
+  while((m=re.exec(code))){if(m[1]){pieces.push({s:m[1],ws:true});continue;}
+    const k=m[2]?'str':m[3]?'pre':m[4]?'num':m[5]?'id':'op',t={s:m[0],k,i:toks.length};pieces.push(t);toks.push(t);}
+  const kw=KW[lang]||new Set();
+  toks.forEach((t,i)=>{if(t.k!=='id')return;const nx=toks[i+1];
+    if(kw.has(t.s))t.k='kw';else if(t.s.endsWith('!')||(nx&&nx.s==='('))t.k='fn';else if((lang==='java'||lang==='rust')&&/^[A-Z]/.test(t.s))t.k='ty';});
+  return{pieces,toks};}
+const cols=s=>{let n=0;for(const ch of s)n+=ch.charCodeAt(0)>0x2e80?2:1;return n;};
+// 一首歌：先數四拍，然後一顆一顆音符；大多一拍一顆，偶爾半拍，偶爾休息一拍
+function makeSong(cfg,L){
+  const sp=SONG[L.id]||SONG.py,bpm=sp.bpm+cfg.bpmUp,beat=60/bpm,e8=sp.e8+cfg.e8Up,rest=sp.rest,n=Math.round(cfg.notes*sp.len*(up.bracket?.88:1));
+  const keys=KEYSETS[cfg.ks].flat(),notes=[];let t=.4+COUNT_IN*beat,half=false;
+  for(let i=0;i<n;i++){let k;do k=pick(keys);while(notes.length>=2&&notes[i-1].k===k&&notes[i-2].k===k);notes.push({t,k,st:0,g:-1});
+    const r=Math.random();let gap=1;if(half){gap=.5;half=false;}else if(r<e8){gap=.5;half=Math.random()<.5;}else if(r<e8+rest)gap=2;t+=gap*beat;}
+  const sc=sp.minor?PENTA_M:PENTA,lad=[];for(let o=0;o<3;o++)for(const d of sc)lad.push(sp.key+24+o*12+d);let li=5;
+  for(const q of notes){const r=Math.random();li+=r<.3?-1:r<.6?1:r<.75?-2:r<.9?2:0;if(li<2)li=3;if(li>lad.length-3)li=lad.length-4;q.m=lad[li];}
+  const steps=Math.ceil((notes[n-1].t-.4)/beat*2)+4;
+  // 歌在最後一格（敲鑼收尾）之後才算唱完
+  return{bpm,beat,notes,style:sp.style,key:sp.key,minor:!!sp.minor,end:Math.max(notes[n-1].t+.6,.4+(steps-1)*beat/2+.15),steps};}
+
+/* ───────── 聲音 ───────── */
+const mtof=m=>440*Math.pow(2,(m-69)/12);
+const Snd={ctx:null,on:store.get('sd.mute')!=='1',
+  init(){if(this.ctx){if(this.ctx.state==='suspended'&&!paused)this.ctx.resume();return;}
+    try{const C=window.AudioContext||window.webkitAudioContext,c=this.ctx=new C();this.master=c.createGain();this.master.gain.value=this.on?1:0;this.master.connect(c.destination);
+      const buf=c.createBuffer(1,c.sampleRate,c.sampleRate),d=buf.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=Math.random()*2-1;this.noise=buf;this.music();}catch(e){this.ctx=null;}},
+  blip(f0,f1,dur,type,vol,delay){if(!this.ctx)return;const c=this.ctx,t=c.currentTime+(delay||0),o=c.createOscillator(),g=c.createGain();
+    o.type=type||'sine';o.frequency.setValueAtTime(f0,t);o.frequency.exponentialRampToValueAtTime(Math.max(30,f1),t+dur);
+    g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(vol||.1,t+.01);g.gain.exponentialRampToValueAtTime(.0008,t+dur);o.connect(g);g.connect(this.master);o.start(t);o.stop(t+dur+.03);},
+  burst(dur,freq,vol,type,delay){if(!this.ctx)return;const c=this.ctx,t=c.currentTime+(delay||0),n=c.createBufferSource(),f=c.createBiquadFilter(),g=c.createGain();n.buffer=this.noise;n.loop=true;f.type=type||'lowpass';f.frequency.value=freq;
+    g.gain.setValueAtTime(vol,t);g.gain.exponentialRampToValueAtTime(.001,t+dur);n.connect(f);f.connect(g);g.connect(this.master);n.start(t);n.stop(t+dur+.05);},
+  key(){const k=up.keyboard;this.burst(.035,2600+Math.random()*900,.16+.05*k,'highpass');this.blip(170,90,.05,'square',.03+.012*k);},
+  hit(g){this.key();this.blip(g===0?1046:g===1?880:660,g===0?1568:1100,.09,'triangle',g===0?.07:.05);},
+  tap(g){this.burst(.03,2800+Math.random()*700,.07+.03*up.keyboard,'highpass');if(g===0)this.blip(2093,2093,.05,'sine',.025);},
+  bad(){this.blip(220,110,.2,'sawtooth',.07);},
+  drum(d,v){this.blip(140,55,.28,'sine',.3*(v||1),d);this.burst(.09,500,.2*(v||1),'lowpass',d);},
+  wood(d){this.blip(1200,900,.05,'square',.05,d);this.burst(.03,3000,.08,'bandpass',d);},
+  gong(d){for(const[f,v]of[[196,.12],[294,.07],[415,.05],[587,.035]])this.blip(f,f*.985,1.7,'sine',v,d);this.burst(.5,3200,.08,'bandpass',d);},
+  opening(){this.drum(0);this.drum(.2);this.gong(.42);},
+  cheer(v){this.burst(.9,1300,.12*v,'bandpass');this.burst(.6,2600,.05*v,'bandpass',.1);for(let i=0;i<3;i++)this.blip(700+Math.random()*500,900+Math.random()*500,.12,'triangle',.02*v,.05+i*.1);},
+  boo(){this.burst(.9,360,.24,'lowpass');this.blip(150,118,.7,'sawtooth',.04);},
+  coin(d){this.blip(1300,1900,.09,'triangle',.05,d||0);},
+  ring(){this.blip(880,880,.1,'square',.045);this.blip(660,660,.1,'square',.045,.13);},
+  giggle(){for(let i=0;i<4;i++)this.blip(900+i*60,1200+i*80,.07,'triangle',.05,i*.08);},
+  slap(){this.burst(.12,900,.28,'lowpass');this.blip(260,120,.1,'square',.04);},
+  sad(){[392,370,349,311].forEach((f,i)=>this.blip(f,f*.97,.36,'sawtooth',.06,i*.3));},
+  tada(){[523,659,784,1047].forEach((f,i)=>this.blip(f,f,.22,'triangle',.08,i*.09));},
+  music(){if(!this.ctx||this.mus)return;const c=this.ctx;this.musF=c.createBiquadFilter();this.musF.type='lowpass';this.musF.frequency.value=14000;this.mus=c.createGain();this.mus.gain.value=.7;this.mus.connect(this.musF);this.musF.connect(this.master);},
+  osc(type,f,at,dur,vol,o){const c=this.ctx,n=c.createOscillator(),g=c.createGain();n.type=type;n.frequency.setValueAtTime(f,at);if(o&&o.f1)n.frequency.exponentialRampToValueAtTime(o.f1,at+(o.glide||dur));
+    g.gain.setValueAtTime(0,at);g.gain.linearRampToValueAtTime(vol,at+(o&&o.atk||.005));if(o&&o.hold)g.gain.setValueAtTime(vol,at+o.hold);g.gain.exponentialRampToValueAtTime(.0005,at+dur);
+    let last=g;if(o&&o.lp){const f2=c.createBiquadFilter();f2.type=o.bp?'bandpass':'lowpass';f2.frequency.value=o.lp;f2.Q.value=o.q||.7;g.connect(f2);last=f2;}
+    if(o&&o.vib){const l=c.createOscillator(),lg2=c.createGain();l.frequency.value=o.vib;lg2.gain.value=f*.007;l.connect(lg2);lg2.connect(n.frequency);l.start(at);l.stop(at+dur+.05);}
+    n.connect(g);last.connect(o&&o.dest||this.mus);n.start(at);n.stop(at+dur+.05);},
+  nz(at,dur,vol,type,freq,q){const c=this.ctx,n=c.createBufferSource(),f=c.createBiquadFilter(),g=c.createGain();n.buffer=this.noise;n.loop=true;f.type=type;f.frequency.value=freq;f.Q.value=q||.7;
+    g.gain.setValueAtTime(vol,at);g.gain.exponentialRampToValueAtTime(.001,at+dur);n.connect(f);f.connect(g);g.connect(this.mus);n.start(at,Math.random()*.5);n.stop(at+dur+.05);},
+  // 古箏撥弦、低音、鼓、鈸、木魚、鑼
+  pluck(m,at,v){const f=mtof(m);this.osc('triangle',f,at,.9,.16*v,{lp:2600});this.osc('sine',f*2,at,.3,.05*v);},
+  bass(m,at,dur,v){this.osc('triangle',mtof(m),at,dur,.26*v,{atk:.01,hold:dur*.5,lp:700});},
+  kick(at,v){this.osc('sine',150,at,.32,.5*v,{f1:42,glide:.18});},
+  tanggu(at,v){this.osc('sine',190,at,.28,.42*v,{f1:85,glide:.2});this.nz(at,.07,.12*v,'lowpass',700);},
+  cym(at,v,len){this.nz(at,len||.28,.11*v,'highpass',5200);this.nz(at,(len||.28)*.6,.06*v,'bandpass',8500,2);},
+  hat(at,v){this.nz(at,.045,.07*v,'highpass',8000);},
+  snare(at,v){this.nz(at,.14,.16*v,'bandpass',1900,.8);this.osc('triangle',210,at,.09,.1*v,{f1:150});},
+  woodAt(at,v){this.osc('square',1250,at,.045,.05*v,{f1:950});this.nz(at,.03,.06*v,'bandpass',3000,3);},
+  gongAt(at,v){for(const[f,a]of[[196,.11],[294,.06],[415,.045],[587,.03]])this.osc('sine',f,at,2.2,a*v,{f1:f*.985});this.nz(at,.6,.05*v,'bandpass',3200);},
+  // 打中音符時的旋律：笛子、嗩吶、晶片音、陶笛，看曲風
+  lead(m,style,v){if(!this.ctx||!this.mus)return;const at=this.ctx.currentTime+.005,f=mtof(m);
+    if(style==='zheng'){this.osc('sine',f,at,.42,.2*v,{atk:.015,hold:.18,vib:5.5});this.osc('triangle',f*2,at,.25,.04*v);this.nz(at,.06,.03*v,'bandpass',f*2,4);}
+    else if(style==='march'||style==='grand'){this.osc('sawtooth',f,at,.38,.17*v,{atk:.02,hold:.2,vib:6,lp:1700,bp:1,q:1.4});this.osc('square',f,at,.3,.04*v,{lp:2400});}
+    else if(style==='ancient'){this.osc('sine',f/2,at,.55,.24*v,{atk:.04,hold:.25,vib:4.5});this.nz(at,.12,.025*v,'bandpass',f,6);}
+    else{this.osc('square',f,at,.24,.1*v,{atk:.004,hold:.08,lp:3200});this.osc(style==='electro'?'sawtooth':'triangle',f*2,at,.16,.04*v,{lp:4000});}},
+  setOn(v){this.on=v;store.set('sd.mute',v?'0':'1');if(this.ctx)this.master.gain.setTargetAtTime(v?1:0,this.ctx.currentTime,.02);}
+};
+
+/* ───────── 伴奏 ─────────
+   一格是半拍，一小節八格。開頭八格是數拍子：木魚三下、第四拍「鏘」。之後照曲風排鼓、低音、撥弦；
+   連擊 10 以上多一層打擊；最後一格敲鑼收尾 */
+function musicStep(sg,k,at){
+  const S2=Snd;if(!S2.ctx||!S2.mus)return;const beat=sg.beat,half=beat/2;
+  if(k<COUNT_IN*2){if(k%2===0){if(k===COUNT_IN*2-2)S2.cym(at,1,.35);else S2.woodAt(at,1.2);}return;}
+  const j=k-COUNT_IN*2,bar=Math.floor(j/8),s=j%8,pr=sg.minor?PROG_M:PROG,[ro,tri]=pr[bar%4],root=sg.key+ro,hot=S&&S.combo>=10,st=sg.style;
+  if(k>=sg.steps-1){S2.gongAt(at,1);S2.bass(sg.key,at,1.6,1);for(let i=0;i<3;i++)S2.pluck(sg.key+24+[0,sg.minor?3:4,7][i],at+i*.06,1);return;}
+  const arp=i=>root+24+tri[i%3]+(i>=3?12:0);
+  if(st==='zheng'){if(s===0)S2.bass(root,at,beat*2,1);if(s===4)S2.bass(root+7,at,beat*2,.8);if(s%2===0)S2.pluck(arp(s/2),at,1);
+    if(s===2||s===6)S2.woodAt(at,.5);if(s===0)S2.tanggu(at,.35);if(hot&&s%2===1)S2.pluck(arp(s+1)+12,at,.45);if(s===0&&bar%4===0)S2.gongAt(at,.35);}
+  else if(st==='swing'){const sw=s%2?half*.18:0;if(s===0)S2.bass(root,at,beat*1.4,1);if(s===3)S2.bass(root+7,at+sw,beat,.85);if(s===6)S2.bass(root+12,at,beat,.75);
+    if(s===4)S2.snare(at,.8);if(s%2===1)S2.hat(at+sw,.9);if(s===0)S2.kick(at,.7);if(s===2||s===5)S2.pluck(arp(s),at+(s===5?sw:0),.9);if(s===0&&bar%2===0)S2.cym(at,.7);if(hot&&s%2===0)S2.hat(at,.6);}
+  else if(st==='march'){if(s===0||s===4)S2.tanggu(at,1);if(s===6)S2.tanggu(at,.5);if(s===2||s===6)S2.cym(at,.8,.18);if(s%2===0)S2.bass(s%4?root+7:root,at,beat*.9,.9);
+    if(s===1||s===5)S2.pluck(arp(s),at,.7);if(hot&&s%2===1)S2.woodAt(at,.6);if(s===0&&bar%2===0)S2.gongAt(at,.45);}
+  else if(st==='grand'){if(s===0)S2.bass(root,at,beat*4,1);if(s===0||s===3||s===4)S2.tanggu(at,s===0?1:.6);if(s===7)S2.cym(at,.6,.5);S2.pluck(arp(s),at,.55);
+    if(hot&&(s===2||s===6))S2.snare(at,.5);if(s===0&&bar%4===0)S2.gongAt(at,.7);}
+  else if(st==='electro'){if(s%2===0)S2.kick(at,1);if(s===4||(hot&&s===2))S2.snare(at,.9);if(s%2===1)S2.hat(at,1);S2.bass(root+(s%2?12:0),at,half*.9,.75);if(s===3||s===7)S2.pluck(arp(s),at,.7);if(s===0&&bar%4===0)S2.cym(at,.8,.6);}
+  else{if(s===0&&bar%2===0)S2.osc('sine',mtof(root+12),at,beat*8,.07,{atk:.4,hold:beat*6,vib:3});if(s===0)S2.tanggu(at,.45);if(s===4)S2.woodAt(at,.7);if(s===2||s===6)S2.pluck(arp(s/2)+12,at,.55);if(hot&&s%2===1)S2.woodAt(at,.35);}
+}
+
+/* ───────── 狀態 ───────── */
+let mode='title',time=0,paused=false,run=null,S=null,introT=0,leaveT=0,capText='',capUntil=0,lastLang=store.get('sd.lang')||'py';
+let bank=Math.max(0,parseInt(store.get('sd.bank')||'0',10)||0),best=parseInt(store.get('sd.best')||'0',10)||0;
+let htmlN=parseInt(store.get('sd.html')||'0',10)||0,aiN=parseInt(store.get('sd.ai')||'0',10)||0;
+const up={coffee:0,keyboard:0,fans:0,bracket:0};
+try{const u=JSON.parse(store.get('sd.up')||'{}');for(const k in UPG)up[k]=clamp(parseInt(u[k],10)||0,0,UPG[k].max);}catch(e){}
+const saveUp=()=>{store.set('sd.bank',String(bank));store.set('sd.up',JSON.stringify(up));};
+const ev={kid:null,ama:false,phone:0,ringT:0,next:0,mix:0};
+const pops=[],parts=[],lanePops=[];let cheer=0,shake=0,handL=0,handR=0,handSide=0,mood='ok',moodT=0,bowA=0,roastT=0,beatPulse=0;
+// 台下的座位：三排，後排小、前排大；看到的是觀眾的後腦勺
+const seats=[];
+(()=>{const rows=[[214,9,9],[229,8,10.5],[245,7,12]];for(const[y,n,r]of rows)for(let i=0;i<n;i++){const x=(i+.5)*(VW/n)+(Math.random()-.5)*8;
+  seats.push({x,y,r,hair:pick(['#2b2420','#3a2c22','#1d1a1a','#4a3a2c','#8a8a8a']),bun:Math.random()<.18,cap:Math.random()<.12,hat:Math.random()<.2,ph:Math.random()*TAU,on:true,k:1});}})();
+function say(t,d){capText=t;capUntil=time+(d||1.6);}
+function pop(x,y,text,col,o){pops.push(Object.assign({x,y,text,col:col||PAPER,life:.9,dur:.9,size:14},o));}
+const wmul=()=>1+.08*up.keyboard;
+
+/* ───────── 一場表演 ───────── */
+function newRun(lang){run={lang,n:0,done:0,tips:0,k:0,a:0,last:-1};lastLang=lang;store.set('sd.lang',lang);nextShow();}
+function nextShow(){
+  run.n++;const cfg=showOf(run.n);let L,prog;
+  if(cfg.shl){L=P[ANCIENT[run.a%ANCIENT.length]];run.a++;prog=L.progs[0];}
+  else{L=P[run.lang];const ps=L.progs;let i=run.k<ps.length?run.k:ps.length-1-((Math.random()*Math.min(3,ps.length))|0);if(run.k>=ps.length&&i===run.last&&ps.length>1)i=i===ps.length-1?i-1:i+1;run.k++;run.last=i;prog=ps[i];}
+  const{pieces,toks}=tokenize(prog.code,L.id);let maxCols=0;for(const l of prog.code.split('\n'))maxCols=Math.max(maxCols,cols(l));
+  const song=makeSong(cfg,L);
+  S={cfg,lang:L,prog,pieces,toks,song,notes:song.notes,ni:0,typed:0,bad:new Set(),heat:Math.min(100,HEAT0+8*up.fans),combo:0,maxCombo:0,cnt:[0,0,0],miss:0,t:0,bk:0,
+    maxCols,runT:0,aiT:0,caughtT:0,outN:0,tip:0,aiName:pick(AI_NAMES),aiOn:false};
+  ev.kid=null;ev.ama=false;ev.phone=0;ev.mix=0;ev.next=4+rnd(0,2);
+  mode='intro';introT=INTRO_T;bowA=0;mood='ok';lanePops.length=0;
+  for(const s of seats){s.on=true;s.k=1;}
+  show('desk');hideScreens();$('hud').hidden=false;$('out').hidden=true;$('runBtn').hidden=true;$('ama').hidden=true;$('phone').hidden=true;$('aiBar').hidden=true;
+  buildKeys();$('keys').style.visibility='visible';
+  const b=$('banner');b.className='banner'+(cfg.shl?' shl':'');
+  b.innerHTML=cfg.shl?`<small>特別演出</small><b>十三行博物館</b><span>出土程式碼：${esc(L.name)}・字母被土蓋住，快到圈圈才看得到</span>`
+    :`<small>第 ${run.n} 場</small><b>宜蘭傳藝中心</b><span>今天純手打：${esc(L.name)}・${Math.round(song.bpm)} 拍／分</span>`;
+  b.hidden=false;$('langTag').textContent=L.name;fitCode();renderCode();Snd.opening();resizeLane();
+}
+function beginPlay(){mode='play';S.t=0;S.bk=0;S.dull=false;if(Snd.musF)Snd.musF.frequency.setTargetAtTime(14000,Snd.ctx.currentTime,.05);$('banner').hidden=true;}
+// 鍵盤：照這一場的那組鍵排；小朋友亂插的時候，畫面上的鍵帽位置會被打亂
+let keyPos=[];
+function buildKeys(){const rows=KEYSETS[S.cfg.ks],box=$('keys');box.innerHTML='';keyPos=[];
+  for(const r of rows){const row=document.createElement('div');row.className='krow'+(rows.length>1?' two':'');
+    for(const k of r){const b=document.createElement('button');b.type='button';b.className='key';b.dataset.p=keyPos.length;keyPos.push(k);row.appendChild(b);}box.appendChild(row);}
+  labelKeys();}
+function labelKeys(){const bs=$('keys').querySelectorAll('.key');bs.forEach((b,i)=>{const k=keyPos[i];b.textContent=k;b.style.setProperty('--c',KEYCOL[k]||GOLD);b.setAttribute('aria-label','按 '+k);});}
+function mixKeys(){const a=KEYSETS[S.cfg.ks].flat();let p;do p=shuffle(a.slice());while(p.join('')===keyPos.join(''));keyPos=p;labelKeys();$('keys').querySelectorAll('.key').forEach(b=>{b.classList.remove('mixed');void b.offsetWidth;b.classList.add('mixed');});}
+function unmixKeys(){keyPos=KEYSETS[S.cfg.ks].flat();labelKeys();}
+function flashKey(k){const i=keyPos.indexOf(k),b=$('keys').querySelectorAll('.key')[i];if(!b)return;b.classList.add('hit');setTimeout(()=>b.classList.remove('hit'),90);}
+// 按一個字母：找最早一顆還沒判定、又在判定時間裡的音符
+function hit(k){
+  if(mode!=='play'||paused||ev.ama)return;Snd.init();flashKey(k);handSide^=1;if(handSide)handL=1;else handR=1;
+  const t=S.t,wm=wmul();let nt=null;for(let i=S.ni;i<S.notes.length;i++){const q=S.notes[i];if(q.st)continue;if(q.t-t>W[2]*wm)break;if(Math.abs(q.t-t)<=W[2]*wm){nt=q;break;}}
+  if(!nt){Snd.key();return;}
+  if(nt.k!==k)return judge(nt,-2);
+  const d=Math.abs(nt.t-t);judge(nt,d<=W[0]*wm?0:d<=W[1]*wm?1:2);}
+// 判定：g 0 完美、1 不錯、2 勉強、-1 漏掉、-2 按錯
+function judge(nt,g){nt.st=1;nt.g=g;while(S.ni<S.notes.length&&S.notes[S.ni].st)S.ni++;
+  const idx=S.notes.indexOf(nt),upto=Math.round((idx+1)/S.notes.length*S.toks.length);
+  if(g>=0){S.cnt[g]++;S.combo++;S.maxCombo=Math.max(S.maxCombo,S.combo);S.heat=Math.min(100,S.heat+H_GAIN[g]+Math.min(S.combo,25)*H_COMBO);Snd.lead(nt.m,S.song.style,g===2?.6:1);Snd.tap(g);cheer=Math.min(1,cheer+.1);
+    lanePops.push({text:GRADE[g],col:g===0?GOLD:g===1?'#9fe3a8':'#cfd3dc',life:.5});
+    if(S.combo%10===0){const s=pick(seats.filter(q=>q.on));if(s)pop(s.x,s.y-24,pick(CHEERS),GOLD,{size:16});Snd.cheer(.6);mood='happy';moodT=1;}}
+  else{S.miss++;S.combo=0;S.heat-=H_MISS*(1-.12*up.coffee);if(g===-2)Snd.bad();else Snd.burst(.12,300,.16,'lowpass');shake=Math.max(shake,3);mood='sweat';moodT=1;
+    lanePops.push({text:g===-2?'按錯':'漏掉',col:'#ff8a7a',life:.55});S.bad.add(clamp(upto-1,0,S.toks.length-1));
+    if(Math.random()<.4){const s=pick(seats.filter(q=>q.on));if(s)pop(s.x,s.y-22,'噓～','#d0d0d0');}}
+  S.typed=Math.max(S.typed,upto);renderCode();
+  if(S.heat<=0)return leave();}
+function finishSong(){mode='run';S.runAt=time;$('keys').style.visibility='hidden';$('aiBar').hidden=true;$('runBtn').hidden=false;mood='happy';moodT=9;unmixKeys();S.typed=S.toks.length;renderCode();}
+// 唱完最後一顆的那一下，手指放開時會落在剛出現的 Run 上，所以剛出現的 0.35 秒內不算
+function doRun(){if(mode!=='run'||paused||time-S.runAt<.35)return;Snd.init();mode='compile';S.runT=0;$('runBtn').hidden=true;Snd.blip(500,800,.12,'triangle',.06);say(S.lang.id==='py'?'直譯中…':'編譯中…',COMPILE_T);}
+function outputStart(){mode='output';S.runT=0;S.outN=0;const o=$('out');o.hidden=false;o.innerHTML='<b>▶ 輸出</b>';Snd.tada();Snd.cheer(1);cheer=1;
+  for(let i=0;i<14;i++)throwFrom(pick(seats.filter(q=>q.on)),Math.random()<.4?'hong':'coin');}
+function outLines(){const l=S.prog.out.split('\n');if(S.bad.size)l.unshift(`⚠ 有 ${S.bad.size} 個錯字（觀眾好像沒發現）`);return l;}
+function bow(){
+  mode='bow';const hits=S.cnt[0]+S.cnt[1]+S.cnt[2],acc=hits/Math.max(1,S.notes.length),venue=S.cfg.shl?2:1;
+  S.tip=Math.round((hits*5+S.cnt[0]*2+S.maxCombo*4+S.heat+20*run.n)*acc*acc*P[run.lang].mul*venue);
+  bank+=S.tip;run.tips+=S.tip;run.done++;saveUp();if(run.done>best){best=run.done;store.set('sd.best',String(best));}
+  $('bowV').innerHTML=S.cfg.shl?'十三行特別演出<span class="n">謝幕！</span>':`第 ${run.n} 場<span class="n">謝幕！</span>`;
+  $('bowTip').textContent='+'+S.tip.toLocaleString('en-US');$('bowAcc').textContent=S.cnt[0]+'／'+(S.cnt[1]+S.cnt[2]);$('bowCombo').textContent=S.maxCombo;
+  $('bowTime').textContent=S.miss;$('bowHeat').textContent=Math.round(S.heat);renderShop();show('bow');$('next').focus({preventScroll:true});
+}
+// 求助 AI：AI 一下子把剩下的打完，然後被台下抓包
+function askAI(){if(mode!=='play'||paused)return;Snd.init();mode='ai';S.aiT=0;aiN++;store.set('sd.ai',String(aiN));$('keys').style.visibility='hidden';$('aiBar').hidden=true;
+  say(`（${S.aiName} 正在幫你寫…）`,3);Snd.blip(600,1200,.3,'sine',.06);}
+function caught(){mode='caught';S.caughtT=0;mood='shock';moodT=9;Snd.boo();say('「這不是手打的！」',3);shake=8;
+  for(const s of seats)if(Math.random()<.5)pop(s.x,s.y-22,pick(['退票！','這不是手打的！','噓～','AI 仔！']),'#ffd0c8',{life:1.4,dur:1.4});
+  for(let i=0;i<10;i++)throwAt(pick(seats),Math.random()<.5?'slipper':'tomato',i*.06);}
+function leave(){mode='leave';leaveT=1.8;mood='sad';moodT=9;S.heat=0;Snd.sad();say('觀眾都走光了…',3);$('keys').style.visibility='hidden';$('aiBar').hidden=true;$('ama').hidden=true;$('phone').hidden=true;ev.kid=null;ev.ama=false;ev.phone=0;}
+function gameOver(why){
+  mode='over';run.why=why;$('ovV').innerHTML=why==='ai'?'被抓包：<span class="n">這不是手打的！</span>':'觀眾<span class="n">都走光了</span>…';
+  $('ovBig').textContent=run.done;$('ovTips').textContent=run.tips.toLocaleString('en-US')+' 元';$('ovBest').textContent=best+' 場';$('ovRank').textContent=RANKS.find(r=>run.done>=r[0])[1];
+  $('ovLang').textContent=P[run.lang].name;$('ovWhy').textContent=why==='ai'?`在台上求助 ${S.aiName}，被觀眾抓包`:WHY[why];$('copied').textContent='';renderShop();showBest();show('over');
+}
+
+/* ───────── 干擾 ───────── */
+function startEvent(force){
+  const n=run.n,opts=[];if(n>=2)opts.push('kid');if(n>=3&&!S.cfg.shl)opts.push('ama');if(n>=5&&!S.cfg.shl)opts.push('phone');
+  const e=force||pick(opts);if(!e)return;
+  if(e==='kid'){const side=Math.random()<.5?-1:1;ev.kid={x0:180+side*200,x:180+side*200,tx:180+side*30,t:0,T:S.cfg.kidT,run:0,mash:0,side};Snd.giggle();say(S.cfg.shl?'校外教學的小朋友衝上台了！點他！':'小朋友衝上台了！點他！',1.4);}
+  else if(e==='ama'){ev.ama=true;$('amaQ').textContent=pick(AMA_Q);$('ama').hidden=false;Snd.blip(500,420,.15,'triangle',.06);}
+  else{ev.phone=PHONE_T;ev.ringT=0;$('phone').hidden=false;}
+}
+function shoo(){const k=ev.kid;if(!k||k.run)return;k.run=1;S.heat=Math.min(100,S.heat+2);Snd.slap();say('小朋友被家長抓回去了',1.2);}
+function dismissAma(){if(!ev.ama)return;ev.ama=false;$('ama').hidden=true;say(pick(AMA_A),1.3);ev.next=S.t+S.cfg.evGap*rnd(.8,1.2);}
+function hangUp(){if(!ev.phone)return;ev.phone=0;$('phone').hidden=true;Snd.blip(400,300,.08,'square',.05);say('掛掉了',.8);ev.next=S.t+S.cfg.evGap*rnd(.8,1.2);}
+function updateEvents(dt){
+  const k=ev.kid;
+  if(k){k.t+=dt;if(k.run){k.x+=k.side*260*dt;if(Math.abs(k.x-180)>220){ev.kid=null;ev.next=S.t+S.cfg.evGap*rnd(.8,1.2);}}
+    else{k.x=lerp(k.x0,k.tx,clamp(k.t/k.T,0,1));if(k.t>=k.T){k.mash=.6;k.run=1;ev.mix=KID_MIX;mixKeys();Snd.giggle();shake=5;mood='sweat';moodT=1.2;say('鍵帽被小朋友拔起來亂插了！',1.6);}}}
+  if(k&&k.mash>0)k.mash-=dt;
+  if(ev.mix>0&&(ev.mix-=dt)<=0){ev.mix=0;unmixKeys();say('鍵帽插回去了',1);}
+  if(ev.phone>0){ev.phone-=dt;S.heat-=PHONE_DRAIN*dt;if((ev.ringT-=dt)<=0){ev.ringT=.45;Snd.ring();}if(ev.phone<=0){ev.phone=0;$('phone').hidden=true;S.heat-=PHONE_PEN;say('PM 留了一通語音訊息…',1.4);ev.next=S.t+S.cfg.evGap*rnd(.8,1.2);}}
+  const left=S.notes.length-S.ni;
+  if(!ev.kid&&!ev.ama&&!ev.phone&&!ev.mix&&S.t>=ev.next&&left>6){startEvent();if(!ev.kid&&!ev.ama&&!ev.phone)ev.next=S.t+2;}
+}
+
+/* ───────── 每一步 ───────── */
+function tick(dt){
+  time+=dt;shake=Math.max(0,shake-dt*24);cheer=Math.max(0,cheer-dt*.5);handL=Math.max(0,handL-dt*9);handR=Math.max(0,handR-dt*9);beatPulse=Math.max(0,beatPulse-dt*4);if((moodT-=dt)<=0&&mood!=='sad'&&mood!=='shock')mood='ok';
+  for(let i=pops.length-1;i>=0;i--)if((pops[i].life-=dt)<=0)pops.splice(i,1);
+  for(let i=lanePops.length-1;i>=0;i--)if((lanePops[i].life-=dt)<=0)lanePops.splice(i,1);
+  for(let i=parts.length-1;i>=0;i--){const p=parts[i];if(p.delay>0){p.delay-=dt;continue;}p.x+=p.vx*dt;p.y+=p.vy*dt;p.vy+=520*dt;p.rot+=p.vr*dt;if((p.life-=dt)<=0)parts.splice(i,1);}
+  // 觀眾：熱度越低，走掉的人越多；熱度回來會有人坐回來
+  if(S&&(mode==='play'||mode==='leave'||mode==='run')){const want=mode==='leave'?0:Math.round(SEATS*clamp(S.heat/85,0,1)),on=seats.filter(s=>s.on);
+    if(on.length>want&&Math.random()<dt*14){const s=pick(on);s.on=false;}else if(on.length<want&&Math.random()<dt*6){const s=pick(seats.filter(q=>!q.on));if(s)s.on=true;}}
+  for(const s of seats)s.k=clamp(s.k+(s.on?dt*3:-dt*2.5),0,1);
+  if(mode==='intro'){if((introT-=dt)<=0)beginPlay();return;}
+  if(mode==='play'){S.t+=dt;const sg=S.song;
+    // 伴奏往前排 0.12 秒；熱度低的時候整個音樂變悶
+    while(S.bk<sg.steps&&S.t+.12>=.4+S.bk*sg.beat/2){const tt=.4+S.bk*sg.beat/2;if(Snd.ctx)musicStep(sg,S.bk,Snd.ctx.currentTime+Math.max(0,tt-S.t));S.bk++;}
+    const dull=S.heat<30;if(Snd.musF&&dull!==S.dull){S.dull=dull;Snd.musF.frequency.setTargetAtTime(dull?900:14000,Snd.ctx.currentTime,.15);}
+    if(((S.t-.4)/sg.beat%1+1)%1<dt/sg.beat*1.5)beatPulse=1;
+    const wm=wmul();for(let i=S.ni;i<S.notes.length;i++){const q=S.notes[i];if(q.t>S.t)break;if(!q.st&&S.t-q.t>W[2]*wm){judge(q,-1);if(mode!=='play')return;}}
+    if(S.t>.4+COUNT_IN*sg.beat)S.heat-=S.cfg.drain*dt;
+    updateEvents(dt);if(mode!=='play')return;if(S.heat<=0)return leave();
+    // 熱度很低的時候，冒出「求助 AI」
+    const ai=S.aiOn?S.heat<AI_OFF:S.heat<AI_ON&&!(run.n===1&&S.ni<AI_FROM);if(ai!==S.aiOn){S.aiOn=ai;$('aiName').textContent=S.aiName;$('aiBar').hidden=!ai;}
+    if(S.ni>=S.notes.length&&S.t>=S.song.end)finishSong();return;}
+  if(mode==='compile'){if((S.runT+=dt)>=COMPILE_T)outputStart();return;}
+  if(mode==='output'){S.runT+=dt;const lines=outLines(),want=Math.min(lines.length,Math.floor(S.runT/.22)+1);
+    if(want>S.outN){S.outN=want;$('out').innerHTML='<b>▶ 輸出</b>'+esc(lines.slice(0,want).join('\n'));}
+    bowA=clamp((S.runT-.6)/.5,0,1);if(Math.random()<dt*6)Snd.coin();if(S.runT>=OUT_T)bow();return;}
+  if(mode==='ai'){S.aiT+=dt;let ch=false;while(S.aiT>=AI_STEP&&S.typed<S.toks.length){S.aiT-=AI_STEP;S.typed++;ch=true;handSide^=1;if(handSide)handL=1;else handR=1;}
+    if(ch){Snd.key();renderCode();}if(S.typed>=S.toks.length&&S.aiT>.5)caught();return;}
+  if(mode==='caught'){if((S.caughtT+=dt)>1.6)gameOver('ai');return;}
+  if(mode==='leave'){if((leaveT-=dt)<=0)gameOver('leave');return;}
+  if(mode==='roast'){if((roastT-=dt)<=0){roastT=rnd(.35,.8);throwAt(pick(seats),Math.random()<.6?'slipper':'tomato',0);}return;}
+  if(mode==='title'||mode==='lang'){if(Math.random()<dt*5){handSide^=1;if(handSide)handL=1;else handR=1;}}
+}
+function throwFrom(s,type){if(!s)return;const tx=180+rnd(-60,60),ty=rnd(120,170),T=rnd(.55,.8),delay=rnd(0,.6);
+  parts.push({type,x:s.x,y:s.y-10,vx:(tx-s.x)/T,vy:(ty-(s.y-10))/T-.5*520*T,rot:rnd(0,TAU),vr:rnd(-8,8),life:T+.5,delay});}
+function throwAt(s,type,delay){if(!s)return;const tx=180+rnd(-14,14),ty=112+rnd(-8,14),T=rnd(.5,.7);
+  parts.push({type,x:s.x,y:s.y-10,vx:(tx-s.x)/T,vy:(ty-(s.y-10))/T-.5*520*T,rot:rnd(0,TAU),vr:rnd(-12,12),life:T+.15,delay:delay||0});
+  setTimeout(()=>{if(mode==='roast'||mode==='caught'){Snd.slap();shake=Math.max(shake,4);mood='shock';moodT=.8;}},(T+(delay||0))*1000);}
+
+/* ───────── 螢幕上的程式碼 ───────── */
+const codeEl=$('code');
+function renderCode(){if(!S){codeEl.innerHTML='';return;}let h='';const n=S.typed;
+  for(const p of S.pieces){if(p.ws){h+=esc(p.s);continue;}const i=p.i;
+    if(i<n){h+=S.bad.has(i)?`<span class="typo">${esc(p.s)}</span>`:`<span class="${p.k}">${esc(p.s)}</span>`;continue;}
+    h+=i===n&&(mode==='play'||mode==='intro')?`<span class="cur" id="cur">${esc(p.s)}</span>`:`<span class="g">${esc(p.s)}</span>`;}
+  codeEl.innerHTML=h;const c=$('cur')||codeEl.lastElementChild;if(c)codeEl.scrollTop=Math.max(0,c.offsetTop-codeEl.clientHeight*.38);}
+function fitCode(){if(!S)return;const w=codeEl.clientWidth-22;codeEl.style.fontSize=clamp(w/(S.maxCols*.61),10.5,15).toFixed(1)+'px';}
+// 投影幕上的字：已經打好的最後幾行
+function screenLines(){if(!S)return['print("宜蘭好好玩")','# 純手打，無 AI','for i in range(3):','    print("手打", i)'];
+  let s='';for(const p of S.pieces){if(!p.ws&&p.i>=S.typed)break;s+=p.s;}return s.split('\n').slice(-5);}
+
+/* ───────── 畫面：戲台 ───────── */
+const stageEl=$('stage'),cv=$('c'),g=cv.getContext('2d'),gameEl=$('game'),laneEl=$('lane'),lg=laneEl.getContext('2d');
+const reduced=window.matchMedia&&matchMedia('(prefers-reduced-motion:reduce)').matches;
+let cw=1,ch=1,dpr=1,lw=1,lh=1;
+function resize(){const b=stageEl.getBoundingClientRect();cw=Math.max(1,b.width);ch=Math.max(1,b.height);dpr=Math.min(window.devicePixelRatio||1,2);cv.width=Math.round(cw*dpr);cv.height=Math.round(ch*dpr);resizeLane();fitCode();}
+function resizeLane(){lw=Math.max(1,laneEl.clientWidth);lh=Math.max(1,laneEl.clientHeight);laneEl.width=Math.round(lw*dpr);laneEl.height=Math.round(lh*dpr);}
+function render(){
+  g.setTransform(1,0,0,1,0,0);g.clearRect(0,0,cv.width,cv.height);const k=cw/VW*dpr;
+  let sx=0,sy=0;if(shake>0&&!reduced){sx=(Math.random()-.5)*shake;sy=(Math.random()-.5)*shake;}
+  g.setTransform(k,0,0,k,sx*k,sy*k);
+  const shl=S&&S.cfg.shl&&mode!=='title'&&mode!=='lang'&&mode!=='roast';
+  if(shl)drawMuseum();else drawYilan();
+  drawProjector(shl);drawEngineer();drawDesk();
+  if(ev.kid&&(mode==='play'||mode==='leave'))drawKid(ev.kid);
+  drawParts();drawAudience(shl);drawPops();
+  if(S&&!$('desk').hidden)drawLane();
+}
+function drawYilan(){
+  let gr=g.createLinearGradient(0,0,0,200);gr.addColorStop(0,'#7a221c');gr.addColorStop(1,'#4d1612');g.fillStyle=gr;g.fillRect(0,0,VW,205);
+  g.fillStyle='#2f3d44';g.beginPath();g.moveTo(-10,0);g.lineTo(370,0);g.lineTo(370,10);g.quadraticCurveTo(352,26,330,28);g.lineTo(30,28);g.quadraticCurveTo(8,26,-10,10);g.closePath();g.fill();
+  g.strokeStyle=GOLD;g.lineWidth=3;g.beginPath();g.moveTo(30,28);g.lineTo(330,28);g.stroke();
+  g.fillStyle='#d99a3b';for(let x=40;x<330;x+=16){g.beginPath();g.arc(x,28,3,0,Math.PI);g.fill();}
+  g.fillStyle='#3a2216';rrect(g,104,34,152,22,4);g.fill();g.strokeStyle=GOLD;g.lineWidth=2;rrect(g,106,36,148,18,3);g.stroke();
+  g.fillStyle=GOLD;g.font='900 12px '+FONT;g.textAlign='center';g.fillText('純手打　傳統技藝展演',180,50);
+  for(const[x,text]of[[14,'一鍵一字皆手工'],[330,'不靠ＡＩ靠真功']]){g.fillStyle='#a3271f';g.fillRect(x,28,16,180);g.fillStyle='#6e1a14';g.fillRect(x+1,44,14,108);g.strokeStyle=GOLD;g.lineWidth=1;g.strokeRect(x+1.5,44.5,13,107);
+    g.fillStyle=GOLD;g.font='900 10px '+FONT;[...text].forEach((c,i)=>g.fillText(c,x+8,58+i*14.3));}
+  g.textAlign='left';
+  for(const[x,c]of[[66,'手'],[294,'打']]){const a=reduced?0:Math.sin(time*1.6+x)*.08;g.save();g.translate(x,30);g.rotate(a);g.strokeStyle='#2a1d1a';g.lineWidth=1.5;g.beginPath();g.moveTo(0,0);g.lineTo(0,18);g.stroke();
+    g.fillStyle='#d63a2c';g.beginPath();g.ellipse(0,34,12,15,0,0,TAU);g.fill();g.strokeStyle='#8e1f17';g.lineWidth=1;for(const r of[5,9]){g.beginPath();g.ellipse(0,34,r,15,0,0,TAU);g.stroke();}
+    g.fillStyle=GOLD;g.fillRect(-6,17,12,4);g.fillRect(-6,47,12,4);g.strokeStyle=GOLD;g.beginPath();g.moveTo(0,51);g.lineTo(0,60);g.stroke();
+    g.fillStyle='#fff2c2';g.font='900 10px '+FONT;g.textAlign='center';g.fillText(c,0,38);g.textAlign='left';g.restore();}
+  g.fillStyle='#8a5a36';g.fillRect(0,168,VW,42);g.strokeStyle='rgba(42,29,26,.35)';g.lineWidth=1;for(let y=176;y<210;y+=9){g.beginPath();g.moveTo(0,y);g.lineTo(VW,y);g.stroke();}
+  g.fillStyle='#5e3a22';g.fillRect(0,166,VW,4);
+}
+function drawMuseum(){
+  let gr=g.createLinearGradient(0,0,0,200);gr.addColorStop(0,'#5d646d');gr.addColorStop(1,'#3b4047');g.fillStyle=gr;g.fillRect(0,0,VW,205);
+  g.strokeStyle='rgba(255,255,255,.06)';g.lineWidth=1;for(let x=30;x<VW;x+=60){g.beginPath();g.moveTo(x,0);g.lineTo(x,168);g.stroke();}
+  for(const x of[120,240]){const b=g.createLinearGradient(0,0,0,170);b.addColorStop(0,'rgba(255,236,190,.28)');b.addColorStop(1,'rgba(255,236,190,0)');g.fillStyle=b;g.beginPath();g.moveTo(x-6,0);g.lineTo(x+6,0);g.lineTo(x+50,170);g.lineTo(x-50,170);g.closePath();g.fill();}
+  g.fillStyle='#22262b';rrect(g,92,30,176,22,4);g.fill();g.fillStyle=GOLD;g.font='900 11px '+FONT;g.textAlign='center';g.fillText('十三行特別展演・出土程式碼',180,45);g.textAlign='left';
+  g.fillStyle='#7c8088';g.fillRect(22,170,70,32);g.fillStyle='#e9e9e9';g.font='900 8px '+FONT;g.textAlign='center';g.fillText('人面陶罐',57,184);g.textAlign='left';
+  g.fillStyle='#9c5a36';g.beginPath();g.ellipse(57,152,19,17,0,0,TAU);g.fill();g.fillRect(46,118,22,22);g.beginPath();g.ellipse(57,118,13,4,0,0,TAU);g.fill();g.fillStyle='#7d4528';g.beginPath();g.ellipse(57,118,10,2.6,0,0,TAU);g.fill();
+  g.strokeStyle='#4a2614';g.lineWidth=1.6;g.beginPath();g.moveTo(51,126);g.lineTo(54,126);g.moveTo(60,126);g.lineTo(63,126);g.moveTo(57,127);g.lineTo(57,131);g.stroke();g.beginPath();g.ellipse(57,135,2,1.4,0,0,TAU);g.stroke();
+  g.fillStyle='rgba(190,225,240,.18)';g.fillRect(26,102,62,68);g.strokeStyle='rgba(230,245,255,.6)';g.lineWidth=1.5;g.strokeRect(26,102,62,68);g.beginPath();g.moveTo(34,110);g.lineTo(46,104);g.moveTo(34,120);g.lineTo(56,108);g.stroke();
+  g.fillStyle='#7c8088';g.fillRect(268,170,70,32);g.fillStyle='#e9e9e9';g.font='900 8px '+FONT;g.textAlign='center';g.fillText('陶片・石器',303,184);g.textAlign='left';
+  g.fillStyle='#a46a43';for(const[x,y,a]of[[286,150,.3],[304,158,-.4],[320,148,.8]]){g.save();g.translate(x,y);g.rotate(a);g.beginPath();g.moveTo(-8,-5);g.lineTo(7,-6);g.lineTo(9,4);g.lineTo(-6,6);g.closePath();g.fill();g.restore();}
+  g.fillStyle='#6f6a62';g.beginPath();g.ellipse(303,132,11,6,-.3,0,TAU);g.fill();
+  g.fillStyle='rgba(190,225,240,.18)';g.fillRect(272,112,62,58);g.strokeStyle='rgba(230,245,255,.6)';g.strokeRect(272,112,62,58);
+  g.fillStyle='#8b8f95';g.fillRect(0,168,VW,42);g.fillStyle='rgba(255,255,255,.08)';for(let x=0;x<VW;x+=40)g.fillRect(x,168,20,42);g.fillStyle='#5b5f66';g.fillRect(0,166,VW,4);
+}
+function drawProjector(shl){
+  g.fillStyle=shl?'#2b2620':'#14151b';rrect(g,110,60,140,68,4);g.fill();g.strokeStyle=shl?'#8a6a45':'#55575f';g.lineWidth=3;rrect(g,110,60,140,68,4);g.stroke();
+  g.fillStyle=shl?'#e2c08d':'#8fe39a';g.font='8px '+MONO;const ls=screenLines();
+  ls.forEach((l,i)=>{const t=l.length>30?l.slice(-30):l;g.fillText(t,116,73+i*11);});
+  if(mode==='play'&&(time*2|0)%2===0){const l=ls[ls.length-1]||'',w=g.measureText(l.length>30?l.slice(-30):l).width;g.fillRect(116+w+1,66+(ls.length-1)*11,4,8);}
+}
+function drawEngineer(){
+  const lean=bowA,cx=180,hy=112+lean*16;
+  g.save();g.lineJoin='round';g.lineCap='round';
+  g.save();rrect(g,cx-22,128+lean*10,44,40,10);g.fillStyle='#c84b3a';g.fill();g.clip();
+  g.fillStyle='rgba(90,20,15,.45)';for(let x=cx-22;x<cx+22;x+=9)g.fillRect(x,120,3,60);for(let y=128;y<170;y+=9)g.fillRect(cx-24,y+lean*10,48,3);
+  g.fillStyle='rgba(255,220,200,.25)';for(let x=cx-18;x<cx+22;x+=9)g.fillRect(x,120,1.5,60);g.restore();
+  g.strokeStyle=INK;g.lineWidth=2.5;rrect(g,cx-22,128+lean*10,44,40,10);g.stroke();
+  g.strokeStyle='#4a4f5a';g.lineWidth=4;g.beginPath();g.arc(cx,124+lean*14,11,.15*Math.PI,.85*Math.PI);g.stroke();
+  g.fillStyle='#f3c9a0';g.strokeStyle=INK;g.lineWidth=2.5;g.beginPath();g.arc(cx,hy,16,0,TAU);g.fill();g.stroke();
+  g.fillStyle='#2b2420';g.beginPath();g.moveTo(cx-17,hy-1);g.quadraticCurveTo(cx-18,hy-20,cx-4,hy-19);g.lineTo(cx-1,hy-24);g.lineTo(cx+3,hy-18);g.lineTo(cx+8,hy-22);g.lineTo(cx+10,hy-16);g.quadraticCurveTo(cx+18,hy-12,cx+17,hy-1);g.quadraticCurveTo(cx+10,hy-9,cx,hy-10);g.quadraticCurveTo(cx-10,hy-9,cx-17,hy-1);g.closePath();g.fill();
+  g.strokeStyle=INK;g.lineWidth=1.8;for(const sd of[-1,1]){g.beginPath();g.arc(cx+sd*6.5,hy+1,5,0,TAU);g.stroke();}g.beginPath();g.moveTo(cx-1.5,hy+1);g.lineTo(cx+1.5,hy+1);g.stroke();
+  g.fillStyle=INK;if(mood==='happy'){g.lineWidth=1.6;for(const sd of[-1,1]){g.beginPath();g.arc(cx+sd*6.5,hy+2.4,2,Math.PI*1.1,Math.PI*1.9);g.stroke();}}
+  else if(mood==='shock'){for(const sd of[-1,1]){g.beginPath();g.arc(cx+sd*6.5,hy+1,1.4,0,TAU);g.fill();}}
+  else{for(const sd of[-1,1]){g.beginPath();g.arc(cx+sd*6.5,hy+1.4,1.6,0,TAU);g.fill();}}
+  g.lineWidth=1.8;g.beginPath();
+  if(mood==='happy'){g.arc(cx,hy+7,4,.15*Math.PI,.85*Math.PI);}else if(mood==='sad'){g.arc(cx,hy+12,4,1.15*Math.PI,1.85*Math.PI);}
+  else if(mood==='shock'){g.ellipse(cx,hy+9,2.5,3.2,0,0,TAU);}else if(mood==='sweat'){g.moveTo(cx-4,hy+9);g.quadraticCurveTo(cx-2,hy+7,cx,hy+9);g.quadraticCurveTo(cx+2,hy+11,cx+4,hy+9);}else{g.moveTo(cx-3,hy+9);g.lineTo(cx+3,hy+9);}g.stroke();
+  if(mood==='sweat'||mood==='sad'){g.fillStyle='#7fc4e8';g.beginPath();g.moveTo(cx+15,hy-9);g.quadraticCurveTo(cx+19,hy-3,cx+15,hy-2);g.quadraticCurveTo(cx+11,hy-3,cx+15,hy-9);g.fill();}
+  g.fillStyle='rgba(242,140,130,.45)';for(const sd of[-1,1]){g.beginPath();g.ellipse(cx+sd*11,hy+6,2.6,1.6,0,0,TAU);g.fill();}
+  g.restore();
+}
+function drawDesk(){
+  g.save();g.lineJoin='round';
+  g.fillStyle='#b07a4a';g.fillRect(124,150,112,7);g.strokeStyle=INK;g.lineWidth=2;g.strokeRect(124,150,112,7);
+  g.fillStyle='#a8322a';g.fillRect(128,157,104,34);g.strokeRect(128,157,104,34);g.fillStyle=GOLD;g.fillRect(128,161,104,2);g.fillRect(128,185,104,2);
+  g.fillStyle=GOLD;g.font='900 9px '+FONT;g.textAlign='center';g.fillText('純手打',180,177);g.textAlign='left';
+  g.fillStyle='#2c2f36';rrect(g,150,143,60,9,2);g.fill();g.fillStyle='#a9adb6';for(let r=0;r<2;r++)for(let i=0;i<9;i++)g.fillRect(153+i*6.3,145+r*3.6,4.2,2.4);
+  const lean=bowA;for(const[sd,h]of[[-1,handL],[1,handR]]){const sx=180+sd*19,sy=134+lean*10,hx=180+sd*15,hy=146-h*5+lean*4;
+    g.strokeStyle=INK;g.lineWidth=8;g.lineCap='round';g.beginPath();g.moveTo(sx,sy);g.lineTo(hx,hy);g.stroke();g.strokeStyle='#c84b3a';g.lineWidth=5;g.beginPath();g.moveTo(sx,sy);g.lineTo(hx,hy);g.stroke();
+    g.fillStyle='#f3c9a0';g.strokeStyle=INK;g.lineWidth=1.6;g.beginPath();g.arc(hx,hy+1,3.6,0,TAU);g.fill();g.stroke();}
+  const ring=ev.phone>0&&mode==='play',wob=ring&&!reduced?Math.sin(time*60)*1.5:0;g.save();g.translate(224+wob,144);g.fillStyle='#1f2026';rrect(g,-4,-6,8,12,2);g.fill();g.fillStyle=ring?'#8fe39a':'#3a4250';g.fillRect(-2.6,-4.4,5.2,8);g.restore();
+  if(ring){g.strokeStyle='rgba(242,193,78,.9)';g.lineWidth=1.5;for(const r of[8,13]){g.beginPath();g.arc(224,144,r+(time*20%5),-.8,.8);g.stroke();g.beginPath();g.arc(224,144,r+(time*20%5),Math.PI-.8,Math.PI+.8);g.stroke();}}
+  g.restore();
+}
+function drawKid(k){
+  const walk=k.run?time*22:k.t*14,x=k.x,y=198,b=Math.abs(Math.sin(walk))*2;g.save();g.lineCap='round';g.lineJoin='round';
+  g.strokeStyle=INK;g.lineWidth=3;g.beginPath();g.moveTo(x-3,y-12);g.lineTo(x-3+Math.sin(walk)*4,y);g.moveTo(x+3,y-12);g.lineTo(x+3-Math.sin(walk)*4,y);g.stroke();
+  g.fillStyle='#3d7bd9';g.strokeStyle=INK;g.lineWidth=2;rrect(g,x-7,y-28-b,14,17,4);g.fill();g.stroke();
+  const raise=k.mash>0||(!k.run&&k.t>k.T*.8);g.strokeStyle=INK;g.lineWidth=3;g.beginPath();
+  if(raise){g.moveTo(x-6,y-24-b);g.lineTo(x-10,y-40);g.moveTo(x+6,y-24-b);g.lineTo(x+10,y-40);}else{g.moveTo(x-6,y-24-b);g.lineTo(x-9,y-14);g.moveTo(x+6,y-24-b);g.lineTo(x+9,y-14);}g.stroke();
+  g.fillStyle='#f3c9a0';g.lineWidth=2;g.beginPath();g.arc(x,y-35-b,7.5,0,TAU);g.fill();g.stroke();
+  g.fillStyle='#ffd23f';g.beginPath();g.arc(x,y-37-b,7.6,Math.PI,TAU);g.fill();g.stroke();g.fillRect(x+(k.side>0?-13:2),y-38-b,11,3);
+  g.fillStyle=INK;g.beginPath();g.arc(x-2.5,y-34-b,1.1,0,TAU);g.arc(x+2.5,y-34-b,1.1,0,TAU);g.fill();g.beginPath();g.arc(x,y-31.5-b,2,0,Math.PI);g.stroke();
+  g.restore();
+}
+function drawAudience(shl){
+  for(const s of seats){if(s.k<=0)continue;const bob=(mode==='output'||cheer>.3)&&!reduced?Math.abs(Math.sin(time*9+s.ph))*4*Math.max(cheer,mode==='output'?1:0):0,y=s.y-bob+(1-s.k)*24;
+    g.globalAlpha=s.k;g.fillStyle='#1c1412';g.beginPath();g.ellipse(s.x,y+s.r*1.2,s.r*1.55,s.r*.95,0,0,TAU);g.fill();
+    g.fillStyle=shl&&s.hat?'#2b2420':s.hair;g.beginPath();g.arc(s.x,y,s.r,0,TAU);g.fill();
+    if(shl&&s.hat){g.fillStyle='#c9b38a';g.beginPath();g.ellipse(s.x,y-s.r*.35,s.r*1.5,s.r*.42,0,0,TAU);g.fill();g.beginPath();g.arc(s.x,y-s.r*.4,s.r*.85,Math.PI,TAU);g.fill();}
+    else if(s.cap){g.fillStyle='#ffd23f';g.beginPath();g.arc(s.x,y-1,s.r*.98,Math.PI,TAU);g.fill();}
+    else if(s.bun){g.fillStyle='#9a9a9a';g.beginPath();g.arc(s.x,y-s.r*.95,s.r*.45,0,TAU);g.fill();}
+    if(mode==='output'||(cheer>.6&&s.ph<2)){const a=Math.sin(time*9+s.ph)*.4;g.strokeStyle='#1c1412';g.lineWidth=3;g.lineCap='round';g.beginPath();g.moveTo(s.x-s.r,y+s.r*.6);g.lineTo(s.x-s.r*1.6,y-s.r*1.4+a*4);g.moveTo(s.x+s.r,y+s.r*.6);g.lineTo(s.x+s.r*1.6,y-s.r*1.4-a*4);g.stroke();}
+    g.globalAlpha=1;}
+}
+function drawParts(){for(const p of parts){if(p.delay>0)continue;g.save();g.translate(p.x,p.y);g.rotate(p.rot);g.strokeStyle=INK;g.lineWidth=1.5;
+    if(p.type==='coin'){g.fillStyle=GOLD;g.beginPath();g.ellipse(0,0,4.5,4.5*Math.abs(Math.cos(p.rot)),0,0,TAU);g.fill();g.stroke();}
+    else if(p.type==='hong'){g.fillStyle='#d63a2c';g.fillRect(-4,-6,8,12);g.strokeRect(-4,-6,8,12);g.fillStyle=GOLD;g.fillRect(-2.5,-2,5,3);}
+    else if(p.type==='tomato'){g.fillStyle='#e0412f';g.beginPath();g.arc(0,0,5,0,TAU);g.fill();g.stroke();g.fillStyle='#3a9a4a';g.fillRect(-2,-6,4,2.5);}
+    else if(p.type==='slipper'){g.fillStyle='#fff';rrect(g,-4,-8,8,16,4);g.fill();g.stroke();g.strokeStyle='#2f62c9';g.lineWidth=2.5;g.beginPath();g.moveTo(-4,-1);g.lineTo(4,-1);g.moveTo(-4,2);g.lineTo(4,2);g.stroke();}
+    g.restore();}}
+function drawPops(){g.textAlign='center';for(const p of pops){const a=clamp(p.life/(p.dur*.4),0,1),k=1-p.life/p.dur;g.globalAlpha=a;g.font='900 '+p.size+'px '+FONT;g.lineWidth=4;g.strokeStyle=INK;g.lineJoin='round';
+    g.strokeText(p.text,p.x,p.y-k*16);g.fillStyle=p.col;g.fillText(p.text,p.x,p.y-k*16);}g.globalAlpha=1;g.textAlign='left';}
+
+/* ───────── 畫面：音符跑道 ───────── */
+function drawLane(){
+  const k=lw/LW*dpr;lg.setTransform(1,0,0,1,0,0);lg.clearRect(0,0,laneEl.width,laneEl.height);lg.setTransform(k,0,0,k,0,0);const H=lh/lw*LW,cy=H/2;
+  lg.fillStyle='#1a100a';rrect(lg,6,cy-24,LW-12,48,24);lg.fill();
+  // 判定圈
+  const pulse=mode==='play'?beatPulse:0;lg.strokeStyle=GOLD;lg.lineWidth=3+pulse*2;lg.beginPath();lg.arc(HIT_X,cy,23+pulse*2,0,TAU);lg.stroke();lg.fillStyle='rgba(242,193,78,.12)';lg.fill();
+  lg.strokeStyle='rgba(242,193,78,.35)';lg.lineWidth=1.5;lg.beginPath();lg.arc(HIT_X,cy,17,0,TAU);lg.stroke();
+  if(!S||!S.song)return;const t=S.t,sp=PX_BEAT/S.song.beat,shl=S.cfg.shl;
+  lg.textAlign='center';lg.textBaseline='middle';
+  for(let i=S.notes.length-1;i>=Math.max(0,S.ni-6);i--){const q=S.notes[i];const x=HIT_X+(q.t-t)*sp;if(x>LW+30||x<-30)continue;
+    if(q.st&&q.g>=0)continue;
+    const missed=q.st&&q.g<0;lg.globalAlpha=missed?.4:1;lg.save();lg.translate(x,cy);
+    const dirt=shl&&!q.st&&q.t-t>DIRT_T;
+    lg.fillStyle=dirt?'#7a5a3a':PAPER;lg.strokeStyle=INK;lg.lineWidth=2.5;rrect(lg,-18,-18,36,36,8);lg.fill();lg.stroke();
+    if(!dirt){lg.fillStyle=KEYCOL[q.k]||GOLD;lg.fillRect(-15.5,9,31,6.5);lg.fillStyle=INK;lg.font='700 21px '+DISP;lg.fillText(q.k,0,-1);}
+    else{lg.fillStyle='#5b412a';for(const[a,b,r]of[[-6,-5,5],[5,2,6],[-3,7,4]]){lg.beginPath();lg.arc(a,b,r,0,TAU);lg.fill();}}
+    if(missed){lg.strokeStyle='#ff6b5e';lg.lineWidth=3;lg.beginPath();lg.moveTo(-10,-10);lg.lineTo(10,10);lg.moveTo(10,-10);lg.lineTo(-10,10);lg.stroke();}
+    lg.restore();lg.globalAlpha=1;}
+  for(const p of lanePops){const a=clamp(p.life/.3,0,1),yy=cy-26+(1-p.life/.55)*-6;lg.globalAlpha=a;lg.font='900 13px '+FONT;lg.lineWidth=3.5;lg.strokeStyle=INK;lg.strokeText(p.text,HIT_X+2,yy+6);lg.fillStyle=p.col;lg.fillText(p.text,HIT_X+2,yy+6);}
+  lg.globalAlpha=1;
+  if(mode==='play'&&S.t<.4+COUNT_IN*S.song.beat){const n=COUNT_IN-Math.floor((S.t-.4)/S.song.beat);if(n>=1&&n<=COUNT_IN&&S.t>=.4){lg.fillStyle=GOLD;lg.font='700 26px '+DISP;lg.fillText(String(n),LW/2,cy);}}
+  lg.textAlign='left';lg.textBaseline='alphabetic';
+}
+
+/* ───────── HUD、各種畫面 ───────── */
+const SCREENS=['title','lang','roast','bow','over'];
+function hideScreens(){for(const s of SCREENS)$(s).hidden=true;}
+function show(id){if(id==='desk'){$('desk').hidden=false;return;}hideScreens();$(id).hidden=false;}
+let lastHint=null,lastHeat=-1,lastCombo=null;
+function hud(){
+  if(!S||mode==='title'||mode==='lang'||mode==='roast')return;
+  $('sn').textContent=run.n;const v=(S.cfg.shl?'十三行博物館・':'宜蘭傳藝中心・')+S.lang.name;if($('venue').textContent!==v)$('venue').textContent=v;
+  const h=Math.round(clamp(S.heat,0,100));if(h!==lastHeat){lastHeat=h;$('heat').style.width=h+'%';$('bar').classList.toggle('low',h<30);}
+  const cb=S.combo>=3?'連擊 ×'+S.combo:'';if(cb!==lastCombo){lastCombo=cb;$('combo').textContent=cb;}
+  let t='';if(time<capUntil)t=capText;
+  else if(mode==='play'){if(ev.kid&&!ev.kid.run)t='小朋友要來亂插鍵帽，點他！';else if(ev.mix)t='鍵帽被插亂了，看清楚字母';else if(ev.phone)t='PM 打來了，快掛掉';
+    else if(S.heat<25)t='觀眾要走了，專心！';else if(run.n===1&&S.ni<6)t='音符飛進圈圈的那一刻，按同一個字母';else if(S.cfg.shl&&S.ni<4)t='字母被土蓋住，快到圈圈才看得到';}
+  else if(mode==='run')t='唱完了，按 Run 執行';
+  if(t!==lastHint){lastHint=t;$('cap').textContent=t;}
+}
+function renderLangs(){$('langs').innerHTML=PLAY.map(id=>{const L=P[id];return`<button class="lb${id===lastLang?' last':''}" type="button" data-lang="${id}"><b>${esc(L.name)}</b><i>${'★'.repeat(L.stars)}${'☆'.repeat(3-L.stars)}</i><span>${esc(L.note)}</span><em>打賞 ×${L.mul}</em></button>`;}).join('');}
+function openLang(){mode='lang';S=null;run=null;$('hud').hidden=true;$('desk').hidden=true;$('cap').textContent='';lastHint=null;renderLangs();show('lang');}
+function pickLang(id){Snd.init();if(id==='html')return roast();newRun(id);}
+function roast(){mode='roast';roastT=0;htmlN++;store.set('sd.html',String(htmlN));Snd.boo();shake=6;
+  const H=htmlN===1?'HTML<span>不是程式語言！</span>':htmlN===2?'還選？<span>HTML 真的不是！</span>':'你是故意的吧<span>HTML 不是語言</span>';
+  const L=htmlN===1?['它是標記語言（HyperText Markup Language）啦。','你要在傳藝中心表演 &lt;div&gt; 嗎？']:htmlN===2?['台下的工程師集體翻了白眼。','標記語言不能 Run 啦。']:['觀眾開始丟藍白拖了。',`這是你第 ${htmlN} 次選 HTML。`];
+  $('roastH').innerHTML=H;$('roastP').innerHTML=L.join('<br>');show('roast');
+  for(const s of seats)if(Math.random()<.45)pop(s.x,s.y-22,pick(['HTML 不是語言！','下去！','噓～','標記語言啦']),'#ffd0c8',{life:1.6,dur:1.6});}
+function buy(k){const u=UPG[k];if(!u||up[k]>=u.max||bank<u.cost[up[k]])return false;bank-=u.cost[up[k]];up[k]++;saveUp();Snd.init();Snd.coin();renderShop();showBest();return true;}
+function renderShop(){
+  const html=`<p class="bank">打賞存了 <b>${bank.toLocaleString('en-US')}</b> 元，可以買裝備</p><div class="goods">`+Object.keys(UPG).map(k=>{const u=UPG[k],lv=up[k],full=lv>=u.max,c=full?0:u.cost[lv];
+    return`<button class="buy" type="button" data-buy="${k}"${full||bank<c?' disabled':''}><b>${u.name}${u.max>1?`<small>${lv}/${u.max}</small>`:''}</b><span>${u.desc}</span><em>${full?'已經有了':c.toLocaleString('en-US')+' 元'}</em></button>`;}).join('')+'</div>';
+  for(const id of['shopT','shopB','shopO'])$(id).innerHTML=html;$('shopT').hidden=bank<=0&&!Object.values(up).some(v=>v>0);}
+function showBest(){const b=[];if(best>0)b.push(`最佳紀錄 ${best} 場`);if(htmlN>0)b.push(`被噴 HTML ${htmlN} 次`);if(aiN>0)b.push(`求助 AI ${aiN} 次`);$('best').textContent=b.join('　');}
+function muteIcon(){const m=$('mute');m.innerHTML=Snd.on
+  ?'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9.5v5h3.5L12 18.5v-13L7.5 9.5z" fill="currentColor"/><path d="M15.5 9a4.2 4.2 0 0 1 0 6M18 6.5a8 8 0 0 1 0 11"/></svg>'
+  :'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9.5v5h3.5L12 18.5v-13L7.5 9.5z" fill="currentColor"/><path d="M16 9.5l5 5M21 9.5l-5 5"/></svg>';
+  m.setAttribute('aria-pressed',String(!Snd.on));}
+function toTitle(){mode='title';S=null;run=null;$('hud').hidden=true;$('desk').hidden=true;$('cap').textContent='';lastHint=null;renderShop();showBest();show('title');}
+
+/* ───────── 迴圈、暫停 ───────── */
+const H=1/240;let acc=0,last=0,holdLoop=false;
+function setPaused(p){if(p&&(paused||(mode!=='play'&&mode!=='intro')))return;if(!p&&!paused)return;paused=p;$('pause').hidden=!p;last=0;acc=0;if(Snd.ctx){try{p?Snd.ctx.suspend():Snd.ctx.resume();}catch(e){}}if(p)$('resume').focus({preventScroll:true});}
+function frame(now){const dt=Math.min(.05,(now-(last||now))/1000);last=now;
+  if(!paused&&!holdLoop){acc+=dt;let n=0;while(acc>=H&&n++<20){tick(H);acc-=H;}if(n>=20)acc=0;hud();}render();requestAnimationFrame(frame);}
+
+/* ───────── 輸入 ───────── */
+// 按下去的那一刻就算（pointerdown），不等手指放開
+$('keys').addEventListener('pointerdown',e=>{const b=e.target.closest('.key');if(!b)return;e.preventDefault();hit(keyPos[+b.dataset.p]);});
+$('runBtn').addEventListener('click',doRun);
+$('aiBar').addEventListener('click',askAI);
+$('ama').addEventListener('pointerdown',e=>{e.preventDefault();dismissAma();});
+$('phone').addEventListener('pointerdown',e=>{e.preventDefault();hangUp();});
+cv.addEventListener('pointerdown',e=>{if(mode!=='play'||!ev.kid||ev.kid.run)return;const r=cv.getBoundingClientRect(),x=(e.clientX-r.left)/r.width*VW,y=(e.clientY-r.top)/r.height*VH;
+  if(Math.hypot(x-ev.kid.x,y-176)<40)shoo();});
+$('start').addEventListener('click',()=>{Snd.init();openLang();});
+$('langBack').addEventListener('click',toTitle);
+$('langs').addEventListener('click',e=>{const b=e.target.closest('[data-lang]');if(b)pickLang(b.dataset.lang);});
+$('roastOk').addEventListener('click',openLang);
+$('next').addEventListener('click',()=>{if(mode==='bow'){Snd.init();nextShow();}});
+$('again').addEventListener('click',openLang);
+$('pauseBtn').addEventListener('click',()=>setPaused(true));
+$('resume').addEventListener('click',()=>setPaused(false));
+$('mute').addEventListener('click',()=>{Snd.init();Snd.setOn(!Snd.on);muteIcon();});
+gameEl.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('[data-buy]');if(b&&!b.disabled)buy(b.dataset.buy);});
+$('share').addEventListener('click',async()=>{const link=document.querySelector('link[rel=canonical]'),out=$('copied');
+  const why=run.why==='ai'?'最後忍不住求助 AI 被抓包':'最後觀眾走光了';
+  const text=`我上台純手打 ${P[run.lang].name}，撐了 ${run.done} 場、拿到 ${run.tips} 元打賞，${why}。你敢不靠 AI 上台嗎？`+(link?' '+link.href:'');
+  try{await navigator.clipboard.writeText(text);out.textContent='已複製，貼到脆上炫耀吧';}
+  catch(e){out.textContent=text;const r=document.createRange();r.selectNodeContents(out);const s=getSelection();s.removeAllRanges();s.addRange(r);}});
+gameEl.addEventListener('contextmenu',e=>e.preventDefault());
+for(const t of['touchstart','touchmove'])gameEl.addEventListener(t,e=>{if(e.cancelable&&!(e.target.closest&&e.target.closest('button,a,.card,.screen')))e.preventDefault();},{passive:false});
+let lastTouchEnd=0;
+document.addEventListener('touchend',e=>{const now=Date.now(),btn=e.target&&e.target.closest&&e.target.closest('button,a');if(now-lastTouchEnd<=350&&!btn&&e.cancelable)e.preventDefault();lastTouchEnd=now;},{passive:false});
+for(const t of['gesturestart','gesturechange','gestureend'])document.addEventListener(t,e=>e.preventDefault(),{passive:false});
+document.addEventListener('dblclick',e=>e.preventDefault());
+document.addEventListener('visibilitychange',()=>{last=0;if(document.hidden)setPaused(true);});
+window.addEventListener('blur',()=>setPaused(true));
+window.addEventListener('pagehide',()=>setPaused(true));
+// 電腦：直接按實體鍵盤上的字母；Esc 暫停；Enter／空白鍵執行、下一場
+window.addEventListener('keydown',e=>{if(e.code==='Escape'){if(!e.repeat)setPaused(!paused);return;}if(paused||e.repeat)return;
+  const m=/^Key([A-Z])$/.exec(e.code);
+  if(m&&mode==='play'&&KEYSETS[S.cfg.ks].flat().includes(m[1])){e.preventDefault();hit(m[1]);return;}
+  if(e.target.closest&&e.target.closest('button,a')&&(e.code==='Enter'||e.code==='Space'))return;
+  if(e.code==='Enter'||e.code==='Space'){if(mode==='run'){e.preventDefault();doRun();}else if(mode==='bow'){e.preventDefault();Snd.init();nextShow();}else if(mode==='play'&&ev.ama){e.preventDefault();dismissAma();}}});
+window.addEventListener('resize',resize);
+if(window.ResizeObserver){const ro=new ResizeObserver(resize);ro.observe(stageEl);ro.observe(laneEl);}
+
+muteIcon();renderShop();showBest();resize();requestAnimationFrame(frame);
+window.__sd={P,UPG,showOf,tokenize,makeSong,seats,KEYSETS,W,musicStep,snd:Snd,
+  get mode(){return mode},get S(){return S},get run(){return run},get ev(){return ev},get up(){return up},get keyPos(){return keyPos},
+  get bank(){return bank},set bank(v){bank=v;saveUp();renderShop();},get best(){return best},
+  hit,judge,doRun,next(){if(mode==='bow')nextShow();},pickLang,openLang,newRun,shoo,dismissAma,hangUp,buy,tick,startEvent,askAI,
+  set heat(v){S.heat=v},set loopHold(v){holdLoop=v;}};
+})();
+</script>
+<!--/PAGE-->
+</body>
+</html>
