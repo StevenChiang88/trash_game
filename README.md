@@ -10,6 +10,7 @@
 | 我的豆花30塊 | [`douhua/`](douhua/) | https://stevenchiang88.github.io/trash_game/douhua/ |
 | 我這一生如履薄冰 | [`bobing/`](bobing/) | https://stevenchiang88.github.io/trash_game/bobing/ |
 | 純手打 Code | [`shouda/`](shouda/) | https://stevenchiang88.github.io/trash_game/shouda/ |
+| 阿嘎跟不上我吧 | [`aga/`](aga/) | https://stevenchiang88.github.io/trash_game/aga/ |
 
 首頁（遊戲列表）是根目錄的 `index.html`：https://stevenchiang88.github.io/trash_game/
 
@@ -24,7 +25,8 @@ trash_game/
 ├─ kuangshi/      絕命礦師（遊戲、預覽圖、圖示、說明）
 ├─ douhua/        我的豆花30塊（遊戲、預覽圖、圖示、說明）
 ├─ bobing/        我這一生如履薄冰（遊戲、預覽圖、圖示、說明）
-└─ shouda/        純手打 Code（遊戲、預覽圖、圖示、說明）
+├─ shouda/        純手打 Code（遊戲、預覽圖、圖示、說明）
+└─ aga/           阿嘎跟不上我吧（遊戲、預覽圖、圖示、說明）
 ```
 
 資料夾名稱就是網址，不需要任何路由程式。
@@ -34,7 +36,7 @@ trash_game/
 1. 開一個新資料夾，裡面放 `index.html`（遊戲本體）和 `og.png`（1200×630 的分享預覽圖）。
 2. 在遊戲的 `index.html` 開頭寫好自己的 `<title>`、`og:title`、`og:description`、`og:url`、`og:image`、`canonical`，網址用 `https://stevenchiang88.github.io/trash_game/資料夾名稱/`。貼到 Threads、LINE 時的預覽卡片只讀這些標籤，所以每款遊戲都要有自己的一份。
 3. 在根目錄 `index.html` 的 `<ul class="games">` 裡複製一個 `<li>`，換掉連結、圖片、標題和說明。
-4. 存在瀏覽器裡的資料（例如最佳紀錄）所有遊戲共用同一個空間，key 記得加上自己的前綴，像被被撐住用的是 `bb.`、絕命電師用的是 `ds.`、絕命礦師用的是 `ks.`、我的豆花30塊用的是 `dh.`、我這一生如履薄冰用的是 `bi.`、純手打 Code 用的是 `sd.`。
+4. 存在瀏覽器裡的資料（例如最佳紀錄）所有遊戲共用同一個空間，key 記得加上自己的前綴，像被被撐住用的是 `bb.`、絕命電師用的是 `ds.`、絕命礦師用的是 `ks.`、我的豆花30塊用的是 `dh.`、我這一生如履薄冰用的是 `bi.`、純手打 Code 用的是 `sd.`、阿嘎跟不上我吧用的是 `ag.`。
 
 ## 部署到 GitHub Pages
 
