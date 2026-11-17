@@ -1,0 +1,554 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover, user-scalable=no">
+<meta name="description" content="深夜的大道上只穿一條內褲往前衝，後面的阿嘎扛著攝影機在追。跳過機車、鏟過路牌，等他追到喘的時候回頭嗆他：阿！跟不上我的速度吧！阿嘎！">
+<meta name="theme-color" content="#151a33">
+<link rel="canonical" href="https://stevenchiang88.github.io/trash_game/aga/">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="阿嘎跟不上我吧">
+<meta property="og:title" content="阿嘎跟不上我吧｜阿！跟不上我的速度吧！阿嘎！">
+<meta property="og:description" content="深夜的大道上只穿一條內褲往前衝，後面的阿嘎扛著攝影機在追。跳過機車、鏟過路牌，等他追到喘的時候回頭嗆他：阿！跟不上我的速度吧！阿嘎！">
+<meta property="og:url" content="https://stevenchiang88.github.io/trash_game/aga/">
+<meta property="og:image" content="https://stevenchiang88.github.io/trash_game/aga/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="深夜的大道上，一個只穿內褲的男生邊跑邊回頭嗆聲，後面扛攝影機的人追得彎腰喘氣">
+<meta property="og:locale" content="zh_TW">
+<meta name="twitter:card" content="summary_large_image">
+<style>
+  /* 與發佈環境相同的最小底座：上下避開瀏海與手勢列 */
+  html{box-sizing:border-box;padding:env(safe-area-inset-top,0px) 0 env(safe-area-inset-bottom,0px)}
+  body{margin:0}
+  [hidden]{display:none!important}
+</style>
+<!--PAGE-->
+<title>阿嘎跟不上我吧</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chiron+GoRound+TC:wght@500;900&family=Fredoka:wght@600;700&display=swap">
+<style>
+/* 版面：從側面看深夜的大道，他只穿一條內褲從左往右一直跑，扛著攝影機的阿嘎從左邊追上來。
+   上面是跑了幾公尺和阿嘎離你多遠；下面是「嗆！」按鈕。點畫面跳、往下滑鏟地、往左滑或按「嗆！」回頭嗆聲 */
+:root{
+  --ink:#1f2340;        /* 描邊與文字 */
+  --paper:#fffaf0;      /* 卡片 */
+  --hot:#ff5a3c;        /* 主色：嗆聲、危險 */
+  --sun:#ffd23f;        /* 按鈕、強調 */
+  --sky:#151a33;
+  --ok:#2fae6f;
+  --backdrop:#151a33;
+  --display:"Fredoka","Chiron GoRound TC","PingFang TC","Microsoft JhengHei",sans-serif;
+  --body:"Chiron GoRound TC","PingFang TC","Noto Sans TC","Microsoft JhengHei",sans-serif;
+  --sticker:-2px -2px 0 var(--ink),2px -2px 0 var(--ink),-2px 2px 0 var(--ink),2px 2px 0 var(--ink),0 -2.5px 0 var(--ink),0 2.5px 0 var(--ink),-2.5px 0 0 var(--ink),2.5px 0 0 var(--ink);
+}
+html,body{height:100%;touch-action:none;overscroll-behavior:none}
+button{touch-action:manipulation}
+body{background:var(--backdrop);color:var(--ink);font-family:var(--body);font-weight:500;overflow:hidden;display:grid;place-items:center}
+#game{position:relative;height:100%;aspect-ratio:9/16;max-width:100%;overflow:hidden;touch-action:none;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent;background:var(--sky)}
+#c{position:absolute;inset:0;width:100%;height:100%;display:block}
+
+.hud{position:absolute;inset:0;pointer-events:none;display:flex;flex-direction:column;gap:8px;padding-block:12px;padding-left:max(14px,env(safe-area-inset-left,0px));padding-right:max(14px,env(safe-area-inset-right,0px))}
+.top{display:flex;align-items:flex-start;justify-content:space-between;gap:8px}
+.left{display:flex;flex-direction:column;align-items:flex-start;gap:4px}
+.dist{display:flex;align-items:baseline;gap:4px;font-family:var(--display);color:var(--paper);text-shadow:var(--sticker);line-height:1}
+.dist b{font-size:40px;font-weight:700;font-variant-numeric:tabular-nums}
+.dist small{font-family:var(--body);font-weight:900;font-size:15px}
+.gap{display:flex;align-items:center;gap:6px;font-weight:900;font-size:13px;color:var(--paper);text-shadow:var(--sticker)}
+.gap b{font-family:var(--display);font-size:20px;font-variant-numeric:tabular-nums}
+.gap.near b{color:var(--hot)}
+.rec{display:flex;align-items:center;gap:5px;font-weight:900;font-size:12px;color:#fff;text-shadow:var(--sticker)}
+.rec i{width:9px;height:9px;border-radius:50%;background:#ff3b30;border:1.5px solid var(--ink);animation:recb 1s steps(2) infinite}
+.rec b{font-family:var(--display);font-size:14px;font-variant-numeric:tabular-nums}
+@keyframes recb{50%{opacity:.2}}
+.combo{font-weight:900;font-size:13px;color:var(--sun);text-shadow:var(--sticker);min-height:1.2em}
+.side{display:flex;flex-direction:column;gap:8px}
+.icon-btn{pointer-events:auto;width:40px;height:40px;display:grid;place-items:center;border:2.5px solid var(--ink);border-radius:50%;background:var(--paper);color:var(--ink);cursor:pointer;padding:0}
+.icon-btn svg{width:20px;height:20px}
+.icon-btn:focus-visible,.btn:focus-visible{outline:3px solid var(--sun);outline-offset:3px}
+.cap{align-self:center;margin-top:auto;width:min(330px,100%);min-height:40px;display:flex;align-items:center;justify-content:center;padding:6px 14px;border-radius:12px;background:rgba(21,26,51,.62);color:#fff;text-align:center;font-weight:900;font-size:14px;line-height:1.35;text-wrap:balance}
+.cap:empty{visibility:hidden}
+.taunt{pointer-events:auto;align-self:flex-end;margin-left:auto;flex:none;font:inherit;font-weight:900;font-size:26px;width:104px;height:104px;border-radius:50%;border:4px solid var(--ink);background:var(--hot);color:#fff;text-shadow:0 2px 0 rgba(0,0,0,.25);box-shadow:0 6px 0 var(--ink);cursor:pointer;touch-action:manipulation;line-height:1.05}
+.taunt small{display:block;font-size:12px}
+.taunt:active,.taunt.on{transform:translateY(4px);box-shadow:0 2px 0 var(--ink)}
+.taunt.ready{animation:ready .5s ease-in-out infinite alternate}
+@keyframes ready{to{transform:scale(1.08);background:#ff7a3c}}
+.taunt.cool{background:#9aa0b8}
+.row{display:flex;align-items:flex-end;justify-content:space-between;gap:10px}
+.hint{font-weight:900;font-size:12px;line-height:1.5;color:var(--paper);text-shadow:var(--sticker)}
+
+.btn{pointer-events:auto;font:inherit;font-weight:900;font-size:20px;color:var(--ink);background:var(--sun);border:3px solid var(--ink);border-radius:16px;padding:12px 26px;box-shadow:0 5px 0 var(--ink);cursor:pointer;transition:transform .06s,box-shadow .06s}
+.btn:active{transform:translateY(4px);box-shadow:0 1px 0 var(--ink)}
+.btn.ghost{background:var(--paper);font-size:15px;padding:10px 16px}
+
+.screen{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;gap:12px;padding-block:24px 18px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));text-align:center}
+#title{background:linear-gradient(rgba(21,26,51,.55),rgba(21,26,51,.05) 40%,rgba(21,26,51,.05) 62%,rgba(21,26,51,.7))}
+.logo{margin:3vh 0 0;font-weight:900;font-size:clamp(36px,11vw,54px);line-height:1.08;color:var(--paper);text-shadow:var(--sticker),0 6px 0 var(--ink);transform:rotate(-3deg)}
+.logo span{display:block;color:var(--sun);font-size:1.05em}
+.tag{margin:4px 0 0;font-weight:900;font-size:16px;color:var(--paper);text-shadow:var(--sticker);text-wrap:balance}
+.how{display:flex;flex-wrap:wrap;justify-content:center;gap:7px;margin:0;padding:0;list-style:none;font-size:13.5px}
+.how li{padding:5px 11px;border:2.5px solid var(--ink);border-radius:999px;background:var(--paper);white-space:nowrap}
+.how b{font-weight:900;color:var(--hot)}
+.grow{flex:1}
+.best{font-weight:900;font-size:13px;color:var(--paper);text-shadow:var(--sticker);min-height:1.4em}
+.home{pointer-events:auto;font-weight:900;font-size:14px;color:var(--paper);text-shadow:var(--sticker);text-underline-offset:4px}
+
+#over,#pause{justify-content:center;background:rgba(21,26,51,.55)}
+.card{width:min(330px,100%);max-height:100%;overflow-y:auto;touch-action:pan-y;overscroll-behavior:contain;display:flex;flex-direction:column;gap:12px;padding:18px;border:3px solid var(--ink);border-radius:22px;background:var(--paper);box-shadow:0 7px 0 var(--ink);text-align:left;animation:pop .35s cubic-bezier(.3,1.5,.5,1)}
+@keyframes pop{from{transform:scale(.85);opacity:0}}
+.verdict{margin:0;font-weight:900;font-size:26px;line-height:1.25}
+.verdict .n{color:var(--hot)}
+.big{display:flex;align-items:baseline;gap:10px;padding:10px 14px;border:2.5px solid var(--ink);border-radius:14px;background:#fff}
+.big b{font-family:var(--display);font-weight:700;font-size:46px;line-height:1;color:var(--hot);font-variant-numeric:tabular-nums}
+.big span{font-weight:900;font-size:14px}
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:9px 12px;margin:0}
+.stats dt{font-size:12px;opacity:.65}
+.stats dd{margin:0;font-weight:900;font-size:16px;font-variant-numeric:tabular-nums}
+.stats .wide{grid-column:1/-1}
+.acts{display:flex;flex-wrap:wrap;gap:9px;align-items:center}
+.copied{font-size:13px;font-weight:900;color:var(--ok);min-height:1.3em;user-select:text;-webkit-user-select:text}
+.note{margin:0;font-size:14px;opacity:.75}
+@media (prefers-reduced-motion:reduce){.card{animation:none}.taunt.ready{animation:none}}
+</style>
+</head>
+<body>
+<div id="game">
+  <canvas id="c" aria-label="深夜的大道上，一個只穿內褲的男生往右跑，後面扛攝影機的人在追"></canvas>
+
+  <div class="hud" id="hud" hidden>
+    <div class="top">
+      <div class="left">
+        <div class="dist"><b id="dist">0</b><small>公尺</small></div>
+        <div class="gap" id="gapBox">阿嘎離你 <b id="gap">0</b> 公尺</div>
+        <div class="rec"><i></i>REC <b id="recT">00:00</b></div>
+        <div class="combo" id="combo"></div>
+      </div>
+      <div class="side">
+        <button class="icon-btn" id="pauseBtn" type="button" aria-label="暫停"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="6" y="5" width="4.5" height="14" rx="1.6"/><rect x="13.5" y="5" width="4.5" height="14" rx="1.6"/></svg></button>
+        <button class="icon-btn" id="mute" type="button" aria-label="聲音開關"></button>
+      </div>
+    </div>
+    <div class="cap" id="cap"></div>
+    <div class="row">
+      <div class="hint" id="hint">點畫面：跳<br>往下滑：鏟地</div>
+      <button class="taunt" id="taunt" type="button">嗆！<small>回頭嗆他</small></button>
+    </div>
+  </div>
+
+  <div class="screen" id="title">
+    <h1 class="logo">阿嘎<span>跟不上我吧</span></h1>
+    <p class="tag">阿！跟不上我的速度吧！阿嘎！</p>
+    <ul class="how">
+      <li><b>點一下</b> 跳</li>
+      <li><b>往下滑</b> 鏟地</li>
+      <li><b>他喘的時候</b> 回頭嗆</li>
+      <li><b>被追上</b> 就輸了</li>
+    </ul>
+    <div class="grow"></div>
+    <button class="btn" id="start" type="button">開跑</button>
+    <div class="best" id="best"></div>
+    <a class="home" href="../">其他遊戲</a>
+  </div>
+
+  <div class="screen" id="over" hidden>
+    <div class="card">
+      <p class="verdict" id="ovV">被阿嘎<span class="n">追上了</span>！</p>
+      <div class="big"><b id="ovDist">0</b><span>公尺</span></div>
+      <dl class="stats">
+        <div><dt>分數</dt><dd id="ovScore">0</dd></div>
+        <div><dt>最佳紀錄</dt><dd id="ovBest"></dd></div>
+        <div><dt>嗆成功</dt><dd id="ovTaunt"></dd></div>
+        <div><dt>封號</dt><dd id="ovRank"></dd></div>
+        <div class="wide"><dt>跑到哪裡被追上</dt><dd id="ovWhere"></dd></div>
+      </dl>
+      <div class="acts">
+        <button class="btn" id="again" type="button">再跑一次</button>
+        <button class="btn ghost" id="share" type="button">複製戰績</button>
+      </div>
+      <div class="copied" id="copied"></div>
+    </div>
+  </div>
+
+  <div class="screen" id="pause" hidden>
+    <div class="card">
+      <p class="verdict">暫停中</p>
+      <p class="note">離開畫面會自動暫停。阿嘎也會停下來等你，按「繼續」就接著跑。</p>
+      <div class="acts"><button class="btn" id="resume" type="button">繼續</button></div>
+    </div>
+  </div>
+</div>
+<script>
+(() => {
+'use strict';
+const clamp=(x,a,b)=>x<a?a:x>b?b:x, lerp=(a,b,t)=>a+(b-a)*t, TAU=Math.PI*2;
+const rnd=(a,b)=>a+Math.random()*(b-a), pick=a=>a[(Math.random()*a.length)|0];
+const store={get(k){try{return localStorage.getItem(k)}catch(e){return null}},set(k,v){try{localStorage.setItem(k,v)}catch(e){}}};
+const $=id=>document.getElementById(id);
+const INK='#1f2340',PAPER='#fffaf0',HOT='#ff5a3c',SUN='#ffd23f';
+const FONT='"Chiron GoRound TC","PingFang TC","Microsoft JhengHei",sans-serif';
+function rrect(c,x,y,w,h,r){c.beginPath();c.moveTo(x+r,y);c.arcTo(x+w,y,x+w,y+h,r);c.arcTo(x+w,y+h,x,y+h,r);c.arcTo(x,y+h,x,y,r);c.arcTo(x,y,x+w,y,r);c.closePath();}
+
+/* ───────── 規則 ─────────
+   從側面看，他自動往右跑，阿嘎從後面追。跑的速度隨距離變快，阿嘎又比你再快一點，所以距離（gap）一直在縮。
+   路上有東西：矮的要跳（點一下），高的招牌要鏟過去（往下滑）；撞到會踉蹌一下、變慢。
+   阿嘎每隔幾秒會追到喘（頭上出現縮小的圈）。他喘的時候回頭嗆他（「嗆！」鈕或往左滑），他會氣到停下來，距離拉開；
+   圈縮到最小那一段嗆最準。他沒在喘的時候嗆，反而會被激怒、衝更快。回頭嗆的那一下不能跳。
+   被追上（距離 0）就結束。路上的珍奶喝到可以衝一下 */
+const VW=360,VH=640,GROUND=470,PX=132,PX_M=18;
+const JUMP_V=560,GRAV=1500,SLIDE_T=.8,CK=1.25,STAND_H=54*CK,SLIDE_H=24*CK,HALF_W=8;
+const V0=6.5,V_D=.0055,V_MAX=13.5,CH0=.35,CH_D=1/650,GAP0=12,GAP_MAX=22,CATCH=.6;
+const PANT_GAP=[5,7.5],PANT_T=1.05,PERFECT=.4,STUN=[1.2,1.75],RAGE_T=1.5,RAGE_V=2.4,TAUNT_T=.5,TAUNT_CD=.9;
+const STUM_T=1,STUM_K=.35,INV_T=1.1,TEA_T=2.5,TEA_K=1.35;
+// 一路都是深夜的大道：高架橋下 → 十字路口 → 騎樓店家前 → 半夜空蕩的大道
+const SCENES=[{at:0,name:'高架橋下',kinds:['cone','bin','puddle','gate']},
+  {at:300,name:'十字路口',kinds:['scooter','cone','sign','dog','bin']},
+  {at:700,name:'騎樓店家前',kinds:['scooter','shop','puddle','dog','bin']},
+  {at:1100,name:'半夜空蕩的大道',kinds:['cone','dog','tape','puddle','scooter']}];
+const sceneAt=d=>{let s=SCENES[0];for(const q of SCENES)if(d>=q.at)s=q;return s;};
+// 東西：w、h 是像素；low 要跳、high 要鏟（停車場柵欄、路牌、騎樓招牌、施工警示帶）、flat 是水窪（跳過去才不會滑一下）
+const KIND={cone:{w:14,h:26,t:'low'},bin:{w:22,h:36,t:'low'},scooter:{w:36,h:34,t:'low'},dog:{w:28,h:24,t:'low',v:-1.4},puddle:{w:40,h:4,t:'flat'},
+  gate:{w:44,t:'high'},sign:{w:38,t:'high'},shop:{w:46,t:'high'},tape:{w:44,t:'high'}};
+const HIGH_BOT=GROUND-46;
+const RANKS=[[2000,'阿嘎永遠跟不上的男人'],[1500,'半夜最快的男人'],[1100,'大道飛人'],[700,'跑過三個路口'],[300,'有點快'],[100,'剛熱身'],[0,'一出門就被追上']];
+const TAUNTS=['阿！跟不上我的速度吧！阿嘎！','跟不上我的速度吧！','阿嘎！太慢了啦！','酸民，死好！'];
+const AGA_MAD=['等我一下啦！','鏡頭要跟不上了！','你跑那麼快幹嘛！','我還在拍欸！'];
+const AGA_FIRE=['被你看穿了喔？','好，衝了喔！','這段一定要拍到！'];
+
+/* ───────── 聲音 ───────── */
+const mtof=m=>440*Math.pow(2,(m-69)/12);
+const Snd={ctx:null,on:store.get('ag.mute')!=='1',
+  init(){if(this.ctx){if(this.ctx.state==='suspended'&&!paused)this.ctx.resume();return;}
+    try{const C=window.AudioContext||window.webkitAudioContext,c=this.ctx=new C();this.master=c.createGain();this.master.gain.value=this.on?1:0;this.master.connect(c.destination);
+      const buf=c.createBuffer(1,c.sampleRate,c.sampleRate),d=buf.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=Math.random()*2-1;this.noise=buf;
+      this.mus=c.createGain();this.mus.gain.value=.55;this.mus.connect(this.master);}catch(e){this.ctx=null;}},
+  osc(type,f,at,dur,vol,o){if(!this.ctx)return;const c=this.ctx,n=c.createOscillator(),g=c.createGain();n.type=type;n.frequency.setValueAtTime(f,at);if(o&&o.f1)n.frequency.exponentialRampToValueAtTime(o.f1,at+(o.glide||dur));
+    g.gain.setValueAtTime(0,at);g.gain.linearRampToValueAtTime(vol,at+(o&&o.atk||.005));if(o&&o.hold)g.gain.setValueAtTime(vol,at+o.hold);g.gain.exponentialRampToValueAtTime(.0005,at+dur);
+    let last=g;if(o&&o.lp){const f2=c.createBiquadFilter();f2.type='lowpass';f2.frequency.value=o.lp;g.connect(f2);last=f2;}
+    n.connect(g);last.connect(o&&o.bus?this.mus:this.master);n.start(at);n.stop(at+dur+.05);},
+  nz(at,dur,vol,type,freq,bus){if(!this.ctx)return;const c=this.ctx,n=c.createBufferSource(),f=c.createBiquadFilter(),g=c.createGain();n.buffer=this.noise;n.loop=true;f.type=type;f.frequency.value=freq;
+    g.gain.setValueAtTime(vol,at);g.gain.exponentialRampToValueAtTime(.001,at+dur);n.connect(f);f.connect(g);g.connect(bus?this.mus:this.master);n.start(at,Math.random()*.5);n.stop(at+dur+.05);},
+  now(){return this.ctx?this.ctx.currentTime:0;},
+  step(){const t=this.now();this.nz(t,.05,.09,'lowpass',500);},
+  jump(){const t=this.now();this.osc('square',300,t,.16,.05,{f1:620});this.nz(t,.12,.05,'highpass',3000);},
+  slide(){const t=this.now();this.nz(t,.35,.12,'bandpass',1200);},
+  thud(){const t=this.now();this.osc('sine',160,t,.25,.3,{f1:60});this.nz(t,.15,.25,'lowpass',600);},
+  splash(){const t=this.now();this.nz(t,.3,.18,'bandpass',2200);},
+  tea(){const t=this.now();[784,988,1319].forEach((f,i)=>this.osc('triangle',f,t+i*.06,.12,.07));},
+  taunt(){const t=this.now();this.osc('sawtooth',420,t,.22,.06,{f1:700,lp:2200});},
+  perfect(){const t=this.now();[1047,1319,1568,2093].forEach((f,i)=>this.osc('triangle',f,t+i*.05,.16,.07));this.nz(t,.5,.1,'highpass',6000);},
+  good(){const t=this.now();[880,1175].forEach((f,i)=>this.osc('triangle',f,t+i*.06,.14,.07));},
+  angry(){const t=this.now();this.osc('sawtooth',140,t,.4,.08,{f1:90,lp:900});this.osc('square',95,t,.35,.05);},
+  pant(){const t=this.now();for(let i=0;i<2;i++)this.nz(t+i*.25,.18,.06,'bandpass',900);},
+  caught(){const t=this.now();[392,349,311,262].forEach((f,i)=>this.osc('sawtooth',f,t+i*.22,.3,.06,{lp:1600}));this.osc('sine',120,t,.4,.3,{f1:50});},
+  setOn(v){this.on=v;store.set('ag.mute',v?'0':'1');if(this.ctx)this.master.gain.setTargetAtTime(v?1:0,this.ctx.currentTime,.02);if(!v)Voice.stop();}
+};
+// 嗆聲那句用裝置內建的中文語音唸；沒有中文語音就只有字幕
+const Voice={ok:'speechSynthesis' in window&&'SpeechSynthesisUtterance' in window,v:null,
+  pick(){if(!this.ok)return;let vs=[];try{vs=speechSynthesis.getVoices()||[];}catch(e){}const L=v=>(v.lang||'').replace('_','-').toLowerCase();
+    this.v=vs.find(v=>L(v)==='zh-tw')||vs.find(v=>L(v).startsWith('zh-tw'))||vs.find(v=>/^(zh-cn|zh-hans|zh-hant|cmn|zh$)/.test(L(v)))||null;},
+  say(text,o){if(!this.ok||!Snd.on)return;try{if(!this.v)this.pick();if(!this.v)return;speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(text);u.voice=this.v;u.lang=this.v.lang;u.rate=(o&&o.rate)||1.25;u.pitch=(o&&o.pitch)||1.1;u.volume=1;speechSynthesis.speak(u);}catch(e){}},
+  stop(){if(this.ok)try{speechSynthesis.cancel();}catch(e){}}};
+if(Voice.ok)try{speechSynthesis.addEventListener('voiceschanged',()=>Voice.pick());}catch(e){}
+
+/* ───────── 配樂 ─────────
+   一首八小節的循環（每分鐘 150 拍）：大鼓四拍、小鼓二四拍、踩鈸八分音符、低音、主旋律。
+   阿嘎離你不到 4 公尺的時候，多一層警報聲和心跳 */
+const BPM=150,BEAT=60/BPM,STEP=BEAT/2;
+const MEL=[76,-1,79,76,72,-1,74,76, 81,-1,79,76,74,-1,72,-1, 72,74,76,-1,79,-1,76,74, 74,-1,74,76,79,-1,-1,-1,
+  84,-1,81,79,76,-1,79,81, 84,-1,81,79,76,74,72,-1, 74,76,79,81,79,76,74,72, 74,-1,79,-1,72,-1,-1,-1];
+const ROOT=[36,33,41,43];
+function musicStep(k,at){const s=k%8,bar=(k>>3)%8,r=ROOT[bar%4],m=MEL[k%64],near=G&&G.gap<4;
+  if(s%2===0)Snd.osc('sine',150,at,.28,.42,{f1:45,glide:.16,bus:1});
+  if(s===2||s===6){Snd.nz(at,.14,.16,'bandpass',1900,1);Snd.osc('triangle',220,at,.08,.08,{f1:160,bus:1});}
+  Snd.nz(at,.04,s%2?.06:.035,'highpass',8000,1);
+  if(s%2===0||s===7)Snd.osc('triangle',mtof(r+(s===4||s===7?12:0)),at,STEP*1.8,.24,{lp:900,bus:1});
+  if(m>0)Snd.osc('square',mtof(m),at,STEP*1.6,.075,{atk:.005,hold:STEP*.9,lp:3400,bus:1});
+  if(s%4===1)Snd.osc('triangle',mtof(r+24+(s===5?7:4)),at,.12,.035,{bus:1});
+  if(near&&s%2===0){Snd.osc('square',1320,at,.08,.03,{bus:1});if(s===0)Snd.osc('sine',70,at,.18,.35,{f1:40,bus:1});}}
+
+/* ───────── 狀態 ───────── */
+let mode='title',time=0,paused=false,G=null,capText='',capUntil=0;
+let best=parseInt(store.get('ag.best')||'0',10)||0;
+const pops=[],parts=[];let shake=0;
+function newGame(){G={d:0,v:V0,gap:GAP0,jy:0,jv:0,air:false,slide:0,stum:0,inv:0,tea:0,taunt:0,cd:0,phase:0,stepPh:0,
+    obs:[],teas:[],next:22,nextTea:60,aga:{st:'chase',t:0,pant:rnd(3.5,5),run:0,face:''},
+    score:0,good:0,perfect:0,bad:0,hits:0,streak:0,t:0,musK:0,musT:0,lastStep:0};}
+function say(t,d){capText=t;capUntil=time+(d||1.6);}
+function pop(x,y,text,col,o){pops.push(Object.assign({x,y,text,col:col||PAPER,life:.9,dur:.9,size:16},o));}
+const vBase=d=>Math.min(V_MAX,V0+V_D*d);
+const chase=d=>CH0+CH_D*d;
+
+/* ───────── 動作 ───────── */
+function jump(){if(mode!=='play'||paused||!G)return;if(G.taunt>0)return;if(G.air)return;G.air=true;G.jv=JUMP_V;G.slide=0;G.slideQ=false;Snd.jump();}
+// 在空中往下滑：快點落地，落地馬上鏟
+function slide(){if(mode!=='play'||paused||!G)return;if(G.taunt>0)return;if(G.air){G.jv=Math.min(G.jv,-520);G.slideQ=true;return;}if(G.slide>0)return;G.slide=SLIDE_T;Snd.slide();}
+// 回頭嗆：他在喘就停下來（越接近圈縮到最小越準）；沒在喘反而被激怒
+function taunt(){if(mode!=='play'||paused||!G||G.cd>0)return;Snd.init();G.taunt=TAUNT_T;G.cd=TAUNT_CD;Snd.taunt();const a=G.aga,line=pick(TAUNTS);Voice.say(line);
+  const ax=clamp(PX-G.gap*PX_M,30,VW-30);pop(PX+30,GROUND-112,line.length>10?'跟不上我的速度吧！':line,SUN,{size:15,life:1.1,dur:1.1});
+  if(a.st==='pant'){const left=a.t/PANT_T,perf=left<=PERFECT;a.st='stun';a.t=perf?STUN[1]:STUN[0];G.streak++;
+    const pts=(perf?60:30)*(1+Math.min(G.streak-1,5)*.2);G.score+=pts;if(perf){G.perfect++;Snd.perfect();shake=6;pop(ax,GROUND-130,'完美嗆聲！',HOT,{size:20});}else{G.good++;Snd.good();pop(ax,GROUND-130,'嗆到了！',SUN,{size:18});}
+    say(pick(AGA_MAD),1.4);a.face='mad';Snd.angry();}
+  else if(a.st!=='stun'){a.st='rage';a.t=RAGE_T;G.bad++;G.streak=0;say(pick(AGA_FIRE),1.4);a.face='fire';Snd.angry();pop(ax,GROUND-130,'被激怒了',PAPER,{size:16});}}
+
+/* ───────── 路上的東西 ───────── */
+function spawn(){const sc=sceneAt(G.next),k=pick(sc.kinds),K=KIND[k];G.obs.push({k,x:G.next,w:K.w,h:K.h||0,t:K.t,v:K.v||0,hit:false});
+  const gmin=Math.max(8,13-G.d/200,G.v*.85);G.next+=rnd(gmin,gmin+8)*(G.d<40?1.3:1);
+  if(G.next>G.nextTea){G.teas.push({x:G.nextTea+rnd(-2,2),hi:Math.random()<.5,got:false});G.nextTea+=rnd(70,130);}}
+const sxOf=x=>PX+(x-G.d)*PX_M;
+function collide(){
+  const feet=GROUND-G.jy,top=feet-(G.slide>0?SLIDE_H:STAND_H),x0=PX-HALF_W,x1=PX+HALF_W;
+  for(const o of G.obs){if(o.hit)continue;const sx=sxOf(o.x),ox0=sx-o.w/2,ox1=sx+o.w/2;if(ox1<x0||ox0>x1)continue;
+    let hit=false;if(o.t==='low')hit=feet>GROUND-o.h;else if(o.t==='high')hit=top<HIGH_BOT;else if(o.t==='flat')hit=!G.air;
+    if(!hit)continue;o.hit=true;if(G.inv>0&&o.t!=='flat')continue;
+    if(o.t==='flat'){G.stum=Math.max(G.stum,STUM_T*.55);Snd.splash();pop(PX,GROUND-70,'滑了一下',PAPER);for(let i=0;i<8;i++)parts.push({x:PX+rnd(-10,10),y:GROUND-2,vx:rnd(-80,80),vy:rnd(-200,-60),r:rnd(2,4),col:'#9fd3f5',life:rnd(.3,.6)});}
+    else{G.stum=STUM_T;G.inv=INV_T;G.hits++;G.streak=0;shake=7;Snd.thud();pop(PX,GROUND-80,pick(['痛！','哎唷','撞到了']),HOT);}}
+  for(const t of G.teas){if(t.got)continue;const sx=sxOf(t.x),ty=t.hi?GROUND-92:GROUND-26;if(Math.abs(sx-PX)<18&&ty>top-10&&ty<feet+6){t.got=true;G.tea=TEA_T;G.score+=15;Snd.tea();pop(PX,GROUND-96,'珍奶！衝！',SUN);}}
+}
+
+/* ───────── 每一步 ───────── */
+function tick(dt){
+  time+=dt;shake=Math.max(0,shake-dt*26);
+  for(let i=pops.length-1;i>=0;i--)if((pops[i].life-=dt)<=0)pops.splice(i,1);
+  for(let i=parts.length-1;i>=0;i--){const p=parts[i];p.x+=p.vx*dt;p.y+=p.vy*dt;p.vy+=700*dt;if((p.life-=dt)<=0)parts.splice(i,1);}
+  if(mode==='caught'){G.t+=dt;if(G.t>1.5)gameOver();return;}
+  if(mode!=='play')return;
+  G.t+=dt;G.rec=(G.rec||0)+dt;G.taunt=Math.max(0,G.taunt-dt);G.cd=Math.max(0,G.cd-dt);G.inv=Math.max(0,G.inv-dt);G.tea=Math.max(0,G.tea-dt);
+  // 你的速度：踉蹌的時候慢、喝了珍奶快
+  const vb=vBase(G.d),stu=G.stum>0?lerp(1,STUM_K,G.stum/STUM_T):1;G.stum=Math.max(0,G.stum-dt);G.v=vb*stu*(G.tea>0?TEA_K:1);
+  G.d+=G.v*dt;G.phase+=G.v*dt*1.3;
+  if(G.air){G.jy+=G.jv*dt;G.jv-=GRAV*dt;if(G.jy<=0){G.jy=0;G.air=false;G.jv=0;Snd.step();if(G.slideQ){G.slideQ=false;G.slide=SLIDE_T;Snd.slide();}}}
+  else if(G.slide>0)G.slide=Math.max(0,G.slide-dt);
+  if(!G.air&&G.slide<=0&&Math.floor(G.phase/Math.PI)!==G.lastStep){G.lastStep=Math.floor(G.phase/Math.PI);Snd.step();}
+  // 阿嘎：平常比你基本速度快一點；喘的時候慢下來；被嗆到停住；被激怒衝更快
+  const a=G.aga;a.t-=dt;let av=vb+chase(G.d);
+  if(a.st==='chase'){a.pant-=dt;if(a.pant<=0){a.st='pant';a.t=PANT_T;Snd.pant();a.face='pant';}}
+  else if(a.st==='pant'){av=vb-1.5;if(a.t<=0){a.st='chase';a.pant=rnd(PANT_GAP[0],PANT_GAP[1])*(1+G.d/2500);a.face='';G.streak=Math.max(0,G.streak);}}
+  else if(a.st==='stun'){av=0;if(a.t<=0){a.st='chase';a.pant=rnd(PANT_GAP[0],PANT_GAP[1])*(1+G.d/2500);a.face='';}}
+  else if(a.st==='rage'){av+=RAGE_V;if(a.t<=0){a.st='chase';a.pant=rnd(PANT_GAP[0],PANT_GAP[1])*(1+G.d/2500)*.7;a.face='';}}
+  a.run+=av*dt*1.3;G.gap=Math.min(GAP_MAX,G.gap+(G.v-av)*dt);
+  if(G.gap<=CATCH){G.gap=0;mode='caught';G.t=0;Snd.caught();shake=10;say('被阿嘎追上了…很累！',2);Voice.say('很累！',{pitch:.95,rate:1.05});return;}
+  // 路上的東西
+  while(G.next<G.d+30)spawn();
+  for(const o of G.obs)if(o.v)o.x+=o.v*dt;
+  for(let i=G.obs.length-1;i>=0;i--)if(G.obs[i].x<G.d-20)G.obs.splice(i,1);
+  for(let i=G.teas.length-1;i>=0;i--)if(G.teas[i].x<G.d-20)G.teas.splice(i,1);
+  collide();
+  // 配樂往前排 0.12 秒
+  if(Snd.ctx){G.musT+=dt;while(G.musK*STEP<G.musT+.12){musicStep(G.musK,Snd.now()+Math.max(0,G.musK*STEP-G.musT));G.musK++;}}
+}
+
+/* ───────── 畫面 ───────── */
+const gameEl=$('game'),cv=$('c'),g=cv.getContext('2d');
+const reduced=window.matchMedia&&matchMedia('(prefers-reduced-motion:reduce)').matches;
+let cw=1,ch=1,dpr=1,scale=1,ox=0,oy=0,wx0=0,wx1=VW,wy0=0,wy1=VH;
+function resize(){const b=gameEl.getBoundingClientRect();cw=Math.max(1,b.width);ch=Math.max(1,b.height);dpr=Math.min(window.devicePixelRatio||1,2);
+  cv.width=Math.round(cw*dpr);cv.height=Math.round(ch*dpr);scale=Math.min(cw/VW,ch/VH);ox=(cw-VW*scale)/2;oy=(ch-VH*scale)/2;wx0=-ox/scale;wx1=(cw-ox)/scale;wy0=-oy/scale;wy1=(ch-oy)/scale;}
+const hash=(i,k)=>{const x=Math.sin(i*127.1+k*311.7)*43758.5453;return x-Math.floor(x);};
+// 深夜的大道：遠處的大樓、高架橋和橋墩、路燈、十字路口的斑馬線和紅綠燈、騎樓的店家
+function drawBack(d){
+  const sc=sceneAt(d),i0=SCENES.indexOf(sc);
+  const sky=g.createLinearGradient(0,wy0,0,GROUND);sky.addColorStop(0,'#0b1030');sky.addColorStop(1,'#2b2650');g.fillStyle=sky;g.fillRect(wx0,wy0,wx1-wx0,GROUND-wy0);
+  g.fillStyle='rgba(255,255,255,.7)';for(let i=0;i<26;i++){const x=wx0+hash(i,1)*(wx1-wx0),y=wy0+hash(i,2)*(200-wy0);g.fillRect(x,y,1.5,1.5);}
+  // 遠處的大樓，有些窗戶亮著
+  const far=d*PX_M*.15;for(let i=-1;i<9;i++){const w=60,bx=((i*w-far)%(w*9)+w*9)%(w*9)-w+wx0,id=Math.floor((i*w+far)/(w*9))*9+i,h=120+hash(id,5)*150;
+    g.fillStyle='#1c2147';g.fillRect(bx,GROUND-h,w-4,h);g.fillStyle='#ffd77a';for(let r=0;r<7;r++)for(let c=0;c<3;c++)if(hash(id*7+r,c)>.62)g.fillRect(bx+8+c*16,GROUND-h+12+r*18,8,9);}
+  // 騎樓店家（第三段）：亮著的店面和招牌
+  if(i0===2){const mx=d*PX_M*.7;for(let i=-1;i<6;i++){const w=96,x=((i*w-mx)%(w*6)+w*6)%(w*6)-w+wx0,id=Math.floor((i*w+mx)/(w*6))*6+i,k=((id%4)+4)%4;
+      g.fillStyle='#3a3557';g.fillRect(x,GROUND-150,w-2,150);g.fillStyle=['#fff3c2','#d8fff0','#ffe0c8','#e3e8ff'][k];g.fillRect(x+8,GROUND-92,w-18,92);
+      g.fillStyle=['#ff5a3c','#2fae6f','#ffd23f','#3d7bd9'][k];g.fillRect(x+6,GROUND-112,w-14,18);g.fillStyle='#fff';g.font='900 11px '+FONT;g.textAlign='center';g.fillText(['早餐','藥局','飲料','24 小時'][k],x+w/2-2,GROUND-99);g.textAlign='left';
+      g.fillStyle='#4a4468';g.fillRect(x,GROUND-150,6,150);}}
+  // 高架橋：橋面在上面，橋墩一根一根
+  if(i0===0||i0===3){const mx=d*PX_M*.85;g.fillStyle='#4b4f68';g.fillRect(wx0,GROUND-232,wx1-wx0,26);g.fillStyle='#5c6180';g.fillRect(wx0,GROUND-236,wx1-wx0,6);g.fillStyle='#363a52';g.fillRect(wx0,GROUND-206,wx1-wx0,5);
+    for(let i=-1;i<4;i++){const x=((i*150-mx)%600+600)%600-150+wx0;g.fillStyle='#565a74';g.fillRect(x,GROUND-206,30,206);g.fillStyle='rgba(0,0,0,.18)';g.fillRect(x+20,GROUND-206,10,206);}}
+  // 十字路口：紅綠燈、遠處開過去的計程車
+  if(i0===1){const mx=d*PX_M;for(let i=-1;i<3;i++){const x=((i*260-mx)%520+520)%520-80+wx0;g.fillStyle='#2b2f45';g.fillRect(x,GROUND-150,6,150);g.fillRect(x,GROUND-150,46,6);
+      g.fillStyle='#14172a';rrect(g,x+20,GROUND-146,26,12,3);g.fill();const on=(time*.5+i)%3<1.5;g.fillStyle=on?'#ff4d4d':'#3a1d1d';g.beginPath();g.arc(x+27,GROUND-140,3.6,0,TAU);g.fill();g.fillStyle=on?'#1f3a2a':'#46e08a';g.beginPath();g.arc(x+39,GROUND-140,3.6,0,TAU);g.fill();}
+    const tx=((time*90)%(wx1-wx0+200))+wx0-100;g.fillStyle='#ffcf2e';rrect(g,tx,GROUND-26,46,14,5);g.fill();g.fillStyle='#ffcf2e';rrect(g,tx+10,GROUND-36,24,12,4);g.fill();g.fillStyle='#9fd3f5';g.fillRect(tx+13,GROUND-33,8,7);g.fillRect(tx+23,GROUND-33,8,7);
+    g.fillStyle='#1a1a1a';g.beginPath();g.arc(tx+10,GROUND-12,5,0,TAU);g.arc(tx+36,GROUND-12,5,0,TAU);g.fill();g.fillStyle='#fff6c4';g.fillRect(tx+44,GROUND-24,3,4);}
+  // 路燈和灑下來的光
+  const lx=d*PX_M;for(let i=-1;i<4;i++){const x=((i*180-lx)%540+540)%540-60+wx0;const lg=g.createRadialGradient(x+22,GROUND-4,4,x+22,GROUND-4,90);lg.addColorStop(0,'rgba(255,190,90,.35)');lg.addColorStop(1,'rgba(255,190,90,0)');
+    g.fillStyle=lg;g.fillRect(x-70,GROUND-100,184,104);g.fillStyle='#2b2f45';g.fillRect(x,GROUND-170,5,170);g.fillRect(x,GROUND-170,24,4);g.fillStyle='#ffd27a';rrect(g,x+16,GROUND-168,14,6,2);g.fill();}
+  // 路面：人行道邊緣、柏油、車道線；十字路口段有斑馬線
+  g.fillStyle='#3c3f52';g.fillRect(wx0,GROUND,wx1-wx0,wy1-GROUND);g.fillStyle='#55596f';g.fillRect(wx0,GROUND,wx1-wx0,8);
+  if(i0===1){const zx=d*PX_M;for(let i=-1;i<3;i++){const x=((i*400-zx)%800+800)%800-120+wx0;g.fillStyle='rgba(240,240,240,.85)';for(let k=0;k<6;k++)g.fillRect(x+k*16,GROUND+14,10,52);}}
+  g.strokeStyle='#d8c26a';g.lineWidth=3;g.setLineDash([22,18]);g.lineDashOffset=d*PX_M;g.beginPath();g.moveTo(wx0,GROUND+80);g.lineTo(wx1,GROUND+80);g.stroke();g.setLineDash([]);
+  if(i0===3){g.fillStyle='rgba(180,190,220,.12)';g.fillRect(wx0,GROUND-120,wx1-wx0,120);}
+}
+function drawObs(o){const sx=sxOf(o.x);if(sx<wx0-60||sx>wx1+60)return;g.save();g.translate(sx,GROUND);if(o.hit&&o.t!=='flat'){g.rotate(-.5);g.translate(0,-6);}g.lineJoin='round';g.strokeStyle=INK;g.lineWidth=2.5;
+  if(o.k==='cone'){g.fillStyle='#ff7a2e';g.beginPath();g.moveTo(-7,0);g.lineTo(0,-26);g.lineTo(7,0);g.closePath();g.fill();g.stroke();g.fillStyle='#fff';g.fillRect(-4,-14,8,4);g.fillStyle='#ff7a2e';g.fillRect(-10,-3,20,4);g.strokeRect(-10,-3,20,4);}
+  else if(o.k==='bin'){g.fillStyle='#2f9a5f';rrect(g,-11,-38,22,38,4);g.fill();g.stroke();g.fillStyle='#ffd23f';g.fillRect(-11,-26,22,6);g.fillStyle='#246f46';g.fillRect(-13,-41,26,5);}
+  else if(o.k==='scooter'){g.fillStyle='#e8e8ec';rrect(g,-20,-26,32,15,7);g.fill();g.stroke();g.fillStyle='#3d7bd9';rrect(g,-8,-34,18,10,5);g.fill();g.stroke();g.strokeStyle=INK;g.lineWidth=2.5;g.beginPath();g.moveTo(11,-26);g.lineTo(18,-36);g.stroke();
+    g.fillStyle=INK;for(const x of[-14,14]){g.beginPath();g.arc(x,-7,7,0,TAU);g.fill();}g.fillStyle='#9aa0b8';for(const x of[-14,14]){g.beginPath();g.arc(x,-7,2.6,0,TAU);g.fill();}}
+  else if(o.k==='dog'){const b=Math.sin(time*16)*2;g.fillStyle='#c98a4a';rrect(g,-14,-20+b,26,13,6);g.fill();g.stroke();g.beginPath();g.arc(-15,-22+b,7,0,TAU);g.fill();g.stroke();g.fillStyle=INK;g.beginPath();g.arc(-17,-23+b,1.3,0,TAU);g.fill();
+    g.strokeStyle=INK;g.lineWidth=3;g.beginPath();for(const x of[-9,7]){g.moveTo(x,-8+b);g.lineTo(x+Math.sin(time*16+x)*3,0);}g.moveTo(12,-16+b);g.lineTo(18,-22+b);g.stroke();}
+  else if(o.k==='puddle'){g.fillStyle='rgba(120,190,240,.75)';g.beginPath();g.ellipse(0,-1,20,4,0,0,TAU);g.fill();g.strokeStyle='rgba(255,255,255,.6)';g.lineWidth=1.5;g.beginPath();g.ellipse(-6,-1,8,1.5,0,0,TAU);g.stroke();}
+  else{// 要鏟過去的：停車場柵欄、路牌、騎樓招牌、施工警示帶，下緣在 HIGH_BOT
+    const w=o.w,top=-150,bot=HIGH_BOT-GROUND;g.strokeStyle=INK;g.lineWidth=3;
+    if(o.k==='gate'){g.fillStyle='#d9d9d9';g.fillRect(w/2-4,bot-6,12,-bot+6);g.strokeRect(w/2-4,bot-6,12,-bot+6);g.save();g.translate(w/2,bot-3);g.fillStyle='#fff';g.fillRect(-w-14,-4,w+14,8);g.strokeRect(-w-14,-4,w+14,8);g.fillStyle=HOT;for(let k=0;k<3;k++)g.fillRect(-w-10+k*18,-4,8,8);g.restore();}
+    else if(o.k==='tape'){g.fillStyle='#ff7a2e';for(const x of[-w/2,w/2]){g.beginPath();g.moveTo(x-6,0);g.lineTo(x,bot-10);g.lineTo(x+6,0);g.closePath();g.fill();g.stroke();}
+      g.fillStyle='#ffd23f';g.fillRect(-w/2,bot-8,w,8);g.strokeRect(-w/2,bot-8,w,8);g.fillStyle=INK;for(let k=0;k<4;k++){g.beginPath();g.moveTo(-w/2+k*11,bot-8);g.lineTo(-w/2+k*11+6,bot-8);g.lineTo(-w/2+k*11+1,bot);g.lineTo(-w/2+k*11-5,bot);g.closePath();g.fill();}}
+    else{g.beginPath();g.moveTo(-w/2,top);g.lineTo(-w/2,bot);g.moveTo(w/2,top);g.lineTo(w/2,bot);g.stroke();
+      const col=o.k==='sign'?'#1f7a4d':'#ff5a3c';g.fillStyle=col;rrect(g,-w/2-6,bot-30,w+12,30,4);g.fill();g.stroke();
+      g.fillStyle='#fff';g.font='900 11px '+FONT;g.textAlign='center';g.fillText(o.k==='sign'?'市民大道':'雞排',0,bot-11);g.textAlign='left';}}
+  g.restore();}
+function drawTea(t){if(t.got)return;const sx=sxOf(t.x);if(sx<wx0-20||sx>wx1+20)return;const y=(t.hi?GROUND-92:GROUND-26)+Math.sin(time*5+t.x)*3;
+  g.save();g.translate(sx,y);g.strokeStyle=INK;g.lineWidth=2;g.fillStyle='#e9c79a';g.beginPath();g.moveTo(-8,-11);g.lineTo(8,-11);g.lineTo(6,11);g.lineTo(-6,11);g.closePath();g.fill();g.stroke();
+  g.fillStyle='#3a2416';for(const[x,y2]of[[-3,6],[2,7],[0,3],[4,3]]){g.beginPath();g.arc(x,y2,1.6,0,TAU);g.fill();}g.strokeStyle='#ff5a3c';g.lineWidth=2.5;g.beginPath();g.moveTo(2,-11);g.lineTo(5,-19);g.stroke();g.restore();}
+// 他：只穿一條白色內褲和球鞋，邊跑邊喊；回頭嗆的時候轉頭、手指後面
+function drawRunner(x,feet,o){
+  g.save();g.translate(x,feet);g.scale(CK,CK);g.lineJoin='round';g.lineCap='round';const ph=o.phase,sl=o.slide>0,back=o.taunt>0,st=o.stum>0,SK='#f3c9a0',SK2='#e9b48a';
+  if(sl){g.rotate(-.9);g.translate(-8,8);}else if(st)g.rotate(.25);
+  const leg=(a,c)=>{g.strokeStyle=INK;g.lineWidth=6;g.beginPath();g.moveTo(0,-26);const kx=Math.sin(a)*9,ky=-14+Math.abs(Math.cos(a))*2,fy=o.air?-6:-1;g.lineTo(kx,ky);g.lineTo(kx+Math.sin(a-.9)*8,fy);g.stroke();
+    g.strokeStyle=c;g.lineWidth=3.5;g.beginPath();g.moveTo(0,-26);g.lineTo(kx,ky);g.lineTo(kx+Math.sin(a-.9)*8,fy);g.stroke();g.fillStyle='#fff';g.beginPath();g.ellipse(kx+Math.sin(a-.9)*8+2,fy,5.5,3,0,0,TAU);g.fill();g.strokeStyle=INK;g.lineWidth=1.5;g.stroke();};
+  leg(ph+Math.PI,SK2);
+  // 內褲
+  g.fillStyle='#fff';g.beginPath();g.moveTo(-9,-31);g.lineTo(9,-31);g.lineTo(8,-23);g.quadraticCurveTo(0,-20,-8,-23);g.closePath();g.fill();g.strokeStyle=INK;g.lineWidth=2;g.stroke();g.fillStyle='#3d7bd9';g.fillRect(-9,-31,18,2.6);
+  leg(ph,SK);
+  // 手臂：遠的那隻畫在身體後面，近的那隻畫在前面；回頭嗆的時候近的那隻往後指
+  const arm=(k,c,pt)=>{const ex=pt?-20:k*12,ey=pt?-54:-36;g.strokeStyle=INK;g.lineWidth=5.5;g.beginPath();g.moveTo(0,-46);g.lineTo(ex,ey);g.stroke();g.strokeStyle=c;g.lineWidth=3;g.beginPath();g.moveTo(0,-46);g.lineTo(ex,ey);g.stroke();};
+  arm(-Math.sin(ph),SK2,false);
+  // 光著上身，有一點肚子
+  g.fillStyle=SK;g.beginPath();g.moveTo(-9,-50);g.lineTo(9,-50);g.quadraticCurveTo(12,-38,9,-31);g.lineTo(-9,-31);g.quadraticCurveTo(-11,-40,-9,-50);g.closePath();g.fill();g.strokeStyle=INK;g.lineWidth=2.5;g.stroke();
+  g.strokeStyle='rgba(31,35,64,.35)';g.lineWidth=1.2;g.beginPath();g.arc(3,-36,1.2,0,TAU);g.stroke();
+  arm(back?-1:Math.sin(ph),SK,back);
+  const hx=back?-2:2;g.fillStyle=SK;g.strokeStyle=INK;g.lineWidth=2.5;g.beginPath();g.arc(hx,-62,11,0,TAU);g.fill();g.stroke();
+  g.fillStyle='#1d1a1a';g.beginPath();g.arc(hx,-64,11.2,Math.PI*1.02,Math.PI*1.98);g.fill();
+  const fx=back?-1:1;g.fillStyle=INK;g.beginPath();g.arc(hx+fx*5,-62,1.6,0,TAU);g.fill();
+  g.lineWidth=2;g.beginPath();if(back){g.ellipse(hx+fx*6,-56,3.2,2.8,0,0,TAU);g.stroke();}else if(st){g.moveTo(hx+fx*2,-56);g.lineTo(hx+fx*8,-57);g.stroke();}else{g.ellipse(hx+fx*6,-56.5,2.2,1.8,0,0,TAU);g.stroke();}
+  g.fillStyle='rgba(242,140,130,.5)';g.beginPath();g.ellipse(hx+fx*1,-58,2.6,1.6,0,0,TAU);g.fill();
+  g.restore();}
+// 阿嘎：扛著攝影機在後面跟拍，戴帽子、揹包包；喘的時候手撐膝蓋、攝影機垂在胸前，被嗆到在原地跳腳，被激怒滿臉通紅往前衝
+function drawAga(x,a){
+  const feet=GROUND,st=a.st,ph=a.run;g.save();g.translate(x,feet);g.scale(CK,CK);g.lineJoin='round';g.lineCap='round';
+  const bend=st==='pant'?1:0,stomp=st==='stun'?Math.abs(Math.sin(time*14))*6:0;g.translate(0,-stomp);
+  const leg=(an,c)=>{const A=st==='pant'||st==='stun'?0:an;g.strokeStyle=INK;g.lineWidth=6.5;g.beginPath();g.moveTo(0,-28);const kx=Math.sin(A)*9+bend*4,ky=-14;g.lineTo(kx,ky);g.lineTo(kx+Math.sin(A-.9)*8,-1);g.stroke();
+    g.strokeStyle=c;g.lineWidth=4;g.beginPath();g.moveTo(0,-28);g.lineTo(kx,ky);g.lineTo(kx+Math.sin(A-.9)*8,-1);g.stroke();g.fillStyle='#fff';g.beginPath();g.ellipse(kx+Math.sin(A-.9)*8+2,-1,5.5,3,0,0,TAU);g.fill();g.strokeStyle=INK;g.lineWidth=1.5;g.stroke();};
+  leg(ph+Math.PI,'#2c3a66');leg(ph,'#3a4a80');
+  g.save();g.translate(0,-30);g.rotate(bend*.65);
+  g.fillStyle='#2b2b33';rrect(g,-17,-24,9,20,3);g.fill();g.strokeStyle=INK;g.lineWidth=2;g.stroke();
+  g.fillStyle='#4a4f5a';rrect(g,-11,-24,22,26,7);g.fill();g.strokeStyle=INK;g.lineWidth=2.5;g.stroke();
+  const red=st==='rage'||st==='stun',blink=(time*2|0)%2===0;
+  // 攝影機：跑的時候舉在臉前面對著前方，喘的時候垂在胸前
+  const cam=(cx,cy,rot)=>{g.save();g.translate(cx,cy);g.rotate(rot);g.fillStyle='#1d1f27';rrect(g,-7,-6,16,12,2);g.fill();g.strokeStyle=INK;g.lineWidth=1.6;g.stroke();g.fillStyle='#3b4258';g.beginPath();g.arc(11,0,4.5,0,TAU);g.fill();g.stroke();
+    g.fillStyle='#9fd3f5';g.beginPath();g.arc(11,0,2,0,TAU);g.fill();if(blink){g.fillStyle='#ff3b30';g.beginPath();g.arc(-4,-3,1.6,0,TAU);g.fill();}g.restore();};
+  g.strokeStyle=INK;g.lineWidth=5.5;g.beginPath();
+  if(st==='pant'){g.moveTo(-6,-18);g.lineTo(-2,6);g.moveTo(6,-18);g.lineTo(10,6);g.stroke();cam(3,-8,.2);}
+  else if(st==='stun'){const w=Math.sin(time*18)*.6;g.moveTo(-8,-18);g.lineTo(-18,-34+w*6);g.moveTo(8,-18);g.lineTo(16,-30-w*4);g.stroke();cam(18,-34-w*4,-.4);}
+  else{g.moveTo(-5,-18);g.lineTo(10,-30);g.moveTo(6,-18);g.lineTo(14,-30);g.stroke();cam(16,-34,0);}
+  g.fillStyle=red?'#f29a7a':'#f0c08f';g.strokeStyle=INK;g.lineWidth=2.5;g.beginPath();g.arc(2,-36,12,0,TAU);g.fill();g.stroke();
+  g.fillStyle='#22305e';g.beginPath();g.arc(2,-40,12,Math.PI*1.02,Math.PI*1.98);g.fill();g.stroke();g.fillRect(8,-42,10,3.5);
+  g.fillStyle=INK;g.lineWidth=2;
+  if(st==='stun'){g.beginPath();g.moveTo(3,-38);g.lineTo(9,-35);g.moveTo(13,-38);g.lineTo(9,-35);g.stroke();g.beginPath();g.ellipse(10,-28,3,2.2,0,0,TAU);g.fill();}
+  else if(st==='pant'){g.beginPath();g.moveTo(5,-36);g.lineTo(10,-36);g.stroke();g.beginPath();g.ellipse(10,-29,2.6,3.4,0,0,TAU);g.fill();}
+  else{g.beginPath();g.arc(6,-36,1.7,0,TAU);g.fill();g.beginPath();if(st==='rage'){g.moveTo(2,-30);g.lineTo(10,-30);}else g.arc(7,-30,2.6,0,Math.PI);g.stroke();}
+  g.fillStyle='#7fc4e8';for(let i=0;i<(st==='pant'?2:1);i++){const d2=(time*2+i*.5)%1;g.globalAlpha=1-d2;g.beginPath();g.ellipse(-8-i*3,-46+d2*10,1.8,2.8,0,0,TAU);g.fill();}g.globalAlpha=1;
+  g.restore();
+  if(st==='stun'&&!reduced){g.strokeStyle='rgba(255,255,255,.85)';g.lineWidth=2;for(let i=0;i<3;i++){const t2=(time*2+i/3)%1;g.globalAlpha=1-t2;g.beginPath();g.arc(-6+i*8,-80-t2*16,4+t2*3,0,TAU);g.stroke();}g.globalAlpha=1;}
+  if(st==='rage'&&!reduced){g.strokeStyle='rgba(255,255,255,.7)';g.lineWidth=2;for(let i=0;i<4;i++){const yy=-60+i*14,ll=20+hash(i,(time*8)|0)*20;g.beginPath();g.moveTo(-20,yy);g.lineTo(-20-ll,yy);g.stroke();}}
+  g.fillStyle=PAPER;g.font='900 12px '+FONT;g.textAlign='center';g.lineWidth=3;g.strokeStyle=INK;g.strokeText('阿嘎',2,-94);g.fillText('阿嘎',2,-94);g.textAlign='left';
+  g.restore();}
+function drawPantRing(x,y,a){const k=clamp(a.t/PANT_T,0,1),r=14+k*30,perf=k<=PERFECT;
+  g.save();g.strokeStyle=perf?HOT:SUN;g.lineWidth=4;g.beginPath();g.arc(x,y,r,0,TAU);g.stroke();g.strokeStyle='rgba(255,255,255,.85)';g.lineWidth=2;g.beginPath();g.arc(x,y,14,0,TAU);g.stroke();
+  g.fillStyle=PAPER;g.font='900 12px '+FONT;g.textAlign='center';g.lineWidth=3;g.strokeStyle=INK;g.strokeText('呼…呼…',x,y+4);g.fillText('呼…呼…',x,y+4);g.textAlign='left';g.restore();}
+function render(){
+  g.setTransform(1,0,0,1,0,0);g.clearRect(0,0,cv.width,cv.height);const k=scale*dpr;let sx=0,sy=0;if(shake>0&&!reduced){sx=(Math.random()-.5)*shake;sy=(Math.random()-.5)*shake;}
+  g.setTransform(k,0,0,k,(ox+sx)*dpr,(oy+sy)*dpr);
+  const d=G?G.d:time*4;drawBack(d);
+  if(G){for(const o of G.obs)if(o.t==='flat')drawObs(o);for(const t of G.teas)drawTea(t);
+    const a=G.aga,ax=PX-G.gap*PX_M,feet=GROUND-G.jy;
+    for(const o of G.obs)if(o.t!=='flat')drawObs(o);
+    if(ax>wx0-30)drawAga(ax,a);
+    drawRunner(PX,feet,{phase:G.phase,slide:G.slide,taunt:G.taunt,stum:G.stum,air:G.air});
+    if(G.tea>0&&!reduced){g.strokeStyle='rgba(255,210,63,.8)';g.lineWidth=2;for(let i=0;i<3;i++){const yy=feet-20-i*12;g.beginPath();g.moveTo(PX-16,yy);g.lineTo(PX-36-i*6,yy);g.stroke();}}
+    // 阿嘎在畫面外：左邊的箭頭和距離
+    if(ax<=wx0-30&&mode==='play'){const y=GROUND-60;g.fillStyle='rgba(31,35,64,.75)';rrect(g,wx0+6,y-20,78,40,10);g.fill();g.fillStyle=PAPER;g.font='900 12px '+FONT;g.fillText('◀ 阿嘎',wx0+14,y-4);g.font='700 14px Fredoka,'+FONT;g.fillText(G.gap.toFixed(1)+' m',wx0+14,y+13);
+      if(a.st==='pant')drawPantRing(wx0+45,y-52,a);}
+    else if(a.st==='pant'&&mode==='play')drawPantRing(ax+2,GROUND-158,a);
+    if(mode==='caught'){g.fillStyle='rgba(255,90,60,.18)';g.fillRect(wx0,wy0,wx1-wx0,wy1-wy0);}
+  }else{drawRunner(PX+40,GROUND,{phase:time*9,slide:0,taunt:(time%3)<.6?1:0,stum:0,air:false});drawAga(PX-70,{st:(time%3)<.6?'stun':'chase',run:time*9});}
+  for(const p of parts){g.globalAlpha=clamp(p.life*3,0,1);g.fillStyle=p.col;g.beginPath();g.arc(p.x,p.y,p.r,0,TAU);g.fill();}g.globalAlpha=1;
+  g.textAlign='center';for(const p of pops){const a=clamp(p.life/(p.dur*.4),0,1),kk=1-p.life/p.dur;g.globalAlpha=a;g.font='900 '+p.size+'px '+FONT;g.lineWidth=4;g.strokeStyle=INK;g.lineJoin='round';
+    g.strokeText(p.text,p.x,p.y-kk*18);g.fillStyle=p.col;g.fillText(p.text,p.x,p.y-kk*18);}g.globalAlpha=1;g.textAlign='left';
+}
+
+/* ───────── HUD、畫面 ───────── */
+const el={recT:$('recT'),hud:$('hud'),dist:$('dist'),gap:$('gap'),gapBox:$('gapBox'),combo:$('combo'),cap:$('cap'),title:$('title'),over:$('over'),best:$('best'),mute:$('mute'),taunt:$('taunt'),hint:$('hint')};
+let lastD=-1,lastG='',lastC=null,lastCap=null,lastT='',lastR='';
+function hud(){if(!G)return;
+  const dd=Math.floor(G.d);if(dd!==lastD){lastD=dd;el.dist.textContent=dd;}
+  const sec=Math.floor(G.rec||0),rt=String(Math.floor(sec/60)).padStart(2,'0')+':'+String(sec%60).padStart(2,'0');if(rt!==lastR){lastR=rt;el.recT.textContent=rt;}
+  const gg=G.gap.toFixed(1);if(gg!==lastG){lastG=gg;el.gap.textContent=gg;el.gapBox.classList.toggle('near',G.gap<4);}
+  const cb=G.streak>=2?`連續嗆成功 ×${G.streak}`:'';if(cb!==lastC){lastC=cb;el.combo.textContent=cb;}
+  let t='';if(time<capUntil)t=capText;else if(mode==='play'){if(G.d<25)t='點畫面跳過障礙，往下滑可以鏟過路牌';else if(G.aga.st==='pant')t='阿嘎在喘！現在回頭嗆他！';else if(G.gap<3)t='快被追上了！';}
+  if(t!==lastCap){lastCap=t;el.cap.textContent=t;}
+  const ts=G.cd>0?'cool':G.aga.st==='pant'?'ready':'';if(ts!==lastT){lastT=ts;el.taunt.classList.toggle('cool',ts==='cool');el.taunt.classList.toggle('ready',ts==='ready');}
+  el.hint.hidden=G.d>120;
+}
+const RANK=d=>RANKS.find(r=>d>=r[0])[1];
+function start(){Snd.init();newGame();mode='play';el.title.hidden=true;el.over.hidden=true;el.hud.hidden=false;lastD=-1;lastG='';lastC=null;lastCap=null;lastT='';paused=false;$('pause').hidden=true;
+  say('阿！跟不上我的速度吧！阿嘎！',2.2);Voice.say('阿！跟不上我的速度吧！阿嘎！');}
+function gameOver(){mode='over';const d=Math.floor(G.d),score=Math.round(d+G.score);if(d>best){best=d;store.set('ag.best',String(d));}
+  $('ovDist').textContent=d;$('ovScore').textContent=score.toLocaleString('en-US');$('ovBest').textContent=best+' 公尺';$('ovTaunt').textContent=`${G.good+G.perfect} 次（完美 ${G.perfect}）`;$('ovRank').textContent=RANK(d);
+  $('ovWhere').textContent=sceneAt(G.d).name+(G.hits?`，路上撞到 ${G.hits} 次`:'');$('copied').textContent='';el.hud.hidden=true;el.over.hidden=false;showBest();$('again').focus({preventScroll:true});}
+function showBest(){el.best.textContent=best>0?`最佳紀錄　${best} 公尺（${RANK(best)}）`:'';}
+function muteIcon(){el.mute.innerHTML=Snd.on
+  ?'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9.5v5h3.5L12 18.5v-13L7.5 9.5z" fill="currentColor"/><path d="M15.5 9a4.2 4.2 0 0 1 0 6M18 6.5a8 8 0 0 1 0 11"/></svg>'
+  :'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9.5v5h3.5L12 18.5v-13L7.5 9.5z" fill="currentColor"/><path d="M16 9.5l5 5M21 9.5l-5 5"/></svg>';
+  el.mute.setAttribute('aria-pressed',String(!Snd.on));}
+
+/* ───────── 迴圈、暫停 ───────── */
+const H=1/120;let acc=0,last=0,holdLoop=false;
+function setPaused(p){if(p&&(paused||mode!=='play'))return;if(!p&&!paused)return;paused=p;$('pause').hidden=!p;last=0;acc=0;if(p)Voice.stop();if(Snd.ctx){try{p?Snd.ctx.suspend():Snd.ctx.resume();}catch(e){}}if(p)$('resume').focus({preventScroll:true});}
+function frame(now){const dt=Math.min(.05,(now-(last||now))/1000);last=now;
+  if(!paused&&!holdLoop){acc+=dt;let n=0;while(acc>=H&&n++<10){tick(H);acc-=H;}if(n>=10)acc=0;hud();}
+  if(mode==='title')time+=dt;render();requestAnimationFrame(frame);}
+
+/* ───────── 輸入 ─────────
+   點一下：跳（手指一放下就跳，不等放開）。往下滑：鏟地；剛跳起來就往下滑，會取消那一下跳、直接鏟地。
+   往左滑或按「嗆！」：回頭嗆 */
+let tp=null;const SWIPE=24;
+gameEl.addEventListener('pointerdown',e=>{if(e.target.closest('button,a,.card'))return;e.preventDefault();Snd.init();if(mode!=='play')return;
+  tp={id:e.pointerId,x:e.clientX,y:e.clientY,done:false,jumped:!!G&&!G.air&&G.taunt<=0};jump();});
+gameEl.addEventListener('pointermove',e=>{if(!tp||e.pointerId!==tp.id||tp.done||!G)return;const dx=e.clientX-tp.x,dy=e.clientY-tp.y;
+  if(dy>SWIPE&&dy>Math.abs(dx)){tp.done=true;if(tp.jumped&&G.air&&G.jy<40){G.air=false;G.jy=0;G.jv=0;}slide();}
+  else if(dx<-SWIPE&&-dx>Math.abs(dy)){tp.done=true;if(tp.jumped&&G.air&&G.jy<40){G.air=false;G.jy=0;G.jv=0;}taunt();}});
+const tpEnd=e=>{if(tp&&e.pointerId===tp.id)tp=null;};
+gameEl.addEventListener('pointerup',tpEnd);gameEl.addEventListener('pointercancel',tpEnd);
+el.taunt.addEventListener('pointerdown',e=>{e.preventDefault();e.stopPropagation();taunt();});
+gameEl.addEventListener('contextmenu',e=>e.preventDefault());
+for(const t of['touchstart','touchmove'])gameEl.addEventListener(t,e=>{if(e.cancelable&&!(e.target.closest&&e.target.closest('button,a,.card')))e.preventDefault();},{passive:false});
+let lastTouchEnd=0;
+document.addEventListener('touchend',e=>{const now=Date.now(),btn=e.target&&e.target.closest&&e.target.closest('button,a');if(now-lastTouchEnd<=350&&!btn&&e.cancelable)e.preventDefault();lastTouchEnd=now;},{passive:false});
+for(const t of['gesturestart','gesturechange','gestureend'])document.addEventListener(t,e=>e.preventDefault(),{passive:false});
+document.addEventListener('dblclick',e=>e.preventDefault());
+document.addEventListener('visibilitychange',()=>{last=0;if(document.hidden)setPaused(true);});
+window.addEventListener('blur',()=>setPaused(true));
+window.addEventListener('pagehide',()=>setPaused(true));
+window.addEventListener('keydown',e=>{if(e.code==='Escape'||e.code==='KeyP'){if(!e.repeat)setPaused(!paused);return;}if(paused||e.repeat)return;
+  if(e.target.closest&&e.target.closest('button,a')&&(e.code==='Enter'||e.code==='Space'))return;
+  if(mode!=='play'){if(e.code==='Enter'||e.code==='Space'){e.preventDefault();start();}return;}
+  if(e.code==='Space'||e.code==='ArrowUp'||e.code==='KeyW'){e.preventDefault();Snd.init();jump();}
+  else if(e.code==='ArrowDown'||e.code==='KeyS'){e.preventDefault();slide();}
+  else if(e.code==='ArrowLeft'||e.code==='KeyA'||e.code==='KeyZ'){e.preventDefault();taunt();}});
+$('start').addEventListener('click',start);
+$('again').addEventListener('click',start);
+$('pauseBtn').addEventListener('click',()=>setPaused(true));
+$('resume').addEventListener('click',()=>setPaused(false));
+el.mute.addEventListener('click',()=>{Snd.init();Snd.setOn(!Snd.on);muteIcon();});
+$('share').addEventListener('click',async()=>{const link=document.querySelector('link[rel=canonical]'),out=$('copied');const d=Math.floor(G.d);
+  const text=`半夜只穿一條內褲跑了 ${d} 公尺才被阿嘎追上，回頭嗆了他 ${G.good+G.perfect} 次（${RANK(d)}）。阿！跟不上我的速度吧！阿嘎！`+(link?' '+link.href:'');
+  try{await navigator.clipboard.writeText(text);out.textContent='已複製，貼到脆上嗆朋友吧';}
+  catch(e){out.textContent=text;const r=document.createRange();r.selectNodeContents(out);const s=getSelection();s.removeAllRanges();s.addRange(r);}});
+window.addEventListener('resize',resize);
+if(window.ResizeObserver)new ResizeObserver(resize).observe(gameEl);
+
+muteIcon();showBest();resize();requestAnimationFrame(frame);
+window.__ag={KIND,SCENES,PX,PX_M,GROUND,HIGH_BOT,PANT_T,PERFECT,STUN,RAGE_T,RAGE_V,STAND_H,SLIDE_H,HALF_W,JUMP_V,GRAV,
+  get mode(){return mode},get G(){return G},start,jump,slide,taunt,tick,sxOf:x=>sxOf(x),vBase,chase,set loopHold(v){holdLoop=v;}};
+})();
+</script>
+<!--/PAGE-->
+</body>
+</html>
